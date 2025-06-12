@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import axios from 'axios';
+import apiClient from '../services/apiClient';
 
 interface AuthContextType {
     user: any;
@@ -20,16 +21,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     });
 
     const login = async (username: string, password: string) => {
-        const response = await axios.post('/api/login', { username, password });
-        const { token } = response.data;
-        localStorage.setItem('token', token);
-        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        const token = await apiClient.login(username, password);
         setUser({ token });
     };
 
     const logout = () => {
-        localStorage.removeItem('token');
-        delete axios.defaults.headers.common['Authorization'];
+        apiClient.logout();
         setUser(null);
     };
 

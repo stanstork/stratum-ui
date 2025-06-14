@@ -12,6 +12,9 @@ const apiClient: ApiClient = axios.create({
     }
 }) as ApiClient;
 
+// Enable credentials for cross-origin requests
+apiClient.defaults.withCredentials = true;
+
 // Attach the token from localStorage to each request
 apiClient.interceptors.request.use(
     (config) => {
@@ -36,8 +39,8 @@ apiClient.interceptors.response.use(
     }
 );
 
-apiClient.login = async (username: string, password: string): Promise<string> => {
-    const response = await apiClient.post<{ token: string }>('/login', { username, password });
+apiClient.login = async (email: string, password: string): Promise<string> => {
+    const response = await apiClient.post<{ token: string }>('/login', { email, password });
     const { token } = response.data;
     localStorage.setItem('token', token);
     apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;

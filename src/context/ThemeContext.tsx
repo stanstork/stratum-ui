@@ -1,4 +1,4 @@
-import { createContext, useEffect, useState } from "react";
+import { createContext, use, useContext, useEffect, useState } from "react";
 import { ReactNode } from "react";
 
 type ThemeContextType = {
@@ -7,6 +7,13 @@ type ThemeContextType = {
 };
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+const useTheme = (): ThemeContextType => {
+    const context = useContext(ThemeContext);
+    if (context === undefined) {
+        throw new Error("useTheme must be used within a ThemeProvider");
+    }
+    return context;
+};
 
 const ThemeProvider = ({ children }: { children: ReactNode }) => {
     const [theme, setTheme] = useState<string>(() => {
@@ -39,4 +46,4 @@ const ThemeProvider = ({ children }: { children: ReactNode }) => {
     );
 }
 
-export { ThemeContext, ThemeProvider };
+export { ThemeContext, ThemeProvider, useTheme };

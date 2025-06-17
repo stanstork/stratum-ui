@@ -1,6 +1,10 @@
 import axios, { AxiosInstance, AxiosRequestConfig } from "axios";
+import { JobDefinition, mapJobDefinition } from "../types/JobDefinition";
+import { JobExecution, JobExecutionDTO, mapJobExecution } from "../types/JobExecution";
 
 interface ApiClient extends AxiosInstance {
+    getJobExecutions: () => Promise<JobExecution[]>;
+    getJobDefinitions: () => Promise<JobDefinition[]>;
     login: (username: string, password: string) => Promise<string>;
     logout: () => void;
 }
@@ -43,6 +47,7 @@ apiClient.login = async (email: string, password: string): Promise<string> => {
     const response = await apiClient.post<{ token: string }>('/login', { email, password });
     const { token } = response.data;
     localStorage.setItem('token', token);
+    localStorage.setItem('email', email);
     apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     return token;
 };
@@ -50,6 +55,16 @@ apiClient.login = async (email: string, password: string): Promise<string> => {
 apiClient.logout = (): void => {
     localStorage.removeItem('token');
     delete apiClient.defaults.headers.common['Authorization'];
+};
+
+apiClient.getJobDefinitions = async () => {
+    const response = await apiClient.get('/jobs');
+    return response.data.map(mapJobDefinition) as JobDefinition[];
+};
+
+apiClient.getJobExecutions = async () => {
+    const response = await apiClient.get('/jobs/executions');
+    return response.data.map(mapJobExecution) as JobExecution[];
 };
 
 export default apiClient;

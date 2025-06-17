@@ -4,18 +4,18 @@ import { useAppContext } from "../App";
 import { useTheme } from "../context/ThemeContext";
 import apiClient from "../services/apiClient";
 import { JobExecution } from "../types/JobExecution";
-import { JobDefinition } from "../types/JobDefinition";
 import { CardContent, CardHeader, MotionCard, Spinner, StatCard, StatusBadge } from "../components/common/Helper";
 import { easeOut, motion, Variants } from "framer-motion";
-import { CheckCircleIcon, ClockIcon, FileTextIcon, LoaderIcon } from "../components/icons/Helper";
+import { CheckCircleIcon, ClockIcon, FileTextIcon, LoaderIcon, RunningJobsIcon, StatCard2, SuccessRateIcon, TotalDefinitionsIcon, TotalExecutionsIcon } from "../components/icons/Helper";
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { makeDayKey } from "../utils/dateBuckets";
 import DailyLineChart from "../components/common/DailyLineChart";
+import { ExecutionStat } from "../types/ExecutionStat";
 
 type ChartDataItem = { name: string; Succeeded: number; Failed: number; InProgress: number };
 type Stats = {
     totalExecutions: number;
-    successRate: number;
+    successRate: string; // percentage as string
     inProgress: number;
     totalDefs: number;
     chartData: ChartDataItem[];
@@ -25,7 +25,7 @@ const Dashboard = () => {
     const [recentExecutions, setRecentExecutions] = useState<JobExecution[]>([]);
     const [stats, setStats] = useState<Stats>({
         totalExecutions: 0,
-        successRate: 0,
+        successRate: '0.00',
         inProgress: 0,
         totalDefs: 0,
         chartData: [],
@@ -36,18 +36,11 @@ const Dashboard = () => {
     const { theme } = useTheme();
 
     useEffect(() => {
-        const processData = (executions: JobExecution[], definitions: JobDefinition[]) => {
-            const totalExecutions = executions.length;
-            const successCount = executions.filter(ex => ex.status === 'succeeded').length;
-            const failed = executions.filter(ex => ex.status === 'failed').length;
-            const successRate = (successCount + failed) > 0 ? Math.round((successCount / (successCount + failed)) * 100) : 100;
-            const inProgress = executions.filter(ex => ex.status == 'running').length;
-
+        const processData = (stat: ExecutionStat) => {
             const chartData = [] as Array<ChartDataItem>;
-            for (let offset = 30; offset >= 0; offset--) {
-                const bucket = new Date();
-                bucket.setHours(0, 0, 0, 0);
-                bucket.setDate(bucket.getDate() - offset);
+            for (let offset = stat.perDay.length - 1; offset >= 0; offset--) {
+                console.log(`Processing day ${offset} with date ${stat.perDay[offset].day}`);
+                const bucket = new Date(stat.perDay[offset].day);
 
                 // Label for the X-axis
                 const name = bucket.toLocaleDateString('en-US', {
@@ -55,38 +48,28 @@ const Dashboard = () => {
                     day: 'numeric',
                 }); // e.g. "Jun 12"
 
-                const dayKey = makeDayKey(bucket);
-
-                // Filter executions that started exactly on this day
-                const dayExecs = executions.filter((e) => {
-                    if (!e.runStartedAt) return false;
-                    const runDate = new Date(e.runStartedAt);
-                    const runKey = makeDayKey(runDate);
-                    return runKey === dayKey;
-                });
-
                 // Tally statuses
-                const succeeded = dayExecs.filter((e) => e.status === 'succeeded').length;
-                const failed = dayExecs.filter((e) => e.status === 'failed').length;
-                const inProgress = dayExecs.filter((e) => e.status === 'running').length;
+                const succeeded = stat.perDay[offset].succeeded;
+                const failed = stat.perDay[offset].failed;
+                const inProgress = stat.perDay[offset].running;
 
                 chartData.push({ name, Succeeded: succeeded, Failed: failed, InProgress: inProgress });
             }
 
             setStats({
-                totalExecutions,
-                successRate,
-                inProgress,
-                totalDefs: definitions.length,
+                totalExecutions: stat.total,
+                successRate: stat.successRate.toFixed(2),
+                inProgress: stat.running,
+                totalDefs: stat.totalDefinitions,
                 chartData,
             });
         };
 
         const fetchData = async () => {
             try {
-                const [executions, definitions] = await Promise.all([apiClient.getJobExecutions(), apiClient.getJobDefinitions()]);
+                const [executions, stats] = await Promise.all([apiClient.getJobExecutions(), apiClient.getExecutionStats()]);
                 setRecentExecutions(executions.slice(0, 10));
-                processData(executions, definitions);
+                processData(stats);
             } finally {
                 setLoading(false);
             }
@@ -128,10 +111,10 @@ const Dashboard = () => {
             <motion.h1 initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="text-3xl font-bold text-gray-800 dark:text-gray-100">Welcome back, {user?.email}!</motion.h1>
 
             <motion.div className="grid grid-cols-4 gap-6">
-                <MotionCard custom={0} variants={bentoVariants} initial="hidden" animate="visible" className="col-span-4 lg:col-span-2"><StatCard title="Executions" value={stats.totalExecutions} icon={<ClockIcon />} /></MotionCard>
-                <MotionCard custom={1} variants={bentoVariants} initial="hidden" animate="visible" className="col-span-4 lg:col-span-2"><StatCard title="Success Rate" value={`${stats.successRate}%`} icon={<CheckCircleIcon />} /></MotionCard>
-                <MotionCard custom={2} variants={bentoVariants} initial="hidden" animate="visible" className="col-span-2 lg:col-span-1"><StatCard title="In Progress" value={stats.inProgress} icon={<LoaderIcon />} /></MotionCard>
-                <MotionCard custom={3} variants={bentoVariants} initial="hidden" animate="visible" className="col-span-2 lg:col-span-1"><StatCard title="Definitions" value={stats.totalDefs} icon={<FileTextIcon />} /></MotionCard>
+                <MotionCard custom={0} variants={bentoVariants} initial="hidden" animate="visible" className="col-span-4 lg:col-span-2"><StatCard2 title="Executions" value={stats.totalExecutions} icon={<TotalExecutionsIcon />} /></MotionCard>
+                <MotionCard custom={1} variants={bentoVariants} initial="hidden" animate="visible" className="col-span-4 lg:col-span-2"><StatCard2 title="Success Rate" value={`${stats.successRate}%`} icon={<SuccessRateIcon />} /></MotionCard>
+                <MotionCard custom={2} variants={bentoVariants} initial="hidden" animate="visible" className="col-span-2 lg:col-span-1"><StatCard2 title="In Progress" value={stats.inProgress} icon={<RunningJobsIcon />} /></MotionCard>
+                <MotionCard custom={3} variants={bentoVariants} initial="hidden" animate="visible" className="col-span-2 lg:col-span-1"><StatCard2 title="Definitions" value={stats.totalDefs} icon={<TotalDefinitionsIcon />} /></MotionCard>
 
                 <MotionCard custom={4} variants={bentoVariants} initial="hidden" animate="visible" className="col-span-4 lg:col-span-2 row-span-2">
                     <CardHeader>Daily Executions (Last 31 Days)</CardHeader>

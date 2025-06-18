@@ -1,6 +1,6 @@
 import axios, { AxiosInstance, AxiosRequestConfig } from "axios";
-import { JobDefinition, mapJobDefinition } from "../types/JobDefinition";
-import { JobExecution, mapJobExecution } from "../types/JobExecution";
+import { JobDefinition, JobDefinitionDTO, mapJobDefinition } from "../types/JobDefinition";
+import { JobExecution, JobExecutionDTO, mapJobExecution } from "../types/JobExecution";
 import { emptyExecutionStat, ExecutionStat, mapExecutionStat } from "../types/ExecutionStat";
 
 interface ApiClient extends AxiosInstance {
@@ -59,14 +59,16 @@ apiClient.logout = (): void => {
     delete apiClient.defaults.headers.common['Authorization'];
 };
 
-apiClient.getJobDefinitions = async () => {
-    const response = await apiClient.get('/jobs');
-    return response.data?.map(mapJobDefinition) as JobDefinition[];
+apiClient.getJobDefinitions = async (): Promise<JobDefinition[]> => {
+    const response = await apiClient.get<JobDefinitionDTO[]>('/jobs');
+    const dtoList = response.data ?? [];
+    return dtoList.map(mapJobDefinition);
 };
 
-apiClient.getJobExecutions = async () => {
-    const response = await apiClient.get('/jobs/executions');
-    return response.data?.map(mapJobExecution) as JobExecution[];
+apiClient.getJobExecutions = async (): Promise<JobExecution[]> => {
+    const response = await apiClient.get<JobExecutionDTO[]>('/jobs/executions');
+    const dtoList = response.data ?? [];
+    return dtoList.map(mapJobExecution);
 };
 
 apiClient.getExecutionStats = async () => {

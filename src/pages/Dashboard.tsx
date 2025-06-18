@@ -4,11 +4,9 @@ import { useAppContext } from "../App";
 import { useTheme } from "../context/ThemeContext";
 import apiClient from "../services/apiClient";
 import { JobExecution } from "../types/JobExecution";
-import { CardContent, CardHeader, MotionCard, Spinner, StatCard, StatusBadge } from "../components/common/Helper";
+import { CardContent, CardHeader, MotionCard, Spinner, StatusBadge } from "../components/common/Helper";
 import { easeOut, motion, Variants } from "framer-motion";
-import { CheckCircleIcon, ClockIcon, FileTextIcon, LoaderIcon, RunningJobsIcon, StatCard2, SuccessRateIcon, TotalDefinitionsIcon, TotalExecutionsIcon } from "../components/icons/Helper";
-import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { makeDayKey } from "../utils/dateBuckets";
+import { RunningJobsIcon, StatCard, SuccessRateIcon, TotalDefinitionsIcon, TotalExecutionsIcon } from "../components/icons/Helper";
 import DailyLineChart from "../components/common/DailyLineChart";
 import { ExecutionStat } from "../types/ExecutionStat";
 
@@ -111,25 +109,14 @@ const Dashboard = () => {
             <motion.h1 initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="text-3xl font-bold text-gray-800 dark:text-gray-100">Welcome back, {user?.email}!</motion.h1>
 
             <motion.div className="grid grid-cols-4 gap-6">
-                <MotionCard custom={0} variants={bentoVariants} initial="hidden" animate="visible" className="col-span-4 lg:col-span-2"><StatCard2 title="Executions" value={stats.totalExecutions} icon={<TotalExecutionsIcon />} /></MotionCard>
-                <MotionCard custom={1} variants={bentoVariants} initial="hidden" animate="visible" className="col-span-4 lg:col-span-2"><StatCard2 title="Success Rate" value={`${stats.successRate}%`} icon={<SuccessRateIcon />} /></MotionCard>
-                <MotionCard custom={2} variants={bentoVariants} initial="hidden" animate="visible" className="col-span-2 lg:col-span-1"><StatCard2 title="In Progress" value={stats.inProgress} icon={<RunningJobsIcon />} /></MotionCard>
-                <MotionCard custom={3} variants={bentoVariants} initial="hidden" animate="visible" className="col-span-2 lg:col-span-1"><StatCard2 title="Definitions" value={stats.totalDefs} icon={<TotalDefinitionsIcon />} /></MotionCard>
+                <MotionCard custom={0} variants={bentoVariants} initial="hidden" animate="visible" className="col-span-4 lg:col-span-2"><StatCard title="Executions" value={stats.totalExecutions} icon={<TotalExecutionsIcon />} /></MotionCard>
+                <MotionCard custom={1} variants={bentoVariants} initial="hidden" animate="visible" className="col-span-4 lg:col-span-2"><StatCard title="Success Rate" value={`${stats.successRate}%`} icon={<SuccessRateIcon />} /></MotionCard>
+                <MotionCard custom={2} variants={bentoVariants} initial="hidden" animate="visible" className="col-span-2 lg:col-span-1"><StatCard title="In Progress" value={stats.inProgress} icon={<RunningJobsIcon />} /></MotionCard>
+                <MotionCard custom={3} variants={bentoVariants} initial="hidden" animate="visible" className="col-span-2 lg:col-span-1"><StatCard title="Definitions" value={stats.totalDefs} icon={<TotalDefinitionsIcon />} /></MotionCard>
 
                 <MotionCard custom={4} variants={bentoVariants} initial="hidden" animate="visible" className="col-span-4 lg:col-span-2 row-span-2">
                     <CardHeader>Daily Executions (Last 31 Days)</CardHeader>
                     <CardContent className="h-80">
-                        {/* <ResponsiveContainer width="100%" height="100%">
-                             <BarChart data={stats.chartData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme === 'dark' ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"} />
-                                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: theme === 'dark' ? '#9ca3af' : '#6b7280' }} />
-                                <YAxis axisLine={false} tickLine={false} tick={{ fill: theme === 'dark' ? '#9ca3af' : '#6b7280' }} />
-                                <Tooltip contentStyle={{ backgroundColor: 'rgba(255, 255, 255, 0.8)', backdropFilter: 'blur(4px)', borderRadius: '0.75rem', border: '1px solid rgba(0,0,0,0.1)' }} cursor={{ fill: theme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }} />
-                                <Legend wrapperStyle={{ color: theme === 'dark' ? '#e5e7eb' : '#374151' }} />
-                                <Bar dataKey="Succeeded" fill="#22c55e" radius={[4, 4, 0, 0]} />
-                                <Bar dataKey="Failed" fill="#f43f5e" radius={[4, 4, 0, 0]} />
-                            </BarChart> 
-                        </ResponsiveContainer> */}
                         <DailyLineChart data={stats.chartData} theme={theme} />
                     </CardContent>
                 </MotionCard>

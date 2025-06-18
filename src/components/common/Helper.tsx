@@ -1,6 +1,5 @@
 import { HTMLMotionProps, motion } from "framer-motion";
 import React from "react";
-import Card from "./Card";
 
 export const pageVariants = { initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 }, exit: { opacity: 0, y: -20 } };
 export const Spinner = () => <div className="flex justify-center items-center h-full p-8"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-500"></div></div>;
@@ -16,27 +15,6 @@ export const MotionCard = motion(
         );
     })
 );
-
-type StatCardProps = {
-    title: string;
-    value: React.ReactNode;
-    icon: React.ReactNode;
-};
-
-export const StatCard: React.FC<StatCardProps> = ({ title, value, icon }) => (
-    <Card className="p-2">
-        <div className="flex items-center">
-            <motion.div whileHover={{ scale: 1.1, rotate: -5 }} className="flex-shrink-0 bg-sky-500 shadow-lg shadow-sky-500/30 rounded-xl p-4">
-                {icon}
-            </motion.div>
-            <div className="ml-5">
-                <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">{title}</dt>
-                <dd className="text-3xl font-bold text-gray-800 dark:text-gray-100">{value}</dd>
-            </div>
-        </div>
-    </Card>
-);
-
 
 type CardHeaderProps = {
     children: React.ReactNode;

@@ -7,6 +7,7 @@ import { ThemeProvider } from './context/ThemeContext';
 import Header from './components/common/Header';
 import { AnimatePresence, motion } from 'framer-motion';
 import { pageVariants } from './components/common/Helper';
+import Definitions from './pages/Definitions';
 
 interface AppContextProps {
     page: string;
@@ -44,8 +45,9 @@ const InnerApp: React.FC = () => {
     const [viewExecutionId, setViewExecutionId] = useState<string | undefined>(undefined);
 
     useEffect(() => {
-        if (!page.includes('definition')) setViewDefinitionId(undefined);
-        if (!page.includes('execution')) setViewExecutionId(undefined);
+        if (location.pathname === '/') setPage('dashboard');
+        else if (location.pathname.startsWith('/definitions')) setPage('definitions');
+        else if (location.pathname.startsWith('/executions')) setPage('executions');
     }, [page]);
 
     return (
@@ -68,6 +70,22 @@ const InnerApp: React.FC = () => {
                                         transition={{ duration: 0.3 }}
                                     >
                                         <Dashboard />
+                                    </motion.div>
+                                </PrivateRoute>
+                            }
+                        />
+                        <Route
+                            path="/definitions/*"
+                            element={
+                                <PrivateRoute>
+                                    <motion.div
+                                        variants={pageVariants}
+                                        initial="initial"
+                                        animate="animate"
+                                        exit="exit"
+                                        transition={{ duration: 0.3 }}
+                                    >
+                                        <Definitions />
                                     </motion.div>
                                 </PrivateRoute>
                             }

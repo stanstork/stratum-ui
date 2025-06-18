@@ -4,6 +4,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
 import LogoIcon from "../icons/LogoIcon";
 import { MoonIcon, SunIcon } from "../icons/Helper";
+import { NavLink } from "react-router-dom";
 
 const Header = () => {
     const { page, setPage, fromPage } = useAppContext();
@@ -11,11 +12,14 @@ const Header = () => {
     const { theme, toggleTheme } = useTheme();
 
     const navItems = [
-        { id: 'dashboard', label: 'Dashboard' },
+        { id: 'dashboard', label: 'Dashboard', path: '/' },
+        { id: 'definitions', label: 'Definitions', path: '/definitions' },
+        { id: 'executions', label: 'Executions', path: '/executions' },
     ];
 
     const isActive = (itemId: string) => {
-        return page === itemId || (fromPage && fromPage === itemId);
+        const matches = (p?: string) => p === itemId || p?.startsWith(itemId);
+        return matches(page) || matches(fromPage);
     };
 
     return (
@@ -26,13 +30,18 @@ const Header = () => {
                         <LogoIcon className="h-8 w-auto text-gray-800 dark:text-gray-100" />
                         <nav className="hidden sm:flex sm:space-x-1">
                             {navItems.map(item => (
-                                <a key={item.id} href="#" onClick={(e) => { e.preventDefault(); setPage(item.id); }}
-                                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${isActive(item.id)
-                                        ? 'bg-sky-100 text-sky-700 dark:bg-sky-500/20 dark:text-sky-300'
-                                        : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white'
-                                        }`}>
+                                <NavLink
+                                    key={item.id}
+                                    to={item.path}
+                                    className={({ isActive }) =>
+                                        `px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${isActive
+                                            ? 'bg-sky-100 text-sky-700 dark:bg-sky-500/20 dark:text-sky-300'
+                                            : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white'
+                                        }`
+                                    }
+                                >
                                     {item.label}
-                                </a>
+                                </NavLink>
                             ))}
                         </nav>
                     </div>

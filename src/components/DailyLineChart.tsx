@@ -16,7 +16,6 @@ export interface DailyExecutionData {
     name: string;       // e.g., 'Jun 12'
     Succeeded: number;
     Failed: number;
-    InProgress: number;
 }
 
 interface DailyLineChartProps {
@@ -43,13 +42,6 @@ const DailyLineChart: React.FC<DailyLineChartProps> = ({ data, theme }) => {
                     type="monotone"
                     dataKey="Failed"
                     stroke="#f44336"
-                    strokeWidth={2}
-                    dot={{ r: 2 }}
-                />
-                <Line
-                    type="monotone"
-                    dataKey="InProgress"
-                    stroke="#2196f3"
                     strokeWidth={2}
                     dot={{ r: 2 }}
                 />

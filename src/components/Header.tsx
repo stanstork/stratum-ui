@@ -1,10 +1,10 @@
 import { motion } from "framer-motion";
-import { useAppContext } from "../../App";
-import { useAuth } from "../../context/AuthContext";
-import { useTheme } from "../../context/ThemeContext";
-import LogoIcon from "../icons/LogoIcon";
-import { MoonIcon, SunIcon } from "../icons/Helper";
 import { NavLink } from "react-router-dom";
+import { useAppContext } from "../App";
+import { useAuth } from "../context/AuthContext";
+import { useTheme } from "../context/ThemeContext";
+import { MoonIcon, SunIcon } from "lucide-react";
+import LogoIcon from "./icons/LogoIcon";
 
 const Header = () => {
     const { page, setPage, fromPage } = useAppContext();

@@ -1,18 +1,20 @@
+import { motion } from "framer-motion";
+import Card from "../common/Card";
+
 const Icon: React.FC<React.SVGProps<SVGSVGElement>> = ({ children, className = "w-6 h-6", path }) => {
     return (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}><path d={path} /></svg>
     );
 }
 
-export const SunIcon = () =>
-    <Icon path="M12 2c-5.514 0-10 4.486-10 10s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8zM12 5c-3.86 0-7 3.14-7 7s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7zm0 12c-2.757 0-5-2.243-5-5s2.243-5 5-5 5 2.243 5 5-2.243 5-5 5z" className="w-6 h-6" />;
-
+export const SunIcon = () => <Icon path="M12 2c-5.514 0-10 4.486-10 10s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8zM12 5c-3.86 0-7 3.14-7 7s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7zm0 12c-2.757 0-5-2.243-5-5s2.243-5 5-5 5 2.243 5 5-2.243 5-5 5z" className="w-6 h-6" />;
 export const MoonIcon = () => <Icon path="M12 2.062C6.513 2.062 2.062 6.513 2.062 12c0 5.487 4.451 9.938 9.938 9.938 2.031 0 3.92-.615 5.51-1.693-1.764-.78-3.235-2.25-3.99-4.004-1.258-2.926-.26-6.42 2.666-7.678-.59-.047-1.18-.063-1.772-.063z" className="w-6 h-6" />;
+export const PlusIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>;
 
 export const TotalExecutionsIcon = () => (
     <svg
         xmlns="http://www.w3.org/2000/svg"
-        className="h-8 w-8 text-indigo-500"
+        className="h-8 w-8 text-white"
         fill="none"
         viewBox="0 0 24 24"
         stroke="currentColor"
@@ -29,7 +31,7 @@ export const TotalExecutionsIcon = () => (
 export const RunningJobsIcon = () => (
     <svg
         xmlns="http://www.w3.org/2000/svg"
-        className="h-8 w-8 text-blue-500"
+        className="h-8 w-8 text-white"
         fill="none"
         viewBox="0 0 24 24"
         stroke="currentColor"
@@ -51,7 +53,7 @@ export const RunningJobsIcon = () => (
 export const TotalDefinitionsIcon = () => (
     <svg
         xmlns="http://www.w3.org/2000/svg"
-        className="h-8 w-8 text-green-500"
+        className="h-8 w-8 text-white"
         fill="none"
         viewBox="0 0 24 24"
         stroke="currentColor"
@@ -68,7 +70,7 @@ export const TotalDefinitionsIcon = () => (
 export const SuccessRateIcon = () => (
     <svg
         xmlns="http://www.w3.org/2000/svg"
-        className="h-8 w-8 text-teal-500"
+        className="h-8 w-8 text-white"
         fill="none"
         viewBox="0 0 24 24"
         stroke="currentColor"
@@ -91,13 +93,16 @@ type StatCardProps = {
 
 export const StatCard: React.FC<StatCardProps> = ({ icon, title, value, subtext }) => {
     return (
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-lg flex items-center space-x-4 transform hover:scale-105 transition-transform duration-300 ease-in-out">
-            <div className="bg-gray-100 dark:bg-gray-700 p-4 rounded-xl">{icon}</div>
-            <div>
-                <p className="text-sm font-semibold text-gray-500 dark:text-gray-400">{title}</p>
-                <p className="text-3xl font-bold text-gray-800 dark:text-white">{value}</p>
-                {subtext && <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{subtext}</p>}
+        <Card className="p-2">
+            <div className="flex items-center">
+                <motion.div whileHover={{ scale: 1.1, rotate: -5 }} className="flex-shrink-0 bg-sky-500 shadow-lg shadow-sky-500/30 rounded-xl p-4">
+                    {icon}
+                </motion.div>
+                <div className="ml-5">
+                    <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">{title}</dt>
+                    <dd className="text-3xl font-bold text-gray-800 dark:text-gray-100">{value}</dd>
+                </div>
             </div>
-        </div>
+        </Card>
     );
 };

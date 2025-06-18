@@ -7,10 +7,10 @@ import { JobExecution } from "../types/JobExecution";
 import { CardContent, CardHeader, MotionCard, Spinner, StatusBadge } from "../components/common/Helper";
 import { easeOut, motion, Variants } from "framer-motion";
 import { RunningJobsIcon, StatCard, SuccessRateIcon, TotalDefinitionsIcon, TotalExecutionsIcon } from "../components/icons/Helper";
-import DailyLineChart from "../components/common/DailyLineChart";
+import DailyLineChart from "../components/DailyLineChart";
 import { ExecutionStat } from "../types/ExecutionStat";
 
-type ChartDataItem = { name: string; Succeeded: number; Failed: number; InProgress: number };
+type ChartDataItem = { name: string; Succeeded: number; Failed: number; };
 type Stats = {
     totalExecutions: number;
     successRate: string; // percentage as string
@@ -49,9 +49,8 @@ const Dashboard = () => {
                 // Tally statuses
                 const succeeded = stat.perDay[offset].succeeded;
                 const failed = stat.perDay[offset].failed;
-                const inProgress = stat.perDay[offset].running;
 
-                chartData.push({ name, Succeeded: succeeded, Failed: failed, InProgress: inProgress });
+                chartData.push({ name, Succeeded: succeeded, Failed: failed });
             }
 
             setStats({
@@ -105,7 +104,7 @@ const Dashboard = () => {
     }
 
     return (
-        <div className="space-y-8 max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
+        <div className="space-y-8">
             <motion.h1 initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="text-3xl font-bold text-gray-800 dark:text-gray-100">Welcome back, {user?.email}!</motion.h1>
 
             <motion.div className="grid grid-cols-4 gap-6">

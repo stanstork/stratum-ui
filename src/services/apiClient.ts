@@ -91,11 +91,18 @@ apiClient.listConnections = async (): Promise<Connection[]> => {
 };
 
 apiClient.testConnection = async (dataFormat: string, connStr: string): Promise<ConnectionTestResult> => {
-    const response = await apiClient.post<ConnectionTestResult>('/connections/test', {
-        format: dataFormat,
-        dsn: connStr
-    });
-    return response.data;
+    try {
+        const response = await apiClient.post<ConnectionTestResult>('/connections/test', {
+            format: dataFormat,
+            dsn: connStr
+        });
+        return response.data;
+    } catch (error: any) {
+        if (error.response && error.response.status === 400) {
+            return error.response.data;
+        }
+        throw error;
+    }
 };
 
 apiClient.createConnection = async (connection: Connection): Promise<Connection> => {

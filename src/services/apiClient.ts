@@ -2,8 +2,13 @@ import axios, { AxiosInstance, AxiosRequestConfig } from "axios";
 import { JobDefinition, JobDefinitionDTO, mapJobDefinition } from "../types/JobDefinition";
 import { JobExecution, JobExecutionDTO, mapJobExecution } from "../types/JobExecution";
 import { emptyExecutionStat, ExecutionStat, mapExecutionStat } from "../types/ExecutionStat";
+import { Connection, ConnectionDTO, ConnectionTestResult, mapConnection } from "../types/Connection";
 
 interface ApiClient extends AxiosInstance {
+    updateConnection: (connection: Connection) => Promise<Connection>;
+    createConnection: (connection: Connection) => Promise<Connection>;
+    testConnection: (dataFormat: string, connStr: string) => Promise<ConnectionTestResult>;
+    listConnections: () => Promise<Connection[]>;
     getJobExecutions: () => Promise<JobExecution[]>;
     getJobDefinitions: () => Promise<JobDefinition[]>;
     getExecutionStats: () => Promise<ExecutionStat>;
@@ -78,5 +83,39 @@ apiClient.getExecutionStats = async () => {
     }
     return mapExecutionStat(response.data);
 }
+
+apiClient.listConnections = async (): Promise<Connection[]> => {
+    const response = await apiClient.get('/connections');
+    const dtoList = response.data ?? [];
+    return dtoList.map(mapConnection);
+};
+
+apiClient.testConnection = async (dataFormat: string, connStr: string): Promise<ConnectionTestResult> => {
+    const response = await apiClient.post<ConnectionTestResult>('/connections/test', {
+        format: dataFormat,
+        dsn: connStr
+    });
+    return response.data;
+};
+
+apiClient.createConnection = async (connection: Connection): Promise<Connection> => {
+    const response = await apiClient.post<ConnectionDTO>('/connections', {
+        name: connection.name,
+        data_format: connection.format,
+        conn_string: connection.connStr,
+        status: connection.status
+    });
+    return mapConnection(response.data);
+};
+
+apiClient.updateConnection = async (connection: Connection): Promise<Connection> => {
+    const response = await apiClient.put<ConnectionDTO>(`/connections/${connection.id}`, {
+        name: connection.name,
+        data_format: connection.format,
+        conn_string: connection.connStr,
+        status: connection.status
+    });
+    return mapConnection(response.data);
+};
 
 export default apiClient;

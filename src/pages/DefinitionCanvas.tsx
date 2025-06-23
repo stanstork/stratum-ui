@@ -3,6 +3,10 @@ import Section from "../components/common/Section";
 import JobDetailsEditor from "../components/JobDetailsEditor";
 import { useNavigate } from "react-router-dom";
 import ConnectionEditor from "../components/ConnectionEditor";
+import { use, useEffect, useState } from "react";
+import { Connection } from "../types/Connection";
+import apiClient from "../services/apiClient";
+import { Spinner } from "../components/common/Helper";
 
 const INITIAL_CONFIG = {
     "name": "Untitled Migration Job",
@@ -15,6 +19,9 @@ const INITIAL_CONFIG = {
 
 
 const DefinitionCanvas = () => {
+    const [loading, setLoading] = useState(true);
+    const [connections, setConnections] = useState<Connection[]>([]);
+
     const config = INITIAL_CONFIG; // Replace with actual config prop
     const navigate = useNavigate();
 
@@ -30,6 +37,24 @@ const DefinitionCanvas = () => {
         console.log("Connections updated:", connections);
     }
 
+    useEffect(() => {
+        const fetchConnections = async () => {
+            try {
+                const connections = await apiClient.listConnections();
+                setConnections(connections);
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        fetchConnections();
+    }, []);
+
+
+    if (loading) {
+        return <Spinner />;
+    }
+
     return (
         <main className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
             <div className="grid grid-cols-1 xl:grid-cols-5 gap-8 items-start">
@@ -41,7 +66,7 @@ const DefinitionCanvas = () => {
                     </Section>
                     <Section title="Connections" icon={
                         <Database size={20} />
-                    } topRightContent={<button onClick={() => navigate('connections')} className="text-sm font-semibold text-cyan-600 hover:text-cyan-700 dark:text-cyan-400 dark:hover:text-cyan-300">Manage</button>}>
+                    } topRightContent={<button onClick={() => navigate('/connections')} className="text-sm font-semibold text-cyan-600 hover:text-cyan-700 dark:text-cyan-400 dark:hover:text-cyan-300">Manage</button>}>
                         <ConnectionEditor onConnectionsChange={handleConnectionsChange} />
                     </Section>
                 </div>

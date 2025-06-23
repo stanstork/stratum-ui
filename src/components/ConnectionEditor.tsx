@@ -1,14 +1,7 @@
 import React, { ChangeEvent, useState, useEffect } from "react";
 import Input from "./common/Input";
 import Select from "./common/Select";
-
-export interface Connection {
-    id: string;
-    name: string;
-    format: string; // e.g. 'MySql', 'Postgres', 'SqlServer', 'CsvFile'
-    conn_str: string; // Connection string or file path
-    status?: 'untested' | 'tested' | 'error';
-}
+import { Connection } from "../types/Connection";
 
 export interface ConnectionPair {
     source: Connection;
@@ -20,10 +13,10 @@ type ConnectionEditorProps = {
 };
 
 const INITIAL_MOCK_CONNECTIONS: Connection[] = [
-    { id: 'prod-mysql', name: 'Production MySQL', format: 'MySql', conn_str: 'mysql://user:prod_pass@prod.db/sales', status: 'untested' },
-    { id: 'dev-pg', name: 'Development Postgres', format: 'Postgres', conn_str: 'postgres://user:dev_pass@localhost:5432/devdb', status: 'untested' },
-    { id: 'data-warehouse', name: 'Data Warehouse (Postgres)', format: 'Postgres', conn_str: 'postgres://reporter:wh_pass@analytics.db/warehouse', status: 'untested' },
-    { id: 'staging-sql', name: 'Staging SQL Server', format: 'SqlServer', conn_str: 'sqlserver://user:stage_pass@staging.server/stagedb', status: 'untested' }
+    { id: 'prod-mysql', name: 'Production MySQL', format: 'MySql', connStr: 'mysql://user:prod_pass@prod.db/sales', status: 'untested' },
+    { id: 'dev-pg', name: 'Development Postgres', format: 'Postgres', connStr: 'postgres://user:dev_pass@localhost:5432/devdb', status: 'untested' },
+    { id: 'data-warehouse', name: 'Data Warehouse (Postgres)', format: 'Postgres', connStr: 'postgres://reporter:wh_pass@analytics.db/warehouse', status: 'untested' },
+    { id: 'staging-sql', name: 'Staging SQL Server', format: 'SqlServer', connStr: 'sqlserver://user:stage_pass@staging.server/stagedb', status: 'untested' }
 ];
 
 const ConnectionEditor: React.FC<ConnectionEditorProps> = ({ onConnectionsChange }) => {
@@ -72,7 +65,7 @@ const ConnectionEditor: React.FC<ConnectionEditorProps> = ({ onConnectionsChange
                     <option value="">Select a connection...</option>
                     {availableConnections.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </Select>
-                <Input label="Connection String" value={connectionPair.source.conn_str} readOnly />
+                <Input label="Connection String" value={connectionPair.source.connStr} readOnly />
             </div>
 
             {/* Destination */}
@@ -86,7 +79,7 @@ const ConnectionEditor: React.FC<ConnectionEditorProps> = ({ onConnectionsChange
                     <option value="">Select a connection...</option>
                     {availableConnections.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </Select>
-                <Input label="Connection String" value={connectionPair.dest.conn_str} readOnly />
+                <Input label="Connection String" value={connectionPair.dest.connStr} readOnly />
             </div>
         </div>
     );

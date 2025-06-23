@@ -9,6 +9,7 @@ import { pageVariants } from './components/common/Helper';
 import Definitions from './pages/Definitions';
 import DefinitionCanvas from './pages/DefinitionCanvas';
 import Header from './components/Header';
+import ConnectionManagement from './pages/ConnectionManagement';
 
 interface AppContextProps {
     page: string;
@@ -69,7 +70,7 @@ const InnerApp: React.FC = () => {
                                             initial="initial"
                                             animate="animate"
                                             exit="exit"
-                                            transition={{ duration: 0.3 }}
+                                            transition={{ duration: 0.1 }}
                                         >
                                             <Dashboard />
                                         </motion.div>
@@ -85,7 +86,7 @@ const InnerApp: React.FC = () => {
                                             initial="initial"
                                             animate="animate"
                                             exit="exit"
-                                            transition={{ duration: 0.3 }}
+                                            transition={{ duration: 0.1 }}
                                         >
                                             <Definitions />
                                         </motion.div>
@@ -101,9 +102,25 @@ const InnerApp: React.FC = () => {
                                             initial="initial"
                                             animate="animate"
                                             exit="exit"
-                                            transition={{ duration: 0.3 }}
+                                            transition={{ duration: 0.1 }}
                                         >
                                             <DefinitionCanvas />
+                                        </motion.div>
+                                    </PrivateRoute>
+                                }
+                            />
+                            <Route
+                                path="/connections"
+                                element={
+                                    <PrivateRoute>
+                                        <motion.div
+                                            variants={pageVariants}
+                                            initial="initial"
+                                            animate="animate"
+                                            exit="exit"
+                                            transition={{ duration: 0.1 }}
+                                        >
+                                            <ConnectionManagement />
                                         </motion.div>
                                     </PrivateRoute>
                                 }

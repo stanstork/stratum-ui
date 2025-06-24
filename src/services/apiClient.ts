@@ -5,6 +5,7 @@ import { emptyExecutionStat, ExecutionStat, mapExecutionStat } from "../types/Ex
 import { Connection, ConnectionDTO, ConnectionTestResult, mapConnection } from "../types/Connection";
 
 interface ApiClient extends AxiosInstance {
+    deleteConnection: (connectionId: string) => Promise<void>;
     updateConnection: (connection: Connection) => Promise<Connection>;
     createConnection: (connection: Connection) => Promise<Connection>;
     testConnection: (dataFormat: string, connStr: string) => Promise<ConnectionTestResult>;
@@ -123,6 +124,10 @@ apiClient.updateConnection = async (connection: Connection): Promise<Connection>
         status: connection.status
     });
     return mapConnection(response.data);
+};
+
+apiClient.deleteConnection = async (connectionId: string): Promise<void> => {
+    await apiClient.delete(`/connections/${connectionId}`);
 };
 
 export default apiClient;

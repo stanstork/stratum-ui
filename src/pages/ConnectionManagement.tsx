@@ -18,7 +18,19 @@ const ConnectionManagement = () => {
     };
 
     const handleEdit = (conn: React.SetStateAction<Connection | undefined>) => { setEditingConn(conn); setIsFormOpen(true); };
-    const handleDelete = (connId: string) => setConnections(connections.filter(c => c.id !== connId));
+
+    const handleDelete = async (connId: string) => {
+        // Optimistically remove the connection from UI
+        setConnections(prev => prev.filter(c => c.id !== connId));
+        try {
+            await apiClient.deleteConnection(connId);
+        } catch (error) {
+            // Optionally handle error (e.g., show notification)
+            console.error("Failed to delete connection:", error);
+            // Optionally: revert UI change if needed
+        }
+    };
+
     const updateConnectionStatus = (connId: string, status: StatusType) => {
         setConnections(prevConns => prevConns.map(c => c.id === connId ? { ...c, status } : c));
     };

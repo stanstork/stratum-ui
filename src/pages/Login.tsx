@@ -29,7 +29,7 @@ const LoginPage = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex flex-col justify-center items-center p-4">
+        <div className="min-h-screen flex flex-col justify-center items-center p-4">
             <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2, type: 'spring' }}>
                 <div className="sm:mx-auto sm:w-full sm:max-w-md text-center mb-8">
                     <LogoIcon className="h-12 w-auto inline-block text-gray-800 dark:text-gray-100" />

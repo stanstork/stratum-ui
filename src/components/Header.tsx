@@ -15,6 +15,7 @@ const Header = () => {
         { id: 'dashboard', label: 'Dashboard', path: '/' },
         { id: 'definitions', label: 'Definitions', path: '/definitions' },
         { id: 'executions', label: 'Executions', path: '/executions' },
+        { id: 'connections', label: 'Connections', path: '/connections' },
     ];
 
     const isActive = (itemId: string) => {

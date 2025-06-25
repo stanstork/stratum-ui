@@ -1,10 +1,13 @@
+import { ConnectionPair } from "../components/ConnectionEditor";
+import { Connection } from "./Connection";
+
 // Root config
 export interface MigrationConfig {
     name: string;
     description: string;
     creation_date: string; // ISO date string
     migration: Migration;
-    connections: Connections;
+    connections: ConnectionPair;
 }
 
 // Migration section
@@ -66,18 +69,6 @@ export interface FilterStep {
 export interface DataSource {
     kind: string;
     names: string[];
-}
-
-// Connections section
-export interface Connections {
-    source: ConnectionInfo;
-    dest: ConnectionInfo;
-}
-
-export interface ConnectionInfo {
-    format: string;
-    connStr: string;
-    connType: string;
 }
 
 // Expression AST
@@ -154,8 +145,20 @@ export function emptyMigrationConfig(): MigrationConfig {
             migrateItems: []
         },
         connections: {
-            source: { format: '', connStr: '', connType: '' },
-            dest: { format: '', connStr: '', connType: '' }
+            source: {
+                id: '',
+                name: '',
+                format: '',
+                connStr: '',
+                status: 'untested'
+            },
+            dest: {
+                id: '',
+                name: '',
+                format: '',
+                connStr: '',
+                status: 'untested'
+            }
         }
     };
 }

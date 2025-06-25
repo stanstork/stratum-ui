@@ -2,8 +2,8 @@ import { Database, FileJson, FileText } from "lucide-react";
 import Section from "../components/common/Section";
 import JobDetailsEditor from "../components/JobDetailsEditor";
 import { useNavigate } from "react-router-dom";
-import ConnectionEditor from "../components/ConnectionEditor";
-import { use, useCallback, useEffect, useState } from "react";
+import ConnectionEditor, { ConnectionPair } from "../components/ConnectionEditor";
+import { useCallback, useEffect, useState } from "react"; // Removed unused 'use' import
 import { Connection } from "../types/Connection";
 import apiClient from "../services/apiClient";
 import { Spinner } from "../components/common/Helper";
@@ -17,15 +17,33 @@ const DefinitionCanvas = () => {
     const [config, setConfig] = useState<MigrationConfig>(emptyMigrationConfig());
     const [loading, setLoading] = useState(true);
     const [connections, setConnections] = useState<Connection[]>([]);
-    const handleConnectionsChange = (newConnections: any) => setConfig(p => ({ ...p, connections: newConnections }));
-    // const handleMigrationItemsChange = (newItems: MigrateItem[]) => setConfig(p => ({ ...p, migration: { ...p.migration, migrate_items: newItems } }));
     const navigate = useNavigate();
 
-    function handleDetailChange(field: string, value: string): void {
-        // This function should handle changes to the job details
-        // For example, you might want to update the state or send it to an API
+    const handleConnectionsChange = useCallback((newConnections: ConnectionPair) => {
+        setConfig(p => ({ ...p, connections: newConnections }));
+    }, []);
+
+    const handleDetailChange = useCallback((field: string, value: string): void => {
+        setConfig(p => ({ ...p, [field]: value }));
         console.log(`Detail changed: ${field} = ${value}`);
-    }
+    }, []);
+
+    const handleMigrationItemsChange = useCallback(
+        (newItems: MigrateItem[]) =>
+            setConfig(p => ({
+                ...p,
+                migration: { ...p.migration, migrateItems: newItems },
+            })),
+        []
+    );
+
+    const handleSingleMigrationItemChange = useCallback((updatedItem: MigrateItem) => {
+        const newItems = config.migration.migrateItems.map(item =>
+            item.id === updatedItem.id ? updatedItem : item
+        );
+        handleMigrationItemsChange(newItems);
+    }, [config.migration.migrateItems, handleMigrationItemsChange]);
+
 
     const addMigrationItem = () => {
         const newItem = emptyMigrationItem();
@@ -42,19 +60,8 @@ const DefinitionCanvas = () => {
                 setLoading(false);
             }
         }
-
         fetchConnections();
     }, []);
-
-
-    const handleMigrationItemsChange = useCallback(
-        (newItems: MigrateItem[]) =>
-            setConfig(p => ({
-                ...p,
-                migration: { ...p.migration, migrate_items: newItems },
-            })),
-        [setConfig]
-    );
 
     if (loading) {
         return <Spinner />;
@@ -65,14 +72,10 @@ const DefinitionCanvas = () => {
             <main className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
                 <div className="grid grid-cols-1 xl:grid-cols-5 gap-8 items-start">
                     <div className="space-y-8 xl:col-span-5">
-                        <Section title="Job Details" icon={
-                            <FileText size={20} />
-                        }>
+                        <Section title="Job Details" icon={<FileText size={20} />}>
                             <JobDetailsEditor name={config.name} description={config.description} creation_date={config.creation_date} onDetailChange={handleDetailChange} />
                         </Section>
-                        <Section title="Connections" icon={
-                            <Database size={20} />
-                        } topRightContent={<button onClick={() => navigate('/connections')} className="text-sm font-semibold text-cyan-600 hover:text-cyan-700 dark:text-cyan-400 dark:hover:text-cyan-300">Manage</button>}>
+                        <Section title="Connections" icon={<Database size={20} />} topRightContent={<button onClick={() => navigate('/connections')} className="text-sm font-semibold text-cyan-600 hover:text-cyan-700 dark:text-cyan-400 dark:hover:text-cyan-300">Manage</button>}>
                             <ConnectionEditor connections={connections} onConnectionsChange={handleConnectionsChange} />
                         </Section>
                         <div className="space-y-4">
@@ -82,13 +85,15 @@ const DefinitionCanvas = () => {
                                     <p className="text-slate-500 dark:text-slate-400">No migration tasks defined.</p>
                                     <p className="text-slate-400 dark:text-slate-500 text-sm mt-1">Click the + button to get started.</p>
                                 </div>
-                            ) : (config.migration.migrateItems.map((item, index) => (<MigrationItemEditor />)))}
+                            ) : (
+                                config.migration.migrateItems.map((item) => (
+                                    <MigrationItemEditor />
+                                ))
+                            )}
                         </div>
                     </div>
                     <div className="sticky top-24 h-fit space-y-8 xl:col-span-5">
-                        <Section title="Live Configuration JSON" icon={
-                            <FileJson size={20} />
-                        }>
+                        <Section title="Live Configuration JSON" icon={<FileJson size={20} />}>
                             <pre className="font-mono bg-slate-800 text-slate-200 text-xs p-4 rounded-lg overflow-x-auto max-h-[75vh]"><code>{JSON.stringify(config, null, 2)}</code></pre>
                         </Section>
                     </div>
@@ -100,6 +105,3 @@ const DefinitionCanvas = () => {
 }
 
 export default DefinitionCanvas;
-
-
-

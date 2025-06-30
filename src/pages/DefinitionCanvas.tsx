@@ -87,7 +87,13 @@ const DefinitionCanvas = () => {
                                 </div>
                             ) : (
                                 config.migration.migrateItems.map((item) => (
-                                    <MigrationItemEditor />
+                                    <MigrationItemEditor
+                                        item={item}
+                                        key={item.id.toString()}
+                                        onItemChange={handleSingleMigrationItemChange}
+                                        onRemoveItem={() => handleMigrationItemsChange(config.migration.migrateItems.filter(i => i.id !== item.id))}
+                                        isNew={newlyAddedId === item.id.toString()}
+                                    />
                                 ))
                             )}
                         </div>

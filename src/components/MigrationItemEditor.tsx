@@ -7,263 +7,17 @@ import { TableMetadata } from "../types/Metadata";
 import Section from "./common/Section";
 import { Globe, Settings } from "lucide-react";
 import SourceMetadataDiagram from "./SourceMetadataDiagram";
-
-
-const FULL_MOCK_METADATA: { [key: string]: TableMetadata } = {
-    "users": {
-        name: "users",
-        schema: "public",
-        columns: {
-            "id": {
-                name: "id",
-                dataType: "INT",
-                isPrimaryKey: true,
-                isNullable: false,
-                ordinal: 1,
-                isUnique: false,
-                isAutoIncrement: false,
-                referencedTable: null,
-                referencedColumn: null
-            },
-            "name": {
-                name: "name",
-                dataType: "VARCHAR(100)",
-                isNullable: false,
-                isPrimaryKey: false,
-                ordinal: 2,
-                isUnique: false,
-                isAutoIncrement: false,
-                referencedTable: null,
-                referencedColumn: null
-            },
-            "email": {
-                name: "email",
-                dataType: "VARCHAR(100)",
-                isNullable: false,
-                isPrimaryKey: false,
-                ordinal: 3,
-                isUnique: true,
-                isAutoIncrement: false,
-                referencedTable: null,
-                referencedColumn: null
-            },
-            "created_at": {
-                name: "created_at",
-                dataType: "TIMESTAMP",
-                isNullable: true,
-                isPrimaryKey: false,
-                ordinal: 4,
-                isUnique: false,
-                isAutoIncrement: false,
-                referencedTable: null,
-                referencedColumn: null
-            }
-        },
-        primaryKeys: ["id"],
-        foreignKeys: {},
-        referencedTables: [],
-        referencingTables: ["orders"],
-    },
-    "products": {
-        name: "products",
-        schema: "public",
-        columns: {
-            "id": {
-                name: "id",
-                dataType: "INT",
-                isPrimaryKey: true,
-                isNullable: false,
-                ordinal: 1,
-                isUnique: false,
-                isAutoIncrement: false,
-                referencedTable: null,
-                referencedColumn: null
-            },
-            "name": {
-                name: "name",
-                dataType: "VARCHAR(100)",
-                isNullable: false,
-                isPrimaryKey: false,
-                ordinal: 2,
-                isUnique: false,
-                isAutoIncrement: false,
-                referencedTable: null,
-                referencedColumn: null
-            },
-            "price": {
-                name: "price",
-                dataType: "DECIMAL(10,2)",
-                isNullable: false,
-                isPrimaryKey: false,
-                ordinal: 3,
-                isUnique: false,
-                isAutoIncrement: false,
-                referencedTable: null,
-                referencedColumn: null
-            },
-            "stock": {
-                name: "stock",
-                dataType: "INT",
-                isNullable: false,
-                isPrimaryKey: false,
-                ordinal: 4,
-                isUnique: false,
-                isAutoIncrement: false,
-                referencedTable: null,
-                referencedColumn: null
-            }
-        },
-        primaryKeys: ["id"],
-        foreignKeys: {},
-        referencedTables: [],
-        referencingTables: ["order_items"],
-    },
-    "orders": {
-        name: "orders",
-        schema: "public",
-        columns: {
-            "id": {
-                name: "id",
-                dataType: "INT",
-                isPrimaryKey: true,
-                isNullable: false,
-                ordinal: 1,
-                isUnique: false,
-                isAutoIncrement: false,
-                referencedTable: null,
-                referencedColumn: null
-            },
-            "user_id": {
-                name: "user_id",
-                dataType: "INT",
-                isNullable: false,
-                isPrimaryKey: false,
-                ordinal: 2,
-                isUnique: false,
-                isAutoIncrement: false,
-                referencedTable: "users",
-                referencedColumn: "id"
-            },
-            "order_date": {
-                name: "order_date",
-                dataType: "TIMESTAMP",
-                isNullable: true,
-                isPrimaryKey: false,
-                ordinal: 3,
-                isUnique: false,
-                isAutoIncrement: false,
-                referencedTable: null,
-                referencedColumn: null
-            },
-            "total": {
-                name: "total",
-                dataType: "DECIMAL(10,2)",
-                isNullable: true,
-                isPrimaryKey: false,
-                ordinal: 4,
-                isUnique: false,
-                isAutoIncrement: false,
-                referencedTable: null,
-                referencedColumn: null
-            }
-        },
-        primaryKeys: ["id"],
-        foreignKeys: {
-            "user_id": {
-                column: "user_id",
-                referencedTable: "users",
-                referencedColumn: "id"
-            }
-        },
-        referencedTables: ["users"],
-        referencingTables: ["order_items"],
-    },
-    "order_items": {
-        name: "order_items",
-        schema: "public",
-        columns: {
-            "id": {
-                name: "id",
-                dataType: "INT",
-                isPrimaryKey: true,
-                isNullable: false,
-                ordinal: 1,
-                isUnique: false,
-                isAutoIncrement: false,
-                referencedTable: null,
-                referencedColumn: null
-            },
-            "order_id": {
-                name: "order_id",
-                dataType: "INT",
-                isNullable: false,
-                isPrimaryKey: false,
-                ordinal: 2,
-                isUnique: false,
-                isAutoIncrement: false,
-                referencedTable: "orders",
-                referencedColumn: "id"
-            },
-            "product_id": {
-                name: "product_id",
-                dataType: "INT",
-                isNullable: false,
-                isPrimaryKey: false,
-                ordinal: 3,
-                isUnique: false,
-                isAutoIncrement: false,
-                referencedTable: "products",
-                referencedColumn: "id"
-            },
-            "quantity": {
-                name: "quantity",
-                dataType: "INT",
-                isNullable: false,
-                isPrimaryKey: false,
-                ordinal: 4,
-                isUnique: false,
-                isAutoIncrement: false,
-                referencedTable: null,
-                referencedColumn: null
-            },
-            "price": {
-                name: "price",
-                dataType: "DECIMAL(10,2)",
-                isNullable: false,
-                isPrimaryKey: false,
-                ordinal: 5,
-                isUnique: false,
-                isAutoIncrement: false,
-                referencedTable: null,
-                referencedColumn: null
-            }
-        },
-        primaryKeys: ["id"],
-        foreignKeys: {
-            "order_id": {
-                column: "order_id",
-                referencedTable: "orders",
-                referencedColumn: "id"
-            },
-            "product_id": {
-                column: "product_id",
-                referencedTable: "products",
-                referencedColumn: "id"
-            }
-        },
-        referencedTables: ["orders", "products"],
-        referencingTables: [],
-    }
-};
+import { flattenTableMetadataMap } from "../utils/meta";
 
 type MigrationItemEditorProps = {
-    item: MigrateItem
+    item: MigrateItem;
+    metadata: { [key: string]: TableMetadata };
     onItemChange: (item: MigrateItem) => void;
     onRemoveItem: () => void;
     isNew: boolean;
 };
 
-const MigrationItemEditor: React.FC<MigrationItemEditorProps> = ({ item, onItemChange, onRemoveItem, isNew }) => {
+const MigrationItemEditor: React.FC<MigrationItemEditorProps> = ({ item, metadata, onItemChange, onRemoveItem, isNew }) => {
     const [animationClass, setAnimationClass] = useState('');
     const [itemMetadata, setItemMetadata] = useState<{ [key: string]: TableMetadata } | null>(null);
 
@@ -295,12 +49,12 @@ const MigrationItemEditor: React.FC<MigrationItemEditorProps> = ({ item, onItemC
 
         if (settings.inferSchema) {
             Array.from(relevantTableNames).forEach(tableName => {
-                getRelatedTables(tableName, FULL_MOCK_METADATA, relevantTableNames);
+                getRelatedTables(tableName, relevantTableNames);
             });
         }
 
         const filteredMetadata: { [key: string]: TableMetadata } = {};
-        relevantTableNames.forEach(tableName => { if (FULL_MOCK_METADATA[tableName]) { filteredMetadata[tableName] = FULL_MOCK_METADATA[tableName]; } });
+        relevantTableNames.forEach(tableName => { if (metadata[tableName]) { filteredMetadata[tableName] = metadata[tableName]; } });
         setItemMetadata(filteredMetadata);
 
         const finalEntities = Array.from(relevantTableNames).filter(t => t !== sourceTable);
@@ -310,13 +64,12 @@ const MigrationItemEditor: React.FC<MigrationItemEditorProps> = ({ item, onItemC
 
     const getRelatedTables = (
         tableName: string,
-        allMetadata: Record<string, any>,
         visited: Set<string> = new Set()
     ): Set<string> => {
-        if (!tableName || visited.has(tableName) || !allMetadata[tableName]) { return visited; }
+        if (!tableName || visited.has(tableName) || !metadata[tableName]) { return visited; }
         visited.add(tableName);
-        const table = allMetadata[tableName];
-        if (table.foreign_keys) { table.foreign_keys.forEach((fk: any) => { getRelatedTables(fk.referenced_table, allMetadata, visited); }); }
+        const table = metadata[tableName];
+        if (table.foreignKeys) { Object.values(table.foreignKeys).forEach((fk: any) => { getRelatedTables(fk.referenced_table, visited); }); }
         return visited;
     };
 
@@ -342,7 +95,7 @@ const MigrationItemEditor: React.FC<MigrationItemEditorProps> = ({ item, onItemC
                     }
                 >
                     <option value="">Select a source table...</option>
-                    {Object.keys(FULL_MOCK_METADATA).map(t => (
+                    {Object.keys(metadata).map(t => (
                         <option key={t} value={t}>
                             {t}
                         </option>
@@ -373,7 +126,7 @@ const MigrationItemEditor: React.FC<MigrationItemEditorProps> = ({ item, onItemC
                     icon={<Globe size={18} />}
                     initialOpen={true}
                 >
-                    <SourceMetadataDiagram metadata={itemMetadata} />
+                    <SourceMetadataDiagram metadata={flattenTableMetadataMap(itemMetadata)} />
                 </Section>
             )}
             {/* <div className="mt-2 space-y-2">

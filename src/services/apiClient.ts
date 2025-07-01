@@ -3,8 +3,10 @@ import { JobDefinition, JobDefinitionDTO, mapJobDefinition } from "../types/JobD
 import { JobExecution, JobExecutionDTO, mapJobExecution } from "../types/JobExecution";
 import { emptyExecutionStat, ExecutionStat, mapExecutionStat } from "../types/ExecutionStat";
 import { Connection, ConnectionDTO, ConnectionTestResult, mapConnection } from "../types/Connection";
+import { mapMetadataResponse, MetadataResponse, TableMetadata } from "../types/Metadata";
 
 interface ApiClient extends AxiosInstance {
+    getMetadata: (connectionId: string) => Promise<{ [key: string]: TableMetadata; }>;
     deleteConnection: (connectionId: string) => Promise<void>;
     updateConnection: (connection: Connection) => Promise<Connection>;
     createConnection: (connection: Connection) => Promise<Connection>;
@@ -128,6 +130,11 @@ apiClient.updateConnection = async (connection: Connection): Promise<Connection>
 
 apiClient.deleteConnection = async (connectionId: string): Promise<void> => {
     await apiClient.delete(`/connections/${connectionId}`);
+};
+
+apiClient.getMetadata = async (connectionId: string): Promise<{ [key: string]: TableMetadata }> => {
+    const response = await apiClient.get(`/connections/${connectionId}/metadata`);
+    return mapMetadataResponse(response.data as MetadataResponse);
 };
 
 export default apiClient;

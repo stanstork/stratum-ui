@@ -10,6 +10,8 @@ import { Spinner } from "../components/common/Helper";
 import MigrationItemEditor from "../components/MigrationItemEditor";
 import FloatingActionButton from "../components/common/FloatingActionButton";
 import { emptyMigrationConfig, emptyMigrationItem, MigrateItem, MigrationConfig } from "../types/MigrationConfig";
+import { TableMetadata } from "../types/Metadata";
+import { a } from "framer-motion/dist/types.d-B_QPEvFK";
 
 
 const DefinitionCanvas = () => {
@@ -17,6 +19,7 @@ const DefinitionCanvas = () => {
     const [config, setConfig] = useState<MigrationConfig>(emptyMigrationConfig());
     const [loading, setLoading] = useState(true);
     const [connections, setConnections] = useState<Connection[]>([]);
+    const [metadata, setMetadata] = useState<{ [key: string]: TableMetadata }>({});
     const navigate = useNavigate();
 
     const handleConnectionsChange = useCallback((newConnections: ConnectionPair) => {
@@ -45,7 +48,12 @@ const DefinitionCanvas = () => {
     }, [config.migration.migrateItems, handleMigrationItemsChange]);
 
 
-    const addMigrationItem = () => {
+    const addMigrationItem = async () => {
+        if (!metadata || Object.keys(metadata).length === 0) {
+            const metadata = await apiClient.getMetadata(config.connections.source.id);
+            setMetadata(metadata);
+        }
+
         const newItem = emptyMigrationItem();
         handleMigrationItemsChange([...config.migration.migrateItems, newItem]);
         setNewlyAddedId(newItem.id.toString());
@@ -89,6 +97,7 @@ const DefinitionCanvas = () => {
                                 config.migration.migrateItems.map((item) => (
                                     <MigrationItemEditor
                                         item={item}
+                                        metadata={metadata}
                                         key={item.id.toString()}
                                         onItemChange={handleSingleMigrationItemChange}
                                         onRemoveItem={() => handleMigrationItemsChange(config.migration.migrateItems.filter(i => i.id !== item.id))}

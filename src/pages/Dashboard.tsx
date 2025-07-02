@@ -1,16 +1,18 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
-import { useAppContext } from "../App";
 import { useTheme } from "../context/ThemeContext";
 import apiClient from "../services/apiClient";
 import { JobExecution } from "../types/JobExecution";
-import { CardContent, CardHeader, MotionCard, Spinner, StatusBadge } from "../components/common/Helper";
-import { easeOut, motion, Variants } from "framer-motion";
-import { RunningJobsIcon, StatCard, SuccessRateIcon, TotalDefinitionsIcon, TotalExecutionsIcon } from "../components/icons/Helper";
-import DailyLineChart from "../components/DailyLineChart";
+import { Spinner, StatusBadge } from "../components/common/Helper";
+import { easeOut, Variants } from "framer-motion";
 import { ExecutionStat } from "../types/ExecutionStat";
+import { Plus } from "lucide-react";
+import Card from "../components/common/v2/Card";
+import CardHeader from "../components/common/v2/CardHeader";
+import Button from "../components/common/v2/Button";
+import MigrationChart from "../components/MigrationChart";
 
-type ChartDataItem = { name: string; Succeeded: number; Failed: number; };
+type ChartDataItem = { name: string; Succeeded: number; Failed: number; Running: number };
 type Stats = {
     totalExecutions: number;
     successRate: string; // percentage as string
@@ -19,7 +21,12 @@ type Stats = {
     chartData: ChartDataItem[];
 };
 
-const Dashboard = () => {
+type DashboardProps = {
+    setView: (view: string, params?: any) => void;
+    isDarkMode: boolean;
+};
+
+const Dashboard = ({ setView, isDarkMode }: DashboardProps) => {
     const [recentExecutions, setRecentExecutions] = useState<JobExecution[]>([]);
     const [stats, setStats] = useState<Stats>({
         totalExecutions: 0,
@@ -29,7 +36,6 @@ const Dashboard = () => {
         chartData: [],
     });
     const [loading, setLoading] = useState(true);
-    const { setPage, setViewDefinitionId, setViewExecutionId, setFromPage } = useAppContext();
     const { user } = useAuth();
     const { theme } = useTheme();
 
@@ -49,8 +55,9 @@ const Dashboard = () => {
                 // Tally statuses
                 const succeeded = stat.perDay[offset].succeeded;
                 const failed = stat.perDay[offset].failed;
+                const running = stat.perDay[offset].running;
 
-                chartData.push({ name, Succeeded: succeeded, Failed: failed });
+                chartData.push({ name, Succeeded: succeeded, Failed: failed, Running: running });
             }
 
             setStats({
@@ -77,12 +84,6 @@ const Dashboard = () => {
         return () => clearInterval(interval);
     }, []);
 
-    const handleExecutionClick = (executionId: string) => {
-        setViewExecutionId(executionId);
-        setPage('execution');
-        setFromPage('dashboard');
-    };
-
     const bentoVariants: Variants = {
         hidden: {
             opacity: 0,
@@ -104,51 +105,39 @@ const Dashboard = () => {
     }
 
     return (
-        <div className="space-y-8">
-            <motion.h1 initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="text-3xl font-bold text-gray-800 dark:text-gray-100">Welcome back, {user?.email}!</motion.h1>
-
-            <motion.div className="grid grid-cols-4 gap-6">
-                <MotionCard custom={0} variants={bentoVariants} initial="hidden" animate="visible" className="col-span-4 lg:col-span-2"><StatCard title="Executions" value={stats.totalExecutions} icon={<TotalExecutionsIcon />} /></MotionCard>
-                <MotionCard custom={1} variants={bentoVariants} initial="hidden" animate="visible" className="col-span-4 lg:col-span-2"><StatCard title="Success Rate" value={`${stats.successRate}%`} icon={<SuccessRateIcon />} /></MotionCard>
-                <MotionCard custom={2} variants={bentoVariants} initial="hidden" animate="visible" className="col-span-2 lg:col-span-1"><StatCard title="In Progress" value={stats.inProgress} icon={<RunningJobsIcon />} /></MotionCard>
-                <MotionCard custom={3} variants={bentoVariants} initial="hidden" animate="visible" className="col-span-2 lg:col-span-1"><StatCard title="Definitions" value={stats.totalDefs} icon={<TotalDefinitionsIcon />} /></MotionCard>
-
-                <MotionCard custom={4} variants={bentoVariants} initial="hidden" animate="visible" className="col-span-4 lg:col-span-2 row-span-2">
-                    <CardHeader>Daily Executions (Last 31 Days)</CardHeader>
-                    <CardContent className="h-80">
-                        <DailyLineChart data={stats.chartData} theme={theme} />
-                    </CardContent>
-                </MotionCard>
-
-                <MotionCard custom={5} variants={bentoVariants} initial="hidden" animate="visible" className="col-span-4 lg:col-span-2 row-span-2">
-                    <CardHeader>Recent Job Executions</CardHeader>
-                    <div className="overflow-x-auto">
-                        <table className="min-w-full">
-                            <thead className="bg-gray-50/50 dark:bg-white/5">
-                                <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Execution ID</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Started At</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-black/5 dark:divide-white/5">
-                                {recentExecutions.map(exec => (
-                                    <motion.tr key={exec.id} whileHover={{ scale: 1.02 }} className="hover:bg-gray-50/50 dark:hover:bg-white/5 transition-colors duration-150">
-                                        <td className="px-6 py-4 whitespace-nowrap"><StatusBadge status={exec.status} /></td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 font-mono">
-                                            <a href="#" onClick={(e) => { e.preventDefault(); handleExecutionClick(exec.id); }} className="text-sky-600 dark:text-sky-400 hover:text-sky-800 font-medium">{exec.id.substring(0, 10)}...</a>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                            {exec.runStartedAt ? new Date(exec.runStartedAt).toLocaleDateString() : 'N/A'}
-                                        </td>
-                                    </motion.tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                </MotionCard>
-            </motion.div>
-        </div>
+        <>
+            <div className="flex justify-between items-center mb-8">
+                <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-50">Dashboard</h1>
+                <Button onClick={() => setView('wizard')}><Plus size={16} className="mr-2" />Create New Migration</Button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <Card className="p-6 transition-all duration-300 hover:shadow-lg hover:-translate-y-1"><h3 className="text-slate-500 dark:text-slate-400 font-medium mb-1">Total Definitions</h3><p className="text-3xl font-bold text-slate-800 dark:text-slate-100">{stats.totalDefs}</p></Card>
+                <Card className="p-6 transition-all duration-300 hover:shadow-lg hover:-translate-y-1"><h3 className="text-slate-500 dark:text-slate-400 font-medium mb-1">Success Rate</h3><p className="text-3xl font-bold text-slate-800 dark:text-slate-100">{stats.successRate}</p></Card>
+                <Card className="p-6 transition-all duration-300 hover:shadow-lg hover:-translate-y-1"><h3 className="text-slate-500 dark:text-slate-400 font-medium mb-1">Total Runs</h3><p className="text-3xl font-bold text-slate-800 dark:text-slate-100">{stats.totalExecutions}</p></Card>
+            </div>
+            <div className="mb-8">
+                <MigrationChart isDarkMode={isDarkMode} chartData={stats.chartData} />
+            </div>
+             <Card>
+                <CardHeader title="Last 10 Runs" actions={<Button variant="secondary" onClick={() => setView('executions')}>View All</Button>} />
+                <div className="p-2">
+                    <table className="w-full text-left">
+                        <thead className="text-xs text-slate-500 dark:text-slate-400 uppercase"><tr><th className="p-4">Execution Id</th><th className="p-4">Run Date</th><th className="p-4">Status</th></tr></thead>
+                        <tbody className="text-sm">
+                            {recentExecutions.map(run => {
+                                return (
+                                    <tr key={run.id} className="border-t border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50 cursor-pointer" onClick={() => setView('runDetails', { runId: run.id })}>
+                                        <td className="p-4 font-medium text-slate-800 dark:text-slate-100">{run.id}</td>
+                                        <td className="p-4 text-slate-600 dark:text-slate-300">{run.createdAt.toDateString()}</td>
+                                        <td className="p-4"><StatusBadge status={run.status} /></td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                </div>
+            </Card>
+        </>
     );
 }
 export default Dashboard;

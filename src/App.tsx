@@ -1,15 +1,12 @@
 import React, { createContext, useContext, useState, useEffect, JSX } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import LoginPage from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import { ThemeProvider } from './context/ThemeContext';
-import { AnimatePresence, motion } from 'framer-motion';
-import { pageVariants } from './components/common/Helper';
-import Definitions from './pages/Definitions';
-import DefinitionCanvas from './pages/DefinitionCanvas';
-import Header from './components/Header';
-import ConnectionManagement from './pages/ConnectionManagement';
+import Header from './components/v2/Header';
+import ConnectionsPage from './pages/v2/Connections';
+import ConnectionWizard from './components/ConnectionWizard';
 
 interface AppContextProps {
     page: string;
@@ -36,103 +33,124 @@ const PrivateRoute: React.FC<{ children: JSX.Element }> = ({ children }) => {
 };
 
 const InnerApp: React.FC = () => {
-    const location = useLocation();
     const { user } = useAuth();
     const { pathname } = useLocation();
-
-    // page-based state for context (if still needed elsewhere)
-    const [page, setPage] = useState<string>('dashboard');
-    const [fromPage, setFromPage] = useState<string>('dashboard');
-    const [viewDefinitionId, setViewDefinitionId] = useState<string | undefined>(undefined);
-    const [viewExecutionId, setViewExecutionId] = useState<string | undefined>(undefined);
+    const [view, setView] = useState('dashboard');
+    const [viewState, setViewState] = useState({});
+    const [isDarkMode, setIsDarkMode] = useState(false);
+    const navigator = useNavigate();
 
     useEffect(() => {
-        if (location.pathname === '/') setPage('dashboard');
-        else if (location.pathname.startsWith('/definitions')) setPage('definitions');
-        else if (location.pathname.startsWith('/executions')) setPage('executions');
-    }, [page]);
+        if (isDarkMode) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    }, [isDarkMode]);
+    
+    const navigate = (viewName: React.SetStateAction<string>, state = {}) => {
+        setView(viewName);
+        setViewState(state);
+        navigator(viewName.valueOf());
+    };
+
+    const renderView = () => {
+        switch (view) {
+            // case 'wizard':
+            //     return <MigrationWizard onBack={() => navigate('dashboard')} onComplete={handleMigrationComplete} />;
+            // case 'runDetails':
+            //     return <MigrationRunDetails runId={viewState.runId} onBack={() => navigate('executions')} />;
+            // case 'definitions':
+            //     return <MigrationDefinitionsList setView={navigate} />;
+            // case 'definitionDetails':
+            //     return <MigrationDefinitionDetails defId={viewState.defId} onBack={() => navigate('definitions')} />;
+            // case 'executions':
+            //     return <ExecutionsList setView={navigate} />;
+            // case 'connections':
+            //     return <ConnectionsPage setView={navigate} />;
+            // case 'connectionWizard':
+            //     return <ConnectionWizard onBack={() => navigate('connections')} />;
+            case 'dashboard':
+            default:
+                return <Dashboard setView={navigate} isDarkMode={isDarkMode} />;
+        }
+    };
+
+    const goTo = (path: string) => {
+        navigate(path, {});
+    }
 
     return (
-        <AppContext.Provider value={{ page, setPage, fromPage, setFromPage, viewDefinitionId, setViewDefinitionId, viewExecutionId, setViewExecutionId }}>
-            <div className="min-h-screen bg-gray-50 dark:bg-gray-900 bg-gradient-to-br from-white via-sky-50 to-white dark:from-gray-900 dark:via-sky-900/10 dark:to-gray-900">
-                {user && pathname !== '/login' && <Header />}
-                <main className="max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
-                    <AnimatePresence mode="wait">
-                        <Routes location={location} key={location.pathname}>
-                            <Route path="/login" element={<LoginPage />} />
-
+        <div className="h-screen bg-slate-100 dark:bg-slate-900 font-sans antialiased text-slate-700 dark:text-slate-200 flex flex-col">
+            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-indigo-50 via-white to-cyan-50 dark:from-slate-900 dark:to-indigo-900 -z-10"></div>
+            {user && pathname !== '/login' &&  <Header view={view} setView={navigate} isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} />}
+            <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
+                <div className="max-w-7xl mx-auto">
+                    <Routes>
+                        <Route path="/login" element={<LoginPage />} />
+                        <Route path="/*">
+                            <Route index element={<Navigate to="dashboard" replace />} />   
                             <Route
-                                path="/"
+                                path="dashboard"
                                 element={
-                                    <PrivateRoute>
-                                        <motion.div
-                                            variants={pageVariants}
-                                            initial="initial"
-                                            animate="animate"
-                                            exit="exit"
-                                            transition={{ duration: 0.1 }}
-                                        >
-                                            <Dashboard />
-                                        </motion.div>
-                                    </PrivateRoute>
+                                <PrivateRoute>
+                                    <>
+                                        <Dashboard setView={navigate} isDarkMode={isDarkMode} />
+                                    </>
+                                </PrivateRoute>}
+                            />
+                            <Route
+                                path="connections"
+                                element={<ConnectionsPage setView={navigate} />}
+                            />
+                            <Route
+                                path="connections/new"
+                                element={
+                                <ConnectionWizard onBack={() => goTo('connections')} />
+                                }
+                            />
+                            {/* <Route
+                                path="wizard"
+                                element={
+                                <MigrationWizard
+                                    onBack={() => goTo('dashboard')}
+                                    onComplete={() => goTo('dashboard')}
+                                />
                                 }
                             />
                             <Route
-                                path="/definitions"
+                                path="run/:runId"
                                 element={
-                                    <PrivateRoute>
-                                        <motion.div
-                                            variants={pageVariants}
-                                            initial="initial"
-                                            animate="animate"
-                                            exit="exit"
-                                            transition={{ duration: 0.1 }}
-                                        >
-                                            <Definitions />
-                                        </motion.div>
-                                    </PrivateRoute>
+                                <MigrationRunDetails
+                                    runId={location.state?.runId}
+                                    onBack={() => goTo('executions')}
+                                />
                                 }
                             />
                             <Route
-                                path="/definitions/new"
+                                path="definitions"
+                                element={<MigrationDefinitionsList />}
+                            />
+                            <Route
+                                path="definitions/:defId"
                                 element={
-                                    <PrivateRoute>
-                                        <motion.div
-                                            variants={pageVariants}
-                                            initial="initial"
-                                            animate="animate"
-                                            exit="exit"
-                                            transition={{ duration: 0.1 }}
-                                        >
-                                            <DefinitionCanvas />
-                                        </motion.div>
-                                    </PrivateRoute>
+                                <MigrationDefinitionDetails
+                                    defId={location.state?.defId}
+                                    onBack={() => goTo('definitions')}
+                                />
                                 }
                             />
                             <Route
-                                path="/connections"
-                                element={
-                                    <PrivateRoute>
-                                        <motion.div
-                                            variants={pageVariants}
-                                            initial="initial"
-                                            animate="animate"
-                                            exit="exit"
-                                            transition={{ duration: 0.1 }}
-                                        >
-                                            <ConnectionManagement />
-                                        </motion.div>
-                                    </PrivateRoute>
-                                }
+                                path="executions"
+                                element={<ExecutionsList />}
                             />
-
-                            {/* Fallback to dashboard */}
-                            <Route path="*" element={<Navigate to={user ? '/' : '/login'} replace />} />
-                        </Routes>
-                    </AnimatePresence>
-                </main>
-            </div>
-        </AppContext.Provider>
+                            
+                             */}
+                        </Route>
+                    </Routes>
+                </div>
+            </main>
+        </div>
     );
 };
 

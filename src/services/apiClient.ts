@@ -4,6 +4,7 @@ import { JobExecution, JobExecutionDTO, mapJobExecution } from "../types/JobExec
 import { emptyExecutionStat, ExecutionStat, mapExecutionStat } from "../types/ExecutionStat";
 import { Connection, ConnectionDTO, ConnectionTestResult, mapConnection } from "../types/Connection";
 import { mapMetadataResponse, MetadataResponse, TableMetadata } from "../types/Metadata";
+import { data } from "react-router-dom";
 
 interface ApiClient extends AxiosInstance {
     getMetadata: (connectionId: string) => Promise<{ [key: string]: TableMetadata; }>;
@@ -111,8 +112,12 @@ apiClient.testConnection = async (dataFormat: string, connStr: string): Promise<
 apiClient.createConnection = async (connection: Connection): Promise<Connection> => {
     const response = await apiClient.post<ConnectionDTO>('/connections', {
         name: connection.name,
-        data_format: connection.format,
-        conn_string: connection.connStr,
+        data_format: connection.dataFormat.toLowerCase(),
+        host: connection.host,
+        port: connection.port,
+        username: connection.username,
+        password: connection.password,
+        db_name: connection.dbName,
         status: connection.status
     });
     return mapConnection(response.data);
@@ -121,8 +126,12 @@ apiClient.createConnection = async (connection: Connection): Promise<Connection>
 apiClient.updateConnection = async (connection: Connection): Promise<Connection> => {
     const response = await apiClient.put<ConnectionDTO>(`/connections/${connection.id}`, {
         name: connection.name,
-        data_format: connection.format,
-        conn_string: connection.connStr,
+        data_format: connection.dataFormat.toLowerCase(),
+        host: connection.host,
+        port: connection.port,
+        username: connection.username,
+        password: connection.password,
+        db_name: connection.dbName,
         status: connection.status
     });
     return mapConnection(response.data);

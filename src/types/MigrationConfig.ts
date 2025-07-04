@@ -1,5 +1,5 @@
 import { ConnectionPair } from "../components/ConnectionEditor";
-import { Connection } from "./Connection";
+import { Connection, emptyConnection } from "./Connection";
 
 // Root config
 export interface MigrationConfig {
@@ -145,20 +145,8 @@ export function emptyMigrationConfig(): MigrationConfig {
             migrateItems: []
         },
         connections: {
-            source: {
-                id: '',
-                name: '',
-                format: '',
-                connStr: '',
-                status: 'untested'
-            },
-            dest: {
-                id: '',
-                name: '',
-                format: '',
-                connStr: '',
-                status: 'untested'
-            }
+            source: emptyConnection(),
+            dest: emptyConnection()
         }
     };
 }

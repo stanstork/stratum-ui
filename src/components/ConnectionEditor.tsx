@@ -1,7 +1,7 @@
 import React, { ChangeEvent, useState, useEffect } from "react";
 import Input from "./common/Input";
 import Select from "./common/Select";
-import { Connection } from "../types/Connection";
+import { Connection, createConnectionString } from "../types/Connection";
 
 export interface ConnectionPair {
     source: Connection;
@@ -19,9 +19,9 @@ const ConnectionEditor: React.FC<ConnectionEditorProps> = ({
 }) => {
     // Determine default types based on first two connections
     const initialSourceType =
-        connections[0]?.format === "CsvFile" ? "CsvFile" : "Database";
+        connections[0]?.dataFormat === "CsvFile" ? "CsvFile" : "Database";
     const initialDestType =
-        connections[1]?.format === "CsvFile" ? "CsvFile" : "Database";
+        connections[1]?.dataFormat === "CsvFile" ? "CsvFile" : "Database";
 
     const [sourceType, setSourceType] = useState<"Database" | "CsvFile">(
         initialSourceType
@@ -44,9 +44,9 @@ const ConnectionEditor: React.FC<ConnectionEditorProps> = ({
     // Helper to filter by type
     const filterConnections = (type: "Database" | "CsvFile") =>
         type === "CsvFile"
-            ? connections.filter((c) => c.format === "CsvFile")
+            ? connections.filter((c) => c.dataFormat === "CsvFile")
             : connections.filter((c) =>
-                ["mysql", "postgres", "pg"].includes(c.format.toLowerCase())
+                ["mysql", "postgres", "pg"].includes(c.dataFormat.toLowerCase())
             );
 
     const handleTypeChange = (
@@ -103,7 +103,7 @@ const ConnectionEditor: React.FC<ConnectionEditorProps> = ({
                 </Select>
                 <Input
                     label="Connection String"
-                    value={connectionPair.source.connStr}
+                    value={createConnectionString(connectionPair.source)}
                     readOnly
                 />
             </div>
@@ -137,7 +137,7 @@ const ConnectionEditor: React.FC<ConnectionEditorProps> = ({
                 </Select>
                 <Input
                     label="Connection String"
-                    value={connectionPair.dest.connStr}
+                    value={createConnectionString(connectionPair.dest)}
                     readOnly
                 />
             </div>

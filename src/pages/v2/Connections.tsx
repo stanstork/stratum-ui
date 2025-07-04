@@ -31,7 +31,7 @@ const ConnectionsPage = ({ setView }: ConnectionsPageProps) => {
     if (loading) {
         return <Spinner />;
     }
-    
+
     return (
         <>
             <div className="flex justify-between items-center mb-8">
@@ -39,7 +39,7 @@ const ConnectionsPage = ({ setView }: ConnectionsPageProps) => {
                 <Button onClick={() => setView('connections/new')}><Plus size={16} className="mr-2" />Add Connection</Button>
             </div>
             <Card>
-                <CardHeader title="All Data Connections" subtitle="Manage your source and destination connections."/>
+                <CardHeader title="All Data Connections" subtitle="Manage your source and destination connections." />
                 {connections.length === 0 && (
                     <div className="p-6 text-center text-slate-500">No connections defined. Click "Add Connection" to create one.</div>
                 )}
@@ -51,8 +51,8 @@ const ConnectionsPage = ({ setView }: ConnectionsPageProps) => {
                                 {connections.map(c => (
                                     <tr key={c.id} className="border-t border-slate-200 dark:border-slate-700">
                                         <td className="p-4 font-medium text-slate-800 dark:text-slate-100">{c.name}</td>
-                                        <td className="p-4 text-slate-600 dark:text-slate-300">{c.format}</td>
-                                        <td className="p-4"><span className="px-2.5 py-0.5 text-xs font-medium rounded-full bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300">Connected</span></td>
+                                        <td className="p-4 text-slate-600 dark:text-slate-300">{c.dataFormat}</td>
+                                        <td className="p-4"><span className="px-2.5 py-0.5 text-xs font-medium rounded-full bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300">{c.status}</span></td>
                                     </tr>
                                 ))}
                             </tbody>

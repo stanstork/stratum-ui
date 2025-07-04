@@ -2,7 +2,7 @@ import { useState } from "react";
 import Input from "./common/Input";
 import Select from "./common/Select";
 import { LoaderCircle } from "lucide-react";
-import { Connection, StatusType } from "../types/Connection";
+import { Connection, createConnectionString, StatusType } from "../types/Connection";
 import apiClient from "../services/apiClient";
 
 const dataFormats = ["MySql", "Postgres", "CSV"];
@@ -27,7 +27,7 @@ const ConnectionForm: React.FC<ConnectionFormProps> = ({ connection, onSave, onC
         setIsTesting(true);
         setTestLogs([]);
         try {
-            const testResult = await apiClient.testConnection(conn.format, conn.connStr);
+            const testResult = await apiClient.testConnection(conn.dataFormat, createConnectionString(conn));
             if (testResult.error) {
                 setTestLogs([testResult.error]);
                 updateConnectionStatus(conn.id, 'invalid');
@@ -57,14 +57,14 @@ const ConnectionForm: React.FC<ConnectionFormProps> = ({ connection, onSave, onC
             */}
             <Select
                 label="Database Format"
-                value={conn.format}
+                value={conn.dataFormat}
                 onChange={e => handleChange('format', e.target.value)}
             >
                 {dataFormats.map(opt => (
                     <option key={opt} value={opt}>{opt}</option>
                 ))}
             </Select>
-            <Input label="Connection String" value={conn.connStr} onChange={e => handleChange('connStr', e.target.value)} placeholder="db://user:pass@host/db" />
+            <Input label="Connection String" value={createConnectionString(conn)} onChange={e => handleChange('connStr', e.target.value)} placeholder="db://user:pass@host/db" />
 
             {testLogs.length > 0 && (
                 <div className="mt-4">

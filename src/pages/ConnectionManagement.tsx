@@ -2,7 +2,7 @@ import { Edit, Plus, Trash2 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import Modal from "../components/common/Modal";
 import ConnectionForm from "../components/ConnectionForm";
-import { Connection, emptyConnection, StatusType } from "../types/Connection";
+import { Connection, createConnectionString, emptyConnection, StatusType } from "../types/Connection";
 import apiClient from "../services/apiClient";
 import { Spinner } from "../components/common/Helper";
 
@@ -92,7 +92,7 @@ const ConnectionManagement = () => {
                     <div key={conn.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
                         <div className="flex items-center space-x-3">
                             <StatusIndicator status={conn.status} />
-                            <div><p className="font-semibold text-slate-800 dark:text-slate-200">{conn.name}</p><p className="text-sm text-slate-500 dark:text-slate-400 font-mono">{conn.format} - {conn.connStr}</p></div>
+                            <div><p className="font-semibold text-slate-800 dark:text-slate-200">{conn.name}</p><p className="text-sm text-slate-500 dark:text-slate-400 font-mono">{conn.dataFormat} - {createConnectionString(conn)}</p></div>
                         </div>
                         <div className="flex items-center space-x-3"><button onClick={() => handleEdit(conn)} className="text-slate-500 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400"><Edit size={18} /></button><button onClick={() => handleDelete(conn.id)} className="text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400"><Trash2 size={18} /></button></div>
                     </div>

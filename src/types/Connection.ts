@@ -74,3 +74,16 @@ export function createConnectionString(conn: Connection): string {
     }
     return '';
 }
+
+export function mapFrontendDataFormatToBackend(format: string): string {
+    switch (format.toLowerCase()) {
+        case 'mysql':
+            return 'mysql';
+        case 'postgresql':
+            return 'pg';
+        case 'csv':
+            return 'file';
+        default:
+            return format; // Return as is if not recognized
+    }
+}

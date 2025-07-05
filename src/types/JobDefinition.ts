@@ -1,3 +1,5 @@
+import { Connection, ConnectionDTO, mapConnection } from "./Connection";
+
 /**
  * Raw API response shape for a Job Definition
  */
@@ -5,12 +7,12 @@ export interface JobDefinitionDTO {
     id: string;
     tenant_id: string;
     name: string;
+    description: string;
     ast: unknown;                       // Parsed AST JSON
-    source_connection: unknown;        // Connection config (shape may vary)
-    destination_connection: unknown;   // Connection config (shape may vary)
-    engine_settings: unknown;          // Engine settings (shape may vary)
-    created_at: string;                // ISO timestamp
-    updated_at: string;                // ISO timestamp
+    source_connection: ConnectionDTO;         // Connection object
+    destination_connection: ConnectionDTO;    // Connection object
+    created_at: string;                 // ISO timestamp
+    updated_at: string;                 // ISO timestamp
 }
 
 /**
@@ -20,12 +22,12 @@ export interface JobDefinition {
     id: string;
     tenantId: string;
     name: string;
-    ast: unknown;
-    sourceConnection: unknown;
-    destinationConnection: unknown;
-    engineSettings: unknown;
-    createdAt: Date;
-    updatedAt: Date;
+    description: string;
+    ast: string;                       // Parsed AST JSON
+    sourceConnection: Connection;         // Connection object
+    destinationConnection: Connection;    // Connection object
+    createdAt: Date;                 // ISO timestamp
+    updatedAt: Date;                 // ISO timestamp
 }
 
 /**
@@ -36,11 +38,11 @@ export function mapJobDefinition(dto: JobDefinitionDTO): JobDefinition {
         id: dto.id,
         tenantId: dto.tenant_id,
         name: dto.name,
-        ast: dto.ast,
-        sourceConnection: dto.source_connection,
-        destinationConnection: dto.destination_connection,
-        engineSettings: dto.engine_settings,
+        description: dto.description,
+        ast: JSON.stringify(dto.ast),  // Ensure AST is a string
+        sourceConnection: mapConnection(dto.source_connection),
+        destinationConnection: mapConnection(dto.destination_connection),
         createdAt: new Date(dto.created_at),
-        updatedAt: new Date(dto.updated_at),
+        updatedAt: new Date(dto.updated_at)
     };
 }

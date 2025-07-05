@@ -2,7 +2,7 @@ import axios, { AxiosInstance, AxiosRequestConfig } from "axios";
 import { JobDefinition, JobDefinitionDTO, mapJobDefinition } from "../types/JobDefinition";
 import { JobExecution, JobExecutionDTO, mapJobExecution } from "../types/JobExecution";
 import { emptyExecutionStat, ExecutionStat, mapExecutionStat } from "../types/ExecutionStat";
-import { Connection, ConnectionDTO, ConnectionTestResult, mapConnection } from "../types/Connection";
+import { Connection, ConnectionDTO, ConnectionTestResult, mapConnection, mapFrontendDataFormatToBackend } from "../types/Connection";
 import { mapMetadataResponse, MetadataResponse, TableMetadata } from "../types/Metadata";
 import { data } from "react-router-dom";
 
@@ -112,7 +112,7 @@ apiClient.testConnection = async (dataFormat: string, connStr: string): Promise<
 apiClient.createConnection = async (connection: Connection): Promise<Connection> => {
     const response = await apiClient.post<ConnectionDTO>('/connections', {
         name: connection.name,
-        data_format: connection.dataFormat.toLowerCase(),
+        data_format: mapFrontendDataFormatToBackend(connection.dataFormat),
         host: connection.host,
         port: connection.port,
         username: connection.username,
@@ -126,7 +126,7 @@ apiClient.createConnection = async (connection: Connection): Promise<Connection>
 apiClient.updateConnection = async (connection: Connection): Promise<Connection> => {
     const response = await apiClient.put<ConnectionDTO>(`/connections/${connection.id}`, {
         name: connection.name,
-        data_format: connection.dataFormat.toLowerCase(),
+        data_format: mapFrontendDataFormatToBackend(connection.dataFormat),
         host: connection.host,
         port: connection.port,
         username: connection.username,

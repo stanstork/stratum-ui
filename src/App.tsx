@@ -8,6 +8,7 @@ import Header from './components/v2/Header';
 import ConnectionsPage from './pages/v2/Connections';
 import ConnectionWizard from './components/ConnectionWizard';
 import MigrationDefinitionsList from './pages/v2/MigrationDefinitionsList';
+import MigrationWizard from './pages/MigrationWizard';
 
 interface AppContextProps {
     page: string;
@@ -114,13 +115,16 @@ const InnerApp: React.FC = () => {
                                 path="definitions"
                                 element={<MigrationDefinitionsList setView={navigate} />}
                             />
-                            {/* <Route
+                            <Route
                                 path="wizard"
                                 element={
-                                <MigrationWizard
-                                    onBack={() => goTo('dashboard')}
-                                    onComplete={() => goTo('dashboard')}
-                                />
+                                    <MigrationWizard
+                                        onBack={() => goTo('dashboard')}
+                                        onComplete={() => goTo('dashboard')}
+                                    />
+                                }
+                            />
+                            {/* 
                                 }
                             />
                             <Route

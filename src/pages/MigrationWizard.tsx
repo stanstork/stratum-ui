@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { emptyMigrationConfig, MigrationConfig } from "../types/MigrationConfig";
+import { emptyMigrationConfig, emptyMigrationItem, MigrateItem, MigrationConfig } from "../types/MigrationConfig";
 import { ArrowRight, ArrowRightLeft, Check, Database, FileText, Filter, Link2, Settings, Table } from "lucide-react";
 import Step1_Details from "../components/wizard_step/Step1_Details";
 import Button from "../components/common/v2/Button";
 import Step2_Connections from "../components/wizard_step/Step2_Connections";
+import Step3_SelectTable from "../components/wizard_step/Step3_SelectTable";
 
 type MigrationWizardProps = {
     onBack: () => void;
@@ -38,7 +39,7 @@ const MigrationWizard = ({ onBack, onComplete }: MigrationWizardProps) => {
         switch (currentStep) {
             case 1: return <Step1_Details config={config} setConfig={setConfig} />;
             case 2: return <Step2_Connections config={config} setConfig={setConfig} />;
-            // case 3: return <Step3_SelectTable config={config} setConfig={setConfig} />;
+            case 3: return <Step3_SelectTable config={config} setConfig={setConfig} migrateItem={config.migration.migrateItems[0]} />;
             // case 4: return <Step4_Joins config={config} setConfig={setConfig} />;
             // case 5: return <Step5_ColumnMapping config={config} setConfig={setConfig} />;
             // case 6: return <Step6_Settings config={config} setConfig={setConfig} />;

@@ -142,7 +142,7 @@ export function emptyMigrationConfig(): MigrationConfig {
                 createMissingTables: true,
                 createMissingColumns: true
             },
-            migrateItems: []
+            migrateItems: [emptyMigrationItem()]
         },
         connections: {
             source: emptyConnection(),

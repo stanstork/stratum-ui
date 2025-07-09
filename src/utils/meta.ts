@@ -1,4 +1,5 @@
 import { TableMetadata } from "../types/Metadata";
+import { Expression } from "../types/MigrationConfig";
 
 export function flattenTableMetadataMap(
     tables: Record<string, TableMetadata>
@@ -32,3 +33,13 @@ export function flattenTableMetadataMap(
 
     return result;
 }
+
+export const getLookupData = (expr: Expression): { entity: string; column: string } => {
+    // if (isLookup(expr)) {
+    //     return {
+    //         entity: expr.Lookup.entity || '',
+    //         column: expr.Lookup.field || '',
+    //     };
+    // }
+    return { entity: '', column: '' };
+};

@@ -10,32 +10,13 @@ import Input from '../common/v2/Input';
 interface Step3_SelectTableProps {
     config: MigrationConfig;
     migrateItem: MigrateItem;
+    metadata: Record<string, TableMetadata> | null; // Receive metadata as a prop
     setConfig: React.Dispatch<React.SetStateAction<MigrationConfig>>;
 }
 
-const Step3_SelectTable: React.FC<Step3_SelectTableProps> = ({ config, setConfig, migrateItem }) => {
+const Step3_SelectTable: React.FC<Step3_SelectTableProps> = ({ config, metadata, setConfig, migrateItem }) => {
     const [searchTerm, setSearchTerm] = useState('');
-    const [metadata, setMetadata] = useState<Record<string, TableMetadata> | null>(null);
     const [isLoading, setIsLoading] = useState(false);
-
-    // Fetch metadata when the source connection is available ---
-    useEffect(() => {
-        const loadMetadata = async () => {
-            if (!config.connections.source?.id) return;
-            setIsLoading(true);
-            try {
-                const fetchedMetadata = await apiClient.getMetadata(config.connections.source.id);
-                setMetadata(fetchedMetadata);
-            } catch (error) {
-                console.error("Failed to fetch metadata:", error);
-                // Optionally, handle the error in the UI
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        loadMetadata();
-    }, [config.connections.source?.id]);
 
     const availableTables = useMemo<TableMetadata[]>(() => {
         if (!metadata) return [];

@@ -5,6 +5,9 @@ import Step1_Details from "../components/wizard_step/Step1_Details";
 import Button from "../components/common/v2/Button";
 import Step2_Connections from "../components/wizard_step/Step2_Connections";
 import Step3_SelectTable from "../components/wizard_step/Step3_SelectTable";
+import { TableMetadata } from "../types/Metadata";
+import apiClient from "../services/apiClient";
+import Step4_Joins from "../components/wizard_step/Step4_Joins";
 
 type MigrationWizardProps = {
     onBack: () => void;
@@ -15,6 +18,34 @@ const MigrationWizard = ({ onBack, onComplete }: MigrationWizardProps) => {
     const [currentStep, setCurrentStep] = useState(1);
     const [isPreviewVisible, setIsPreviewVisible] = useState(false);
     const [config, setConfig] = useState<MigrationConfig>(emptyMigrationConfig());
+    const [metadata, setMetadata] = useState<Record<string, TableMetadata> | null>(null);
+
+    useEffect(() => {
+        const loadMetadata = async () => {
+            const sourceId = config.connections.source?.id;
+
+            // On initial load, sourceId is null, so the function stops right here.
+            if (!sourceId) {
+                setMetadata(null); // Optionally clear any old metadata
+                return;
+            }
+
+            // This part only runs AFTER a connection ID exists.
+            // setIsLoading(true);
+            try {
+                const fetchedMetadata = await apiClient.getMetadata(sourceId);
+                setMetadata(fetchedMetadata);
+            } catch (error) {
+                console.error("Failed to fetch metadata:", error);
+            } finally {
+                // setIsLoading(false);
+            }
+        };
+
+        loadMetadata();
+
+        // This dependency array ensures the effect only runs when the connection ID changes.
+    }, [config.connections.source?.id]);
 
     useEffect(() => {
         if (isPreviewVisible) {
@@ -39,8 +70,8 @@ const MigrationWizard = ({ onBack, onComplete }: MigrationWizardProps) => {
         switch (currentStep) {
             case 1: return <Step1_Details config={config} setConfig={setConfig} />;
             case 2: return <Step2_Connections config={config} setConfig={setConfig} />;
-            case 3: return <Step3_SelectTable config={config} setConfig={setConfig} migrateItem={config.migration.migrateItems[0]} />;
-            // case 4: return <Step4_Joins config={config} setConfig={setConfig} />;
+            case 3: return <Step3_SelectTable config={config} setConfig={setConfig} migrateItem={config.migration.migrateItems[0]} metadata={metadata} />;
+            case 4: return <Step4_Joins config={config} setConfig={setConfig} metadata={metadata} migrateItem={config.migration.migrateItems[0]} />;
             // case 5: return <Step5_ColumnMapping config={config} setConfig={setConfig} />;
             // case 6: return <Step6_Settings config={config} setConfig={setConfig} />;
             // case 7: return <Step7_Filters config={config} setConfig={setConfig} />;

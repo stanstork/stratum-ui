@@ -11,7 +11,7 @@ import JoinItem from "../JoinItem";
 type Step4JoinsProps = {
     config: MigrationConfig;
     migrateItem: MigrateItem;
-    metadata: Record<string, TableMetadata> | null; // Receive metadata as a prop
+    metadata: Record<string, TableMetadata> | null;
     setConfig: React.Dispatch<React.SetStateAction<MigrationConfig>>;
 };
 

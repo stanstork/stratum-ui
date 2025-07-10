@@ -35,11 +35,11 @@ export function flattenTableMetadataMap(
 }
 
 export const getLookupData = (expr: Expression): { entity: string; column: string } => {
-    // if (isLookup(expr)) {
-    //     return {
-    //         entity: expr.Lookup.entity || '',
-    //         column: expr.Lookup.field || '',
-    //     };
-    // }
+    if ('Lookup' in expr) {
+        return {
+            entity: expr.Lookup.entity || '',
+            column: expr.Lookup.field || '',
+        };
+    }
     return { entity: '', column: '' };
 };

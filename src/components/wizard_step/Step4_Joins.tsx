@@ -34,23 +34,34 @@ const Step4_Joins = ({ config, metadata, setConfig, migrateItem }: Step4JoinsPro
     const updateLoadStep = (updatedLoadStep: LoadStep) => {
         setConfig(currentConfig => {
             const newConfig = structuredClone(currentConfig);
-            const index = newConfig.migration.migrateItems.findIndex(m => m.id === migrateItem.id);
-            if (index > -1) {
-                newConfig.migration.migrateItems[index].load = updatedLoadStep;
-            }
+            newConfig.migration.migrateItems[0].load = updatedLoadStep;
+            console.log("Migrate item after update:", newConfig.migration.migrateItems[0]);
             return newConfig;
         });
     };
 
     const addJoin = () => {
+        // Check if there are any tables available to join.
+        if (availableJoinTables.length === 0) {
+            // Optionally, show a notification to the user
+            console.warn("No available tables to join.");
+            return;
+        }
+
+        const defaultJoinTable = availableJoinTables[0].name;
+
+        // Create the new join condition, pre-filling the right side.
         const newMatch: JoinCondition = {
             left: { Lookup: { entity: sourceTableName, field: null, key: '' } },
-            right: { Lookup: { entity: '', field: null, key: '' } },
+            right: { Lookup: { entity: defaultJoinTable, field: null, key: '' } }, // Use the default table
         };
+
+        // Create the new load step with the default table name.
         const newLoadStep: LoadStep = {
-            entities: [...loadStep.entities, ''], // Add placeholder for new table name
+            entities: [...loadStep.entities, defaultJoinTable],
             matches: [...loadStep.matches, newMatch],
         };
+
         updateLoadStep(newLoadStep);
     };
 
@@ -63,8 +74,32 @@ const Step4_Joins = ({ config, metadata, setConfig, migrateItem }: Step4JoinsPro
         updateLoadStep({ entities: newEntities, matches: newMatches });
     };
 
-    const updateJoinCondition = () => {
+    const updateJoinCondition = (
+        index: number,
+        side: 'left' | 'right',
+        field: 'entity' | 'column',
+        value: string | null
+    ) => {
+        // Create a deep copy of the matches array to ensure immutability.
         const newMatches = structuredClone(loadStep.matches);
+
+        // Cet the specific expression object ('left' or 'right') to modify.
+        const expr = newMatches[index][side];
+
+        // Only update if the expression is a LookupExpr
+        if ('Lookup' in expr) {
+            if (field === 'entity') {
+                // tf the table ('entity') changes...
+                expr.Lookup.entity = value || '';
+                // ...reset the column ('field') to prevent invalid states.
+                expr.Lookup.field = null;
+            } else {
+                // otherwise, just update the column ('field').
+                expr.Lookup.field = value;
+            }
+        }
+
+        // Update the parent state with the newly modified 'matches' array.
         updateLoadStep({ ...loadStep, matches: newMatches });
     };
 
@@ -98,6 +133,7 @@ const Step4_Joins = ({ config, metadata, setConfig, migrateItem }: Step4JoinsPro
                                 index={index}
                                 entity={loadStep.entities[index]}
                                 match={match}
+                                loadStep={loadStep}
                                 sourceTableSchema={sourceTableSchema}
                                 availableJoinTables={availableJoinTables}
                                 getTableSchema={getTableSchema}

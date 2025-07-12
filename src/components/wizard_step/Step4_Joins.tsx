@@ -35,7 +35,6 @@ const Step4_Joins = ({ config, metadata, setConfig, migrateItem }: Step4JoinsPro
         setConfig(currentConfig => {
             const newConfig = structuredClone(currentConfig);
             newConfig.migration.migrateItems[0].load = updatedLoadStep;
-            console.log("Migrate item after update:", newConfig.migration.migrateItems[0]);
             return newConfig;
         });
     };

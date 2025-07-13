@@ -62,7 +62,7 @@ export interface JoinCondition {
 
 // Filter step
 export interface FilterStep {
-    expression: Expression;
+    expression: Expression | null; // Expression AST for the filter
 }
 
 // Data source (for source & destination)

@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { Wand2, Plus, ArrowRight, X, GitFork } from 'lucide-react';
+import { Wand2, Plus, ArrowRight, X, GitFork, ArrowRightLeft } from 'lucide-react';
 import AllAvailableTablesProvider from './AllAvailableTablesProvider';
-import { Expression, LookupExpr, Mapping, MapStep, MigrateItem, MigrationConfig } from '../../types/MigrationConfig';
+import { Expression, LiteralExpr, LookupExpr, Mapping, MapStep, MigrateItem, MigrationConfig } from '../../types/MigrationConfig';
 import { TableMetadata } from '../../types/Metadata';
 import Card from '../common/v2/Card';
 import CardHeader from '../common/v2/CardHeader';
@@ -17,13 +17,24 @@ const getLookupData = (expr: Expression): { entity: string; column: string | nul
     return { entity: '', column: null };
 };
 
+const getExpressionString = (expr: Expression): string => {
+    const literal = (expr as LiteralExpr)?.Literal;
+    if (literal && typeof literal.String === 'string') {
+        return literal.String;
+    }
+    // In a real scenario, you might serialize other expression types to a string here.
+    return '';
+};
+
 interface MappingInterfaceProps {
     mappings: Mapping[];
     allAvailableTables: TableMetadata[];
     autoMapAll: (tables: TableMetadata[]) => void;
     addMapping: () => void;
     updateMapping: (index: number, field: 'target', value: string) => void;
-    updateSource: (index: number, field: 'entity' | 'column', value: string | null) => void;
+    updateSourceLookup: (index: number, field: 'entity' | 'column', value: string | null) => void;
+    updateSourceExpression: (index: number, value: string) => void;
+    toggleSourceMode: (index: number) => void;
     removeMapping: (index: number) => void;
 }
 
@@ -33,7 +44,9 @@ const MappingInterface: React.FC<MappingInterfaceProps> = ({
     autoMapAll,
     addMapping,
     updateMapping,
-    updateSource,
+    updateSourceLookup,
+    updateSourceExpression,
+    toggleSourceMode,
     removeMapping,
 }) => {
     const [activeTab, setActiveTab] = useState('manual');
@@ -93,33 +106,36 @@ const MappingInterface: React.FC<MappingInterfaceProps> = ({
                             <div className="col-span-1"></div>
                         </div>
                         {mappings.map((map, index) => {
+                            const isLookupMode = (map.source as LookupExpr)?.Lookup !== undefined;
                             const { entity, column } = getLookupData(map.source);
+                            const expressionString = getExpressionString(map.source);
+
                             return (
                                 <div key={index} className={`grid grid-cols-12 gap-4 items-center p-4 rounded-lg ${index % 2 === 0 ? 'bg-slate-50/80 dark:bg-slate-700/50' : 'bg-white/80 dark:bg-slate-800/40'}`}>
-                                    <div className="col-span-5">
-                                        <ColumnSelector
-                                            allTables={allAvailableTables}
-                                            selectedTable={entity}
-                                            selectedColumn={column || ''}
-                                            onTableChange={(val) => updateSource(index, 'entity', val)}
-                                            onColumnChange={(val) => updateSource(index, 'column', val)}
-                                        />
-                                    </div>
-                                    <div className="col-span-1 text-center text-slate-400 dark:text-slate-500">
-                                        <ArrowRight size={20} />
-                                    </div>
-                                    <div className="col-span-5">
-                                        <Input
-                                            value={map.target}
-                                            onChange={e => updateMapping(index, 'target', e.target.value)}
-                                            placeholder="Destination column name"
-                                        />
-                                    </div>
-                                    <div className="col-span-1 text-right">
-                                        <button onClick={() => removeMapping(index)} className="text-slate-400 hover:text-red-600 dark:hover:text-red-400">
-                                            <X size={18} />
+                                    <div className="col-span-5 flex items-center gap-2">
+                                        {isLookupMode ? (
+                                            <ColumnSelector
+                                                allTables={allAvailableTables}
+                                                selectedTable={entity}
+                                                selectedColumn={column || ''}
+                                                onTableChange={(val) => updateSourceLookup(index, 'entity', val)}
+                                                onColumnChange={(val) => updateSourceLookup(index, 'column', val)}
+                                            />
+                                        ) : (
+                                            <Input
+                                                value={expressionString}
+                                                onChange={e => updateSourceExpression(index, e.target.value)}
+                                                placeholder="e.g. CONCAT(users.first_name, ' ')"
+                                                className="font-mono text-sm"
+                                            />
+                                        )}
+                                        <button onClick={() => toggleSourceMode(index)} title="Switch input mode" className="p-2 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors rounded-md">
+                                            <ArrowRightLeft size={16} />
                                         </button>
                                     </div>
+                                    <div className="col-span-1 text-center text-slate-400 dark:text-slate-500"><ArrowRight size={20} /></div>
+                                    <div className="col-span-5"><Input value={map.target} onChange={e => updateMapping(index, 'target', e.target.value)} placeholder="Destination column name" /></div>
+                                    <div className="col-span-1 text-right"><button onClick={() => removeMapping(index)} className="text-slate-400 hover:text-red-600 dark:hover:text-red-400"><X size={18} /></button></div>
                                 </div>
                             )
                         })}
@@ -158,6 +174,7 @@ const Step5_ColumnMapping: React.FC<Step5_ColumnMappingProps> = ({ config, migra
         setConfig(currentConfig => {
             const newConfig = structuredClone(currentConfig);
             newConfig.migration.migrateItems[0].map = updatedMapStep;
+            console.log('Updated Map Step:', newConfig.migration.migrateItems[0].map);
             return newConfig;
         });
     };
@@ -205,7 +222,7 @@ const Step5_ColumnMapping: React.FC<Step5_ColumnMappingProps> = ({ config, migra
         updateMapStep({ mappings: newMappings });
     };
 
-    const updateSource = (mappingIndex: number, field: 'entity' | 'column', value: string | null) => {
+    const updateSourceLookup = (mappingIndex: number, field: 'entity' | 'column', value: string | null) => {
         const newMappings = mappings.map((mapping, index) => {
             if (index !== mappingIndex) return mapping;
             const sourceExpr = mapping.source;
@@ -222,6 +239,28 @@ const Step5_ColumnMapping: React.FC<Step5_ColumnMappingProps> = ({ config, migra
         updateMapStep({ mappings: newMappings });
     };
 
+    const updateSourceExpression = (mappingIndex: number, value: string) => {
+        const newMappings = mappings.map((mapping, index) => {
+            if (index !== mappingIndex) return mapping;
+            // Create a new Literal expression to hold the custom text
+            const newSource: LiteralExpr = { Literal: { String: value } };
+            return { ...mapping, source: newSource };
+        });
+        updateMapStep({ mappings: newMappings });
+    };
+
+    const toggleSourceMode = (mappingIndex: number) => {
+        const newMappings = mappings.map((mapping, index) => {
+            if (index !== mappingIndex) return mapping;
+            const isLookupCurrently = (mapping.source as LookupExpr)?.Lookup !== undefined;
+            const newSource: Expression = isLookupCurrently
+                ? { Literal: { String: '' } } // Switch to Expression mode
+                : { Lookup: { entity: '', field: null, key: '' } }; // Switch back to Lookup mode
+            return { ...mapping, source: newSource };
+        });
+        updateMapStep({ mappings: newMappings });
+    };
+
     return (
         <AllAvailableTablesProvider migrateItem={migrateItem} metadata={metadata}>
             {(allAvailableTables) => (
@@ -231,7 +270,9 @@ const Step5_ColumnMapping: React.FC<Step5_ColumnMappingProps> = ({ config, migra
                     autoMapAll={autoMapAll}
                     addMapping={addMapping}
                     updateMapping={updateMapping}
-                    updateSource={updateSource}
+                    updateSourceLookup={updateSourceLookup}
+                    updateSourceExpression={updateSourceExpression}
+                    toggleSourceMode={toggleSourceMode}
                     removeMapping={removeMapping}
                 />
             )}

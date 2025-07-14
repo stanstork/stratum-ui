@@ -8,14 +8,14 @@ import Button from "../common/v2/Button";
 import { Plus } from "lucide-react";
 import JoinItem from "../JoinItem";
 
-type Step4JoinsProps = {
+type Step4_JoinsProps = {
     config: MigrationConfig;
     migrateItem: MigrateItem;
     metadata: Record<string, TableMetadata> | null;
     setConfig: React.Dispatch<React.SetStateAction<MigrationConfig>>;
 };
 
-const Step4_Joins = ({ config, metadata, setConfig, migrateItem }: Step4JoinsProps) => {
+const Step4_Joins = ({ config, metadata, setConfig, migrateItem }: Step4_JoinsProps) => {
     const sourceTableName = useMemo(() => migrateItem.source.names[0], [migrateItem]);
     const loadStep = useMemo<LoadStep>(() => migrateItem.load || { entities: [], matches: [] }, [migrateItem]);
 
@@ -34,28 +34,25 @@ const Step4_Joins = ({ config, metadata, setConfig, migrateItem }: Step4JoinsPro
     const updateLoadStep = (updatedLoadStep: LoadStep) => {
         setConfig(currentConfig => {
             const newConfig = structuredClone(currentConfig);
+            // Assuming we are always editing the first migrate item for simplicity
             newConfig.migration.migrateItems[0].load = updatedLoadStep;
             return newConfig;
         });
     };
 
     const addJoin = () => {
-        // Check if there are any tables available to join.
         if (availableJoinTables.length === 0) {
-            // Optionally, show a notification to the user
             console.warn("No available tables to join.");
             return;
         }
 
         const defaultJoinTable = availableJoinTables[0].name;
 
-        // Create the new join condition, pre-filling the right side.
         const newMatch: JoinCondition = {
             left: { Lookup: { entity: sourceTableName, field: null, key: '' } },
-            right: { Lookup: { entity: defaultJoinTable, field: null, key: '' } }, // Use the default table
+            right: { Lookup: { entity: defaultJoinTable, field: null, key: '' } },
         };
 
-        // Create the new load step with the default table name.
         const newLoadStep: LoadStep = {
             entities: [...loadStep.entities, defaultJoinTable],
             matches: [...loadStep.matches, newMatch],
@@ -64,12 +61,26 @@ const Step4_Joins = ({ config, metadata, setConfig, migrateItem }: Step4JoinsPro
         updateLoadStep(newLoadStep);
     };
 
-
     const updateJoinTable = (index: number, newTableName: string) => {
         const newEntities = [...loadStep.entities];
         newEntities[index] = newTableName;
 
-        const newMatches = [...loadStep.matches];
+        const newMatches = structuredClone(loadStep.matches);
+        const matchToUpdate = newMatches[index];
+
+        // Ensure we are updating a lookup expression
+        if ('Lookup' in matchToUpdate.right) {
+            // Update the entity (table) on the right side of the join
+            matchToUpdate.right.Lookup.entity = newTableName;
+            // Reset the field (column) since the table has changed
+            matchToUpdate.right.Lookup.field = null;
+        }
+
+        // Also reset the left side column to force user re-selection, preventing invalid states.
+        if ('Lookup' in matchToUpdate.left) {
+            matchToUpdate.left.Lookup.field = null;
+        }
+
         updateLoadStep({ entities: newEntities, matches: newMatches });
     };
 
@@ -79,26 +90,18 @@ const Step4_Joins = ({ config, metadata, setConfig, migrateItem }: Step4JoinsPro
         field: 'entity' | 'column',
         value: string | null
     ) => {
-        // Create a deep copy of the matches array to ensure immutability.
         const newMatches = structuredClone(loadStep.matches);
-
-        // Cet the specific expression object ('left' or 'right') to modify.
         const expr = newMatches[index][side];
 
-        // Only update if the expression is a LookupExpr
         if ('Lookup' in expr) {
             if (field === 'entity') {
-                // tf the table ('entity') changes...
                 expr.Lookup.entity = value || '';
-                // ...reset the column ('field') to prevent invalid states.
-                expr.Lookup.field = null;
+                expr.Lookup.field = null; // Reset column on entity change
             } else {
-                // otherwise, just update the column ('field').
                 expr.Lookup.field = value;
             }
         }
 
-        // Update the parent state with the newly modified 'matches' array.
         updateLoadStep({ ...loadStep, matches: newMatches });
     };
 
@@ -116,7 +119,7 @@ const Step4_Joins = ({ config, metadata, setConfig, migrateItem }: Step4JoinsPro
             />
             <div className="p-6">
                 <div className="flex justify-end mb-6">
-                    <Button onClick={addJoin} variant="secondary">
+                    <Button onClick={addJoin} variant="secondary" disabled={availableJoinTables.length === 0}>
                         <Plus size={16} className="mr-2" /> Add Join
                     </Button>
                 </div>

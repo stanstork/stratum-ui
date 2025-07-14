@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { emptyMigrationConfig, emptyMigrationItem, MigrateItem, MigrationConfig } from "../types/MigrationConfig";
+import { emptyMigrationConfig, MigrationConfig } from "../types/MigrationConfig";
 import { ArrowRight, ArrowRightLeft, Check, Database, FileText, Filter, Link2, Settings, Table } from "lucide-react";
 import Step1_Details from "../components/wizard_step/Step1_Details";
 import Button from "../components/common/v2/Button";
@@ -64,8 +64,8 @@ const MigrationWizard = ({ onBack, onComplete }: MigrationWizardProps) => {
         { num: 3, title: 'Source Table', icon: <Table size={20} />, disabled: !config.connections.source },
         { num: 4, title: 'Joins', icon: <Link2 size={20} />, disabled: !config.connections.source },
         { num: 5, title: 'Column Mapping', icon: <ArrowRightLeft size={20} />, disabled: !config.connections.source },
-        { num: 6, title: 'Settings', icon: <Settings size={20} />, disabled: !config.connections.source },
-        { num: 7, title: 'Filters', icon: <Filter size={20} />, disabled: !config.connections.source },
+        { num: 6, title: 'Filters', icon: <Filter size={20} />, disabled: !config.connections.source },
+        { num: 7, title: 'Settings', icon: <Settings size={20} />, disabled: !config.connections.source },
     ];
 
     const renderStep = () => {

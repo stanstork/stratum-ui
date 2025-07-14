@@ -10,6 +10,8 @@ import apiClient from "../services/apiClient";
 import Step4_Joins from "../components/wizard_step/Step4_Joins";
 import Step5_ColumnMapping from "../components/wizard_step/Step5_ColumnMapping";
 import Step6_Filters from "../components/wizard_step/Step6_Filters";
+import Step7_Filters from "../components/wizard_step/Step6_Filters";
+import Step7_Settings from "../components/wizard_step/Step7_Settings";
 
 type MigrationWizardProps = {
     onBack: () => void;
@@ -76,7 +78,7 @@ const MigrationWizard = ({ onBack, onComplete }: MigrationWizardProps) => {
             case 4: return <Step4_Joins config={config} setConfig={setConfig} metadata={metadata} migrateItem={config.migration.migrateItems[0]} />;
             case 5: return <Step5_ColumnMapping config={config} setConfig={setConfig} metadata={metadata} migrateItem={config.migration.migrateItems[0]} />;
             case 6: return <Step6_Filters config={config} setConfig={setConfig} metadata={metadata} migrateItem={config.migration.migrateItems[0]} />;
-            // case 7: return <Step7_Filters config={config} setConfig={setConfig} />;
+            case 7: return <Step7_Settings config={config} setConfig={setConfig} migrateItem={config.migration.migrateItems[0]} />;
             default: return <Step1_Details config={config} setConfig={setConfig} />;
         }
     };

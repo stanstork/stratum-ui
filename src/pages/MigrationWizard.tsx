@@ -12,6 +12,7 @@ import Step5_ColumnMapping from "../components/wizard_step/Step5_ColumnMapping";
 import Step6_Filters from "../components/wizard_step/Step6_Filters";
 import Step7_Filters from "../components/wizard_step/Step6_Filters";
 import Step7_Settings from "../components/wizard_step/Step7_Settings";
+import PreviewModal from "../components/PreviewModal";
 
 type MigrationWizardProps = {
     onBack: () => void;
@@ -134,7 +135,7 @@ const MigrationWizard = ({ onBack, onComplete }: MigrationWizardProps) => {
                     }
                 </div>
             </div>
-            {/* {isPreviewVisible && <PreviewModal config={config} onClose={() => setIsPreviewVisible(false)} onConfirm={onComplete} />} */}
+            {isPreviewVisible && <PreviewModal config={config} onClose={() => setIsPreviewVisible(false)} onConfirm={onComplete} />}
         </>
     );
 }

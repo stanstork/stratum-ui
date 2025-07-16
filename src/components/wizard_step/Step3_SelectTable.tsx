@@ -10,17 +10,14 @@ interface Step3_SelectTableProps {
     config: MigrationConfig;
     migrateItem: MigrateItem;
     metadata: Record<string, TableMetadata> | null;
+    isMetadataLoading: boolean;
     setConfig: React.Dispatch<React.SetStateAction<MigrationConfig>>;
 }
 
-const Step3_SelectTable: React.FC<Step3_SelectTableProps> = ({ config, metadata, setConfig, migrateItem }) => {
+const Step3_SelectTable: React.FC<Step3_SelectTableProps> = ({ config, metadata, setConfig, migrateItem, isMetadataLoading }) => {
     const [searchTerm, setSearchTerm] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
-
-    // Local state for the destination table name input to provide a responsive UI
     const [destinationTableName, setDestinationTableName] = useState(migrateItem.destination.names?.[0] || '');
 
-    // Effect to sync local state if the global config changes from elsewhere
     useEffect(() => {
         setDestinationTableName(migrateItem.destination.names?.[0] || '');
     }, [migrateItem.destination.names]);
@@ -60,7 +57,7 @@ const Step3_SelectTable: React.FC<Step3_SelectTableProps> = ({ config, metadata,
                 newConfig.migration.migrateItems[migrationIndex] = {
                     ...currentItem,
                     source: {
-                        ...currentItem.source,
+                        kind: 'table',
                         names: [table.name],
                     },
                     destination: {
@@ -83,6 +80,7 @@ const Step3_SelectTable: React.FC<Step3_SelectTableProps> = ({ config, metadata,
             const newConfig = structuredClone(currentConfig);
             const migrationIndex = 0; // Assuming single migration item for simplicity
             if (migrationIndex > -1) {
+                newConfig.migration.migrateItems[migrationIndex].destination.kind = 'table';
                 newConfig.migration.migrateItems[migrationIndex].destination.names = [newDestName];
             }
             return newConfig;
@@ -143,7 +141,7 @@ const Step3_SelectTable: React.FC<Step3_SelectTableProps> = ({ config, metadata,
                         />
                     </div>
                     <div className="space-y-2 max-h-96 overflow-y-auto pr-2 -mr-2">
-                        {isLoading ? (
+                        {isMetadataLoading ? (
                             <p className="text-slate-500 dark:text-slate-400 text-sm">Loading tables...</p>
                         ) : (
                             filteredTables.map(table => (
@@ -240,7 +238,7 @@ const Step3_SelectTable: React.FC<Step3_SelectTableProps> = ({ config, metadata,
                     ) : (
                         <div className="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg flex items-center justify-center min-h-[200px] bg-slate-50/80 dark:bg-slate-800/50">
                             <p className="text-slate-500 dark:text-slate-400">
-                                {isLoading ? 'Loading schema...' : 'Select a table to see its schema'}
+                                {isMetadataLoading ? 'Loading schema...' : 'Select a table to see its schema'}
                             </p>
                         </div>
                     )}

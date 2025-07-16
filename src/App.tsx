@@ -56,28 +56,6 @@ const InnerApp: React.FC = () => {
         navigator(viewName.valueOf());
     };
 
-    const renderView = () => {
-        switch (view) {
-            // case 'wizard':
-            //     return <MigrationWizard onBack={() => navigate('dashboard')} onComplete={handleMigrationComplete} />;
-            // case 'runDetails':
-            //     return <MigrationRunDetails runId={viewState.runId} onBack={() => navigate('executions')} />;
-            // case 'definitions':
-            //     return <MigrationDefinitionsList setView={navigate} />;
-            // case 'definitionDetails':
-            //     return <MigrationDefinitionDetails defId={viewState.defId} onBack={() => navigate('definitions')} />;
-            // case 'executions':
-            //     return <ExecutionsList setView={navigate} />;
-            // case 'connections':
-            //     return <ConnectionsPage setView={navigate} />;
-            // case 'connectionWizard':
-            //     return <ConnectionWizard onBack={() => navigate('connections')} />;
-            case 'dashboard':
-            default:
-                return <Dashboard setView={navigate} isDarkMode={isDarkMode} />;
-        }
-    };
-
     const goTo = (path: string) => {
         navigate(path, {});
     }
@@ -120,7 +98,6 @@ const InnerApp: React.FC = () => {
                                 element={
                                     <MigrationWizard
                                         onBack={() => goTo('dashboard')}
-                                        onComplete={() => goTo('dashboard')}
                                     />
                                 }
                             />

@@ -49,8 +49,8 @@ const Step4_Joins = ({ config, metadata, setConfig, migrateItem }: Step4_JoinsPr
         const defaultJoinTable = availableJoinTables[0].name;
 
         const newMatch: JoinCondition = {
-            left: { Lookup: { entity: sourceTableName, field: null, key: '' } },
-            right: { Lookup: { entity: defaultJoinTable, field: null, key: '' } },
+            left: { Lookup: { entity: sourceTableName, key: null, field: '' } },
+            right: { Lookup: { entity: defaultJoinTable, key: null, field: '' } },
         };
 
         const newLoadStep: LoadStep = {
@@ -73,12 +73,12 @@ const Step4_Joins = ({ config, metadata, setConfig, migrateItem }: Step4_JoinsPr
             // Update the entity (table) on the right side of the join
             matchToUpdate.right.Lookup.entity = newTableName;
             // Reset the field (column) since the table has changed
-            matchToUpdate.right.Lookup.field = null;
+            matchToUpdate.right.Lookup.key = null;
         }
 
         // Also reset the left side column to force user re-selection, preventing invalid states.
         if ('Lookup' in matchToUpdate.left) {
-            matchToUpdate.left.Lookup.field = null;
+            matchToUpdate.left.Lookup.key = null;
         }
 
         updateLoadStep({ entities: newEntities, matches: newMatches });
@@ -96,9 +96,9 @@ const Step4_Joins = ({ config, metadata, setConfig, migrateItem }: Step4_JoinsPr
         if ('Lookup' in expr) {
             if (field === 'entity') {
                 expr.Lookup.entity = value || '';
-                expr.Lookup.field = null; // Reset column on entity change
+                expr.Lookup.key = null; // Reset column on entity change
             } else {
-                expr.Lookup.field = value;
+                expr.Lookup.key = value;
             }
         }
 

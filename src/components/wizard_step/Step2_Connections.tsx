@@ -1,5 +1,5 @@
 import { ArrowRight } from "lucide-react";
-import { emptyMigrationConfig, MigrationConfig } from "../../types/MigrationConfig";
+import { emptyMigrationConfig, getConnectionInfo, MigrationConfig } from "../../types/MigrationConfig";
 import Card from "../common/v2/Card";
 import CardHeader from "../common/v2/CardHeader";
 import Select from "../common/v2/Select";
@@ -28,7 +28,7 @@ const Step2_Connections = ({ config, setConfig }: Step2ConnectionsProps) => {
             ...config,
             connections: {
                 ...config.connections,
-                source: selectedConn,
+                source: getConnectionInfo(selectedConn),
             },
             // Reset subsequent dependent configuration
             migration: {
@@ -46,7 +46,7 @@ const Step2_Connections = ({ config, setConfig }: Step2ConnectionsProps) => {
             ...config,
             connections: {
                 ...config.connections,
-                dest: selectedConn,
+                dest: getConnectionInfo(selectedConn),
             }
         });
     };

@@ -1,3 +1,4 @@
+import { exitCode } from "process";
 import { ConnectionPair } from "../components/ConnectionEditor";
 import { Connection, emptyConnection } from "./Connection";
 
@@ -7,7 +8,20 @@ export interface MigrationConfig {
     description: string;
     creation_date: string; // ISO date string
     migration: Migration;
-    connections: ConnectionPair;
+    connections: ConnectionPairInfo;
+}
+
+// Connection pair with basic info
+export interface ConnectionPairInfo {
+    source: ConnectionInfo;
+    dest: ConnectionInfo;
+}
+
+// Connection info with minimal details
+export interface ConnectionInfo {
+    id: string;
+    name: string;
+    description: string;
 }
 
 // Migration section
@@ -33,7 +47,7 @@ export interface MigrateItem {
     id: Date; // Unique identifier for the migration item
     map: MapStep;
     load: LoadStep;
-    filter: FilterStep;
+    filter: Filter;
     source: DataSource;
     settings: MigrationSettings;
     destination: DataSource;
@@ -61,7 +75,7 @@ export interface JoinCondition {
 }
 
 // Filter step
-export interface FilterStep {
+export interface Filter {
     expression: Expression | null; // Expression AST for the filter
 }
 
@@ -82,7 +96,7 @@ export type Expression =
 // Lookup
 export interface LookupExpr {
     Lookup: {
-        key: string;
+        key: string | null; // Field name or null for entire entity
         field: string | null;
         entity: string;
     };
@@ -109,10 +123,7 @@ export interface ArithmeticExpr {
 
 // Function calls in mapping steps
 export interface FunctionCallExpr {
-    FunctionCall: {
-        name: string;
-        arguments: Expression[];
-    };
+    FunctionCall: [string, Expression[]];
 }
 
 // Conditional expressions (used in filter.matches or filter.expression)
@@ -144,10 +155,7 @@ export function emptyMigrationConfig(): MigrationConfig {
             },
             migrateItems: [emptyMigrationItem()]
         },
-        connections: {
-            source: emptyConnection(),
-            dest: emptyConnection()
-        }
+        connections: emptyConnectionPair()
     };
 }
 
@@ -156,7 +164,7 @@ export function emptyMigrationItem(): MigrateItem {
         id: new Date(),
         map: { mappings: [] },
         load: { matches: [], entities: [] },
-        filter: { expression: { FunctionCall: { name: 'AND', arguments: [] } } },
+        filter: { expression: { FunctionCall: ["AND", []] } },
         source: { kind: '', names: [] },
         settings: {
             batchSize: 1000,
@@ -171,5 +179,28 @@ export function emptyMigrationItem(): MigrateItem {
             createMissingColumns: true
         },
         destination: { kind: '', names: [] }
+    };
+}
+
+export function emptyConnectionPair(): ConnectionPairInfo {
+    return {
+        source: emptyConnectionInfo(),
+        dest: emptyConnectionInfo()
+    };
+}
+
+export function emptyConnectionInfo(): ConnectionInfo {
+    return {
+        id: '',
+        name: '',
+        description: ''
+    };
+}
+
+export function getConnectionInfo(connection: Connection): ConnectionInfo {
+    return {
+        id: connection.id,
+        name: connection.name,
+        description: `${connection.dataFormat} - ${connection.host}:${connection.port}`
     };
 }

@@ -13,13 +13,22 @@ import {
 import Button from "./common/v2/Button";
 import ConfigSection from "./common/v2/ConfigSection";
 
+const COMPARATORS_MAP: Record<string, string> = {
+    'Equal': '=',
+    'NotEqual': '!=',
+    'GreaterThan': '>',
+    'LessThan': '<',
+    'GreaterThanOrEqual': '>=',
+    'LessThanOrEqual': '<=',
+};
+
 // Helper function to render any Expression type into a readable string
 const renderExpression = (expr?: Expression | null): string => {
     if (!expr) return 'N/A';
 
     if ('Lookup' in expr) {
         const lookup = (expr as LookupExpr).Lookup;
-        return `${lookup.entity}.${lookup.field || '?'}`;
+        return `${lookup.entity}.${lookup.key || '?'}`;
     }
     if ('Literal' in expr) {
         const literal = (expr as LiteralExpr).Literal;
@@ -31,16 +40,16 @@ const renderExpression = (expr?: Expression | null): string => {
     }
     if ('Arithmetic' in expr) {
         const arithmetic = (expr as ArithmeticExpr).Arithmetic;
-        return `(${renderExpression(arithmetic.left)} ${arithmetic.operator} ${renderExpression(arithmetic.right)})`;
+        return `(${renderExpression(arithmetic.left)} ${COMPARATORS_MAP[arithmetic.operator]} ${renderExpression(arithmetic.right)})`;
     }
     if ('FunctionCall' in expr) {
         const func = (expr as FunctionCallExpr).FunctionCall;
-        const args = func.arguments.map(renderExpression).join(', ');
-        return `${func.name}(${args})`;
+        const args = func[1].map(renderExpression).join(', ');
+        return `${func[0]}(${args})`;
     }
     if ('Condition' in expr) {
         const condition = (expr as ConditionExpr).Condition;
-        return `(${renderExpression(condition.left)} ${condition.op} ${renderExpression(condition.right)})`;
+        return `(${renderExpression(condition.left)} ${COMPARATORS_MAP[condition.op]} ${renderExpression(condition.right)})`;
     }
 
     return 'Unknown Expression';

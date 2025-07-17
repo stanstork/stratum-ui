@@ -1,4 +1,3 @@
-import { TableMetadata } from "../../types/Metadata";
 import { MigrateItem, MigrationConfig, MigrationSettings } from "../../types/MigrationConfig";
 import Card from "../common/v2/Card";
 import CardHeader from "../common/v2/CardHeader";
@@ -40,7 +39,20 @@ const Step7_Settings = ({ config, setConfig, migrateItem }: Step6SettingsProps) 
                     </div>
                     <div className="space-y-6">
                         <h3 className="font-semibold text-slate-700 dark:text-slate-200">Performance</h3>
-                        <div><label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">Copy Columns</label><Select value={settings.copyColumns} onChange={(e) => updateSetting('copyColumns', e.target.value)} options={[{ value: 'all', label: 'All Columns' }, { value: 'mapped', label: 'Mapped Columns Only' }]} placeholder={""} /></div>
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">
+                                Copy Columns
+                            </label>
+                            <Select
+                                value={settings.copyColumns}
+                                onChange={(e) => updateSetting('copyColumns', e.target.value)}
+                                options={[
+                                    { value: 'All', label: 'All Columns' },
+                                    { value: 'MapOnly', label: 'Mapped Columns Only' }
+                                ]}
+                                placeholder="Choose columns to copy"
+                            />
+                        </div>
                         <div><label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">Batch Size</label><Input type="number" value={settings.batchSize.toString()} onChange={(e) => updateSetting('batchSize', parseInt(e.target.value, 10) || 0)} /></div>
                     </div>
                 </div>

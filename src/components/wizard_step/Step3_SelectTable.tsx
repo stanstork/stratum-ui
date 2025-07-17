@@ -57,11 +57,11 @@ const Step3_SelectTable: React.FC<Step3_SelectTableProps> = ({ config, metadata,
                 newConfig.migration.migrateItems[migrationIndex] = {
                     ...currentItem,
                     source: {
-                        kind: 'table',
+                        kind: 'Table',
                         names: [table.name],
                     },
                     destination: {
-                        ...currentItem.destination,
+                        kind: 'Table',
                         names: [table.name], // Default destination name to match source
                     },
                     load: { entities: [], matches: [] },

@@ -38,7 +38,7 @@ export const getLookupData = (expr: Expression): { entity: string; column: strin
     if ('Lookup' in expr) {
         return {
             entity: expr.Lookup.entity || '',
-            column: expr.Lookup.field || '',
+            column: expr.Lookup.key || '',
         };
     }
     return { entity: '', column: '' };

@@ -23,7 +23,7 @@ const DefinitionCanvas = () => {
     const navigate = useNavigate();
 
     const handleConnectionsChange = useCallback((newConnections: ConnectionPair) => {
-        setConfig(p => ({ ...p, connections: newConnections }));
+        // setConfig(p => ({ ...p, connections: newConnections }));
     }, []);
 
     const handleDetailChange = useCallback((field: string, value: string): void => {

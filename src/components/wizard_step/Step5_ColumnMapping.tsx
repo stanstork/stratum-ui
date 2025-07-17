@@ -12,7 +12,7 @@ import Input from '../common/v2/Input';
 const getLookupData = (expr: Expression): { entity: string; column: string | null } => {
     const lookup = (expr as LookupExpr)?.Lookup;
     if (lookup) {
-        return { entity: lookup.entity || '', column: lookup.field };
+        return { entity: lookup.entity || '', column: lookup.key };
     }
     return { entity: '', column: null };
 };
@@ -190,7 +190,7 @@ const Step5_ColumnMapping: React.FC<Step5_ColumnMappingProps> = ({ config, migra
                 const sourceIdentifier = `${table.name}.${columnName}`;
                 if (!existingSources.has(sourceIdentifier)) {
                     newMappings.push({
-                        source: { Lookup: { entity: table.name, field: columnName, key: '' } },
+                        source: { Lookup: { entity: table.name, key: columnName, field: '' } },
                         target: `${table.name}_${columnName}`,
                     });
                 }
@@ -203,7 +203,7 @@ const Step5_ColumnMapping: React.FC<Step5_ColumnMappingProps> = ({ config, migra
 
     const addMapping = () => {
         const newMapping: Mapping = {
-            source: { Lookup: { entity: '', field: null, key: '' } },
+            source: { Lookup: { entity: '', key: null, field: '' } },
             target: '',
         };
         updateMapStep({ mappings: [...mappings, newMapping] });
@@ -230,9 +230,9 @@ const Step5_ColumnMapping: React.FC<Step5_ColumnMappingProps> = ({ config, migra
             const newSourceExpr: LookupExpr = { Lookup: { ...(sourceExpr as LookupExpr).Lookup } };
             if (field === 'entity') {
                 newSourceExpr.Lookup.entity = value || '';
-                newSourceExpr.Lookup.field = null;
+                newSourceExpr.Lookup.key = null;
             } else {
-                newSourceExpr.Lookup.field = value;
+                newSourceExpr.Lookup.key = value;
             }
             return { ...mapping, source: newSourceExpr };
         });

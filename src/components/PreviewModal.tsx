@@ -13,43 +13,60 @@ import {
 import Button from "./common/v2/Button";
 import ConfigSection from "./common/v2/ConfigSection";
 
-const COMPARATORS_MAP: Record<string, string> = {
+// --- Type Guards ---
+const isLookup = (expr: Expression): expr is LookupExpr => !!(expr as LookupExpr)?.Lookup;
+const isLiteral = (expr: Expression): expr is LiteralExpr => !!(expr as LiteralExpr)?.Literal;
+const isFunctionCall = (expr: Expression): expr is FunctionCallExpr => Array.isArray((expr as FunctionCallExpr)?.FunctionCall);
+const isArithmetic = (expr: Expression): expr is ArithmeticExpr => !!(expr as ArithmeticExpr)?.Arithmetic;
+const isCondition = (expr: Expression): expr is ConditionExpr => !!(expr as ConditionExpr)?.Condition;
+
+
+const COMPARATOR_MAP: Record<string, string> = {
     'Equal': '=',
     'NotEqual': '!=',
     'GreaterThan': '>',
-    'LessThan': '<',
     'GreaterThanOrEqual': '>=',
+    'LessThan': '<',
     'LessThanOrEqual': '<=',
 };
+
+const ARITHMETIC_OPERATORS: Record<string, string> = {
+    'Add': '+',
+    'Subtract': '-',
+    'Multiply': '*',
+    'Divide': '/',
+};
+
+// --- Render Helpers ---
 
 // Helper function to render any Expression type into a readable string
 const renderExpression = (expr?: Expression | null): string => {
     if (!expr) return 'N/A';
 
-    if ('Lookup' in expr) {
-        const lookup = (expr as LookupExpr).Lookup;
+    if (isLookup(expr)) {
+        const lookup = expr.Lookup;
         return `${lookup.entity}.${lookup.key || '?'}`;
     }
-    if ('Literal' in expr) {
-        const literal = (expr as LiteralExpr).Literal;
+    if (isLiteral(expr)) {
+        const literal = expr.Literal;
         if (literal.String !== undefined) return `'${literal.String}'`;
         if (literal.Integer !== undefined) return literal.Integer.toString();
         if (literal.Float !== undefined) return literal.Float.toString();
         if (literal.Boolean !== undefined) return literal.Boolean.toString().toUpperCase();
         return 'NULL';
     }
-    if ('Arithmetic' in expr) {
-        const arithmetic = (expr as ArithmeticExpr).Arithmetic;
-        return `(${renderExpression(arithmetic.left)} ${COMPARATORS_MAP[arithmetic.operator]} ${renderExpression(arithmetic.right)})`;
+    if (isArithmetic(expr)) {
+        const arithmetic = expr.Arithmetic;
+        return `(${renderExpression(arithmetic.left)} ${ARITHMETIC_OPERATORS[arithmetic.operator]} ${renderExpression(arithmetic.right)})`;
     }
-    if ('FunctionCall' in expr) {
-        const func = (expr as FunctionCallExpr).FunctionCall;
-        const args = func[1].map(renderExpression).join(', ');
-        return `${func[0]}(${args})`;
+    if (isFunctionCall(expr)) {
+        const [name, args] = expr.FunctionCall;
+        const renderedArgs = args.map(renderExpression).join(', ');
+        return `${name}(${renderedArgs})`;
     }
-    if ('Condition' in expr) {
-        const condition = (expr as ConditionExpr).Condition;
-        return `(${renderExpression(condition.left)} ${COMPARATORS_MAP[condition.op]} ${renderExpression(condition.right)})`;
+    if (isCondition(expr)) {
+        const condition = expr.Condition;
+        return `(${renderExpression(condition.left)} ${COMPARATOR_MAP[condition.op]} ${renderExpression(condition.right)})`;
     }
 
     return 'Unknown Expression';
@@ -57,30 +74,30 @@ const renderExpression = (expr?: Expression | null): string => {
 
 // A dedicated component to render the potentially nested filter tree
 const FilterTree: React.FC<{ expression: Expression }> = ({ expression }) => {
-    if (!('Condition' in expression)) {
-        return <p>{renderExpression(expression)}</p>;
-    }
-
-    const { op, left, right } = (expression as ConditionExpr).Condition;
-
-    // If it's a logical operator (AND/OR), we render a nested list
-    if (op.toUpperCase() === 'AND' || op.toUpperCase() === 'OR') {
-        return (
-            <div className="pl-4 border-l-2 border-slate-300 dark:border-slate-600">
-                <strong className={`font-mono text-xs ${op.toUpperCase() === 'AND' ? 'text-sky-500' : 'text-amber-500'}`}>{op.toUpperCase()}</strong>
-                <div className="flex flex-col gap-1 mt-1">
-                    <FilterTree expression={left} />
-                    <FilterTree expression={right} />
+    // Check if it's a FunctionCall representing a logical group (AND/OR)
+    if (isFunctionCall(expression)) {
+        const [op, args] = expression.FunctionCall;
+        if ((op.toUpperCase() === 'AND' || op.toUpperCase() === 'OR') && Array.isArray(args)) {
+            return (
+                <div className="pl-4 border-l-2 border-slate-300 dark:border-slate-600">
+                    <strong className={`font-mono text-xs ${op.toUpperCase() === 'AND' ? 'text-sky-500' : 'text-amber-500'}`}>{op.toUpperCase()}</strong>
+                    <div className="flex flex-col gap-1 mt-1">
+                        {args.length > 0 ? (
+                            args.map((arg, i) => <FilterTree key={i} expression={arg} />)
+                        ) : (
+                            <p className="text-slate-500 text-sm italic">Empty group</p>
+                        )}
+                    </div>
                 </div>
-            </div>
-        );
+            );
+        }
     }
 
-    // Otherwise, it's a simple condition
+    // Otherwise, it's a simple condition or another expression type
     return (
         <p>
             <code className="bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200 px-2 py-1 rounded-md">
-                {renderExpression(left)} {op} {renderExpression(right)}
+                {renderExpression(expression)}
             </code>
         </p>
     );
@@ -94,7 +111,6 @@ interface PreviewModalProps {
 }
 
 const PreviewModal: React.FC<PreviewModalProps> = ({ config, onClose, onConfirm }) => {
-    // There's typically one primary migration item to summarize
     const migrateItem: MigrateItem | undefined = config.migration.migrateItems[0];
 
     if (!migrateItem) {
@@ -128,8 +144,9 @@ const PreviewModal: React.FC<PreviewModalProps> = ({ config, onClose, onConfirm 
                         <p><strong>To:</strong> {config.connections.dest.name}</p>
                     </ConfigSection>
 
-                    <ConfigSection title="Source" icon={<Table size={16} />}>
+                    <ConfigSection title="Source & Destination" icon={<Table size={16} />}>
                         <p><strong>Primary Table:</strong> <code className="bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200 px-2 py-1 rounded-md">{migrateItem.source.names[0]}</code></p>
+                        <p><strong>Destination Table:</strong> <code className="bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200 px-2 py-1 rounded-md">{migrateItem.destination.names[0]}</code></p>
                     </ConfigSection>
 
                     {migrateItem.load.matches.length > 0 && (

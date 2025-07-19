@@ -76,7 +76,7 @@ const FunctionArgumentEditor: React.FC<{
                     <ColumnSelector
                         allTables={allAvailableTables}
                         selectedTable={(arg as LookupExpr).Lookup?.entity || ''}
-                        selectedColumn={(arg as LookupExpr).Lookup?.field || ''}
+                        selectedColumn={(arg as LookupExpr).Lookup?.key || ''}
                         onTableChange={(val) => onUpdate({ Lookup: { entity: val, key: null, field: '' } })}
                         onColumnChange={(val) => onUpdate({ Lookup: { entity: (arg as LookupExpr).Lookup?.entity, key: val, field: '' } })}
                     />

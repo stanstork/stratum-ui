@@ -15,9 +15,10 @@ import PreviewModal from "../components/PreviewModal";
 
 type MigrationWizardProps = {
     onBack: () => void;
+    setView: (view: string, params?: any) => void;
 };
 
-const MigrationWizard = ({ onBack }: MigrationWizardProps) => {
+const MigrationWizard = ({ onBack, setView }: MigrationWizardProps) => {
     const [currentStep, setCurrentStep] = useState(1);
     const [isPreviewVisible, setIsPreviewVisible] = useState(false);
     const [config, setConfig] = useState<MigrationConfig>(emptyMigrationConfig());
@@ -158,7 +159,7 @@ const MigrationWizard = ({ onBack }: MigrationWizardProps) => {
                     }
                 </div>
             </div>
-            {isPreviewVisible && <PreviewModal config={config} onClose={() => setIsPreviewVisible(false)} onConfirm={onComplete} />}
+            {isPreviewVisible && <PreviewModal config={config} onClose={() => setIsPreviewVisible(false)} setView={setView} />}
         </>
     );
 }

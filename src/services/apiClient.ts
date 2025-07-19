@@ -5,8 +5,10 @@ import { emptyExecutionStat, ExecutionStat, mapExecutionStat } from "../types/Ex
 import { Connection, ConnectionDTO, ConnectionTestResult, mapConnection, mapFrontendDataFormatToBackend } from "../types/Connection";
 import { mapMetadataResponse, MetadataResponse, TableMetadata } from "../types/Metadata";
 import { data } from "react-router-dom";
+import { MigrationConfig } from "../types/MigrationConfig";
 
 interface ApiClient extends AxiosInstance {
+    createJobDefinition: (config: MigrationConfig) => Promise<JobDefinition>;
     getMetadata: (connectionId: string) => Promise<{ [key: string]: TableMetadata; }>;
     deleteConnection: (connectionId: string) => Promise<void>;
     updateConnection: (connection: Connection) => Promise<Connection>;
@@ -144,6 +146,19 @@ apiClient.deleteConnection = async (connectionId: string): Promise<void> => {
 apiClient.getMetadata = async (connectionId: string): Promise<{ [key: string]: TableMetadata }> => {
     const response = await apiClient.get(`/connections/${connectionId}/metadata`);
     return mapMetadataResponse(response.data as MetadataResponse);
+};
+
+apiClient.createJobDefinition = async (config: MigrationConfig): Promise<JobDefinition> => {
+    const response = await apiClient.post<JobDefinitionDTO>('/jobs', {
+        name: config.name,
+        description: config.description,
+        ast: {
+            migration: config.migration
+        },
+        source_connection_id: config.connections.source.id,
+        destination_connection_id: config.connections.dest.id
+    });
+    return mapJobDefinition(response.data);
 };
 
 export default apiClient;

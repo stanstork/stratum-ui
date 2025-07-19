@@ -1,5 +1,5 @@
-import React from 'react';
-import { ArrowRight, ArrowRightLeft, Database, Filter, Link2, Settings, Table, X } from "lucide-react";
+import React, { useState } from 'react';
+import { ArrowRight, ArrowRightLeft, Database, Filter, Link2, Loader, Settings, Table, X } from "lucide-react";
 import {
     MigrationConfig,
     Expression,
@@ -12,6 +12,7 @@ import {
 } from "../types/MigrationConfig";
 import Button from "./common/v2/Button";
 import ConfigSection from "./common/v2/ConfigSection";
+import apiClient from '../services/apiClient';
 
 // --- Type Guards ---
 const isLookup = (expr: Expression): expr is LookupExpr => !!(expr as LookupExpr)?.Lookup;
@@ -107,11 +108,27 @@ const FilterTree: React.FC<{ expression: Expression }> = ({ expression }) => {
 interface PreviewModalProps {
     config: MigrationConfig;
     onClose: () => void;
-    onConfirm: () => void;
+    setView: (view: string, params?: any) => void;
 }
 
-const PreviewModal: React.FC<PreviewModalProps> = ({ config, onClose, onConfirm }) => {
+const PreviewModal: React.FC<PreviewModalProps> = ({ config, onClose, setView }) => {
+    const [isSaving, setIsSaving] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     const migrateItem: MigrateItem | undefined = config.migration.migrateItems[0];
+
+    const handleSave = async () => {
+        setIsSaving(true);
+        setError(null);
+        try {
+            await apiClient.createJobDefinition(config);
+            setView('definitions'); // Navigate to definitions view after saving
+        } catch (err: any) {
+            console.error("Failed to save migration:", err);
+            setError(err.message || "An unexpected error occurred. Please try again.");
+        } finally {
+            setIsSaving(false);
+        }
+    };
 
     if (!migrateItem) {
         return (
@@ -189,9 +206,19 @@ const PreviewModal: React.FC<PreviewModalProps> = ({ config, onClose, onConfirm 
                     </ConfigSection>
 
                 </div>
-                <div className="p-5 border-t border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 rounded-b-xl flex justify-end gap-3">
-                    <Button onClick={onClose} variant="secondary">Close</Button>
-                    <Button onClick={onConfirm} variant="primary">Save</Button>
+                <div className="p-5 border-t border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 rounded-b-xl">
+                    {error && (
+                        <div className="mb-3 p-3 bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-300 rounded-md text-sm">
+                            <strong>Error:</strong> {error}
+                        </div>
+                    )}
+                    <div className="flex justify-end gap-3">
+                        <Button onClick={onClose} variant="secondary" disabled={isSaving}>Close</Button>
+                        <Button onClick={handleSave} variant="primary" disabled={isSaving}>
+                            {isSaving && <Loader size={16} className="animate-spin mr-2" />}
+                            {isSaving ? 'Saving...' : 'Confirm & Save'}
+                        </Button>
+                    </div>
                 </div>
             </div>
         </div>

@@ -98,6 +98,7 @@ const InnerApp: React.FC = () => {
                                 element={
                                     <MigrationWizard
                                         onBack={() => goTo('dashboard')}
+                                        setView={navigate}
                                     />
                                 }
                             />

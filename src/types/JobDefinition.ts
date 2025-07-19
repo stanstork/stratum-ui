@@ -15,6 +15,14 @@ export interface JobDefinitionDTO {
     updated_at: string;                 // ISO timestamp
 }
 
+export interface JobDefinitionCreateDTO {
+    name: string;
+    description: string;
+    ast: unknown;                       // Parsed AST JSON
+    source_connection_id: string;       // ID of the source connection
+    destination_connection_id: string;  // ID of the destination connection
+}
+
 /**
  * Frontend-friendly model (camelCase keys)
  */

@@ -1,4 +1,5 @@
 import { HTMLMotionProps, motion } from "framer-motion";
+import { Database, Server } from "lucide-react";
 import React from "react";
 
 export const pageVariants = { initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 }, exit: { opacity: 0, y: -20 } };
@@ -56,4 +57,19 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
             {status}
         </div>
     );
+};
+
+// A simple component to get a representative icon for the DB type
+export const DatabaseIcon = ({ type }: { type: string }) => {
+    const lowerType = type.toLowerCase();
+    if (lowerType.includes('postgres')) {
+        return <Database size={24} className="text-blue-500" />;
+    }
+    if (lowerType.includes('mysql')) {
+        return <Database size={24} className="text-orange-500" />;
+    }
+    if (lowerType.includes('snowflake')) {
+        return <Database size={24} className="text-cyan-500" />;
+    }
+    return <Database size={24} className="text-slate-500" />;
 };

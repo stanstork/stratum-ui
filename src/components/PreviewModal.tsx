@@ -117,17 +117,19 @@ const PreviewModal: React.FC<PreviewModalProps> = ({ config, onClose, setView })
     const migrateItem: MigrateItem | undefined = config.migration.migrateItems[0];
 
     const handleSave = async () => {
-        setIsSaving(true);
-        setError(null);
-        try {
-            await apiClient.createJobDefinition(config);
-            setView('definitions'); // Navigate to definitions view after saving
-        } catch (err: any) {
-            console.error("Failed to save migration:", err);
-            setError(err.message || "An unexpected error occurred. Please try again.");
-        } finally {
-            setIsSaving(false);
-        }
+        console.log("Saving migration configuration:", config);
+
+        // setIsSaving(true);
+        // setError(null);
+        // try {
+        //     await apiClient.createJobDefinition(config);
+        //     setView('definitions'); // Navigate to definitions view after saving
+        // } catch (err: any) {
+        //     console.error("Failed to save migration:", err);
+        //     setError(err.message || "An unexpected error occurred. Please try again.");
+        // } finally {
+        //     setIsSaving(false);
+        // }
     };
 
     if (!migrateItem) {

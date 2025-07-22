@@ -2,9 +2,10 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { MigrateItem, MigrationConfig } from '../../types/MigrationConfig';
 import Card from '../common/v2/Card';
 import CardHeader from '../common/v2/CardHeader';
-import { Key, Search, Table, Link2, ArrowRight } from 'lucide-react';
+import { Key, Search, Table, Link2, ArrowRight, GitMerge } from 'lucide-react';
 import { TableMetadata } from '../../types/Metadata';
 import Input from '../common/v2/Input';
+import SchemaDiagram from '../SchemaDiagram';
 
 interface Step3_SelectTableProps {
     config: MigrationConfig;
@@ -244,6 +245,21 @@ const Step3_SelectTable: React.FC<Step3_SelectTableProps> = ({ config, metadata,
                     )}
                 </div>
             </div>
+
+            {/* Schema Diagram Section */}
+            {selectedTableSchema && metadata && (
+                <div className="p-6 border-t border-slate-200 dark:border-slate-700">
+                    <div className="flex items-center gap-3 mb-4">
+                        <div className="bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 p-2 rounded-full">
+                            <GitMerge size={20} />
+                        </div>
+                        <h3 className="font-semibold text-slate-700 dark:text-slate-200 text-xl">
+                            Schema Diagram
+                        </h3>
+                    </div>
+                    <SchemaDiagram table={selectedTableSchema} metadata={metadata} />
+                </div>
+            )}
         </Card>
     );
 };

@@ -1,3 +1,26 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Custom styles for React Flow controls in dark mode */
+.dark .react-flow-controls {
+    background-color: #2d3748;
+    /* A dark gray background */
+    border-bottom: 1px solid #4a5568;
+}
+
+.dark .react-flow-controls button {
+    background-color: #4a5568;
+    /* A slightly lighter gray for buttons */
+    border-bottom: 1px solid #2d3748;
+}
+
+.dark .react-flow-controls button:hover {
+    background-color: #718096;
+    /* A lighter gray for hover */
+}
+
+.dark .react-flow-controls button svg {
+    fill: #e2e8f0;
+    /* A light color for the icons */
+}

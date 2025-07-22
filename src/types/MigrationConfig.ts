@@ -21,6 +21,8 @@ export interface ConnectionPairInfo {
 export interface ConnectionInfo {
     id: string;
     name: string;
+    database: string;
+    dataFormat: string;
     description: string;
 }
 
@@ -193,6 +195,8 @@ export function emptyConnectionInfo(): ConnectionInfo {
     return {
         id: '',
         name: '',
+        database: '', // Optional, can be empty if not set
+        dataFormat: '',
         description: ''
     };
 }
@@ -201,6 +205,8 @@ export function getConnectionInfo(connection: Connection): ConnectionInfo {
     return {
         id: connection.id,
         name: connection.name,
+        database: connection.dbName,
+        dataFormat: connection.dataFormat,
         description: `${connection.dataFormat} - ${connection.host}:${connection.port}`
     };
 }

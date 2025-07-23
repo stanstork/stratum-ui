@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { TableMetadata } from "../types/Metadata";
-import ReactFlow, { Controls, Background, Node, Edge, MarkerType } from 'reactflow';
+import ReactFlow, { Controls, Background, Node, Edge, MarkerType, useReactFlow, MiniMap, useNodesInitialized } from 'reactflow';
 import 'reactflow/dist/style.css';
 import CustomNode from './CustomNode';
 
@@ -14,6 +14,9 @@ const proOptions = { hideAttribution: true };
 const SchemaDiagram = ({ table, metadata }: { table: TableMetadata, metadata: Record<string, TableMetadata> }) => {
     const [nodes, setNodes] = useState<Node[]>([]);
     const [edges, setEdges] = useState<Edge[]>([]);
+
+    const nodesInitialized = useNodesInitialized();
+    const { fitView } = useReactFlow();
 
     useEffect(() => {
         if (!table || !metadata) return;
@@ -87,8 +90,14 @@ const SchemaDiagram = ({ table, metadata }: { table: TableMetadata, metadata: Re
 
     }, [table, metadata]);
 
+    useEffect(() => {
+        if (nodesInitialized) {
+            fitView();
+        }
+    }, [nodesInitialized, fitView]);
+
     return (
-        <div style={{ height: '700px' }} className="bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-200 dark:border-slate-700">
+        <div style={{ height: '550px' }} className="bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-200 dark:border-slate-700">
             <ReactFlow
                 nodes={nodes}
                 edges={edges}
@@ -97,7 +106,7 @@ const SchemaDiagram = ({ table, metadata }: { table: TableMetadata, metadata: Re
                 proOptions={proOptions} // Hide the logo
             >
                 <Controls className="react-flow-controls" />
-                {/* The <MiniMap /> component has been removed */}
+                {/* <MiniMap /> */}
                 <Background gap={12} size={1} />
             </ReactFlow>
         </div>

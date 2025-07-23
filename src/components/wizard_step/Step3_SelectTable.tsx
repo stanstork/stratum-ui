@@ -2,10 +2,11 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { MigrateItem, MigrationConfig } from '../../types/MigrationConfig';
 import Card from '../common/v2/Card';
 import CardHeader from '../common/v2/CardHeader';
-import { Key, Search, Table, Link2, ArrowRight, GitMerge } from 'lucide-react';
+import { Key, Search, Table, Link2, ArrowRight, GitMerge, ChevronDown } from 'lucide-react';
 import { TableMetadata } from '../../types/Metadata';
 import Input from '../common/v2/Input';
 import SchemaDiagram from '../SchemaDiagram';
+import { ReactFlowProvider } from 'reactflow';
 
 interface Step3_SelectTableProps {
     config: MigrationConfig;
@@ -18,6 +19,7 @@ interface Step3_SelectTableProps {
 const Step3_SelectTable: React.FC<Step3_SelectTableProps> = ({ config, metadata, setConfig, migrateItem, isMetadataLoading }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [destinationTableName, setDestinationTableName] = useState(migrateItem.destination.names?.[0] || '');
+    const [isDiagramVisible, setIsDiagramVisible] = useState(false);
 
     useEffect(() => {
         setDestinationTableName(migrateItem.destination.names?.[0] || '');
@@ -222,19 +224,6 @@ const Step3_SelectTable: React.FC<Step3_SelectTableProps> = ({ config, metadata,
                                     </div>
                                 </div>
                             </div>
-                            <div className="border-t border-slate-200 dark:border-slate-700 p-5 bg-white/50 dark:bg-slate-900/20 rounded-b-lg">
-                                <label htmlFor="dest-table-name" className="block text-sm font-semibold text-slate-600 dark:text-slate-300 mb-2">Destination Table Name</label>
-                                <div className="flex items-center gap-3">
-                                    {/* <code className="text-sm bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 py-2 px-3 rounded-md">{config.connections.dest.name}</code>
-                                    <ArrowRight size={16} className="text-slate-400 dark:text-slate-500 flex-shrink-0" /> */}
-                                    <Input
-                                        placeholder="Enter destination table name..."
-                                        value={destinationTableName}
-                                        onChange={e => handleDestinationNameChange(e.target.value)}
-                                        className="font-mono"
-                                    />
-                                </div>
-                            </div>
                         </div>
                     ) : (
                         <div className="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg flex items-center justify-center min-h-[200px] bg-slate-50/80 dark:bg-slate-800/50">
@@ -246,18 +235,48 @@ const Step3_SelectTable: React.FC<Step3_SelectTableProps> = ({ config, metadata,
                 </div>
             </div>
 
+            {/* Destination Table Name Section */}
+            {selectedTableSchema && (
+                <div className="px-6 pb-6 border-t border-slate-200 dark:border-slate-700">
+                    <div className="flex items-center gap-3 mb-4 pt-6">
+                        <div className="bg-green-100 dark:bg-green-500/20 text-green-600 dark:text-green-300 p-2 rounded-full">
+                            <Table size={20} />
+                        </div>
+                        <h3 className="font-semibold text-slate-700 dark:text-slate-200 text-xl">
+                            Destination Table Name
+                        </h3>
+                    </div>
+                    <Input
+                        placeholder="Enter destination table name..."
+                        value={destinationTableName}
+                        onChange={e => handleDestinationNameChange(e.target.value)}
+                        className="font-mono"
+                    />
+                </div>
+            )}
+
             {/* Schema Diagram Section */}
             {selectedTableSchema && metadata && (
                 <div className="p-6 border-t border-slate-200 dark:border-slate-700">
-                    <div className="flex items-center gap-3 mb-4">
-                        <div className="bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 p-2 rounded-full">
-                            <GitMerge size={20} />
+                    <button
+                        onClick={() => setIsDiagramVisible(!isDiagramVisible)}
+                        className="w-full flex justify-between items-center text-left"
+                    >
+                        <div className="flex items-center gap-3">
+                            <div className="bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 p-2 rounded-full">
+                                <GitMerge size={20} />
+                            </div>
+                            <h3 className="font-semibold text-slate-700 dark:text-slate-200 text-xl">
+                                Schema Diagram
+                            </h3>
                         </div>
-                        <h3 className="font-semibold text-slate-700 dark:text-slate-200 text-xl">
-                            Schema Diagram
-                        </h3>
+                        <ChevronDown size={24} className={`text-slate-500 dark:text-slate-400 transition-transform duration-300 ${isDiagramVisible ? 'rotate-180' : ''}`} />
+                    </button>
+                    <div className={`transition-all duration-500 ease-in-out overflow-hidden ${isDiagramVisible ? 'pt-4' : 'max-h-0'}`}>
+                        <ReactFlowProvider>
+                            <SchemaDiagram table={selectedTableSchema} metadata={metadata} />
+                        </ReactFlowProvider>
                     </div>
-                    <SchemaDiagram table={selectedTableSchema} metadata={metadata} />
                 </div>
             )}
         </Card>

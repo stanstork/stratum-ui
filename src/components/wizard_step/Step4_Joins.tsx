@@ -273,11 +273,11 @@ const Step4_Joins = ({ config, metadata, setConfig, migrateItem }: Step4_JoinsPr
     };
 
     return (
-        <Card>
-            <CardHeader
+        <div className="space-y-6">
+            {/* <CardHeader
                 title="Joins"
                 subtitle="Combine data from other tables with your source table."
-            />
+            /> */}
             <div className="p-6">
                 <div className="flex justify-end mb-6">
                     <Button onClick={addJoin} variant="secondary" disabled={allTablesInConnection.filter(t => !new Set(loadStep.entities.concat(sourceTableName)).has(t.name)).length === 0}>
@@ -320,7 +320,7 @@ const Step4_Joins = ({ config, metadata, setConfig, migrateItem }: Step4_JoinsPr
                     )}
                 </div>
             </div>
-        </Card>
+        </div>
     );
 };
 

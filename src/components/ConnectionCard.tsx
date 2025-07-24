@@ -1,5 +1,5 @@
-import { CheckCircle2 } from "lucide-react";
-import { Connection } from "../types/Connection";
+import { CheckCircle2, HelpCircle, Loader2, XCircle, Zap } from "lucide-react";
+import { Connection, StatusType } from "../types/Connection";
 import { DatabaseIcon } from "./common/Helper";
 
 interface ConnectionCardProps {
@@ -8,34 +8,53 @@ interface ConnectionCardProps {
     onClick: () => void;
 }
 
-const ConnectionCard: React.FC<ConnectionCardProps> = ({ connection, isSelected, onClick }) => {
+const StatusIndicator = ({ status }: { status: StatusType }) => {
+    const statusStyles: Record<StatusType, { icon: React.ReactNode, text: string, className: string }> = {
+        untested: { icon: <HelpCircle size={14} />, text: 'Untested', className: 'text-slate-500 bg-slate-100 dark:bg-slate-700 dark:text-slate-400' },
+        testing: { icon: <Loader2 size={14} className="animate-spin" />, text: 'Testing...', className: 'text-sky-600 bg-sky-100 dark:bg-sky-500/20 dark:text-sky-400' },
+        valid: { icon: <CheckCircle2 size={14} />, text: 'Active', className: 'text-green-600 bg-green-100 dark:bg-green-500/10 dark:text-green-400' },
+        invalid: { icon: <XCircle size={14} />, text: 'Invalid', className: 'text-red-600 bg-red-100 dark:bg-red-500/10 dark:text-red-400' },
+    };
+
+    const currentStatus = statusStyles[status];
+
+    return (
+        <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${currentStatus.className}`}>
+            {currentStatus.icon}
+            <span>{currentStatus.text}</span>
+        </div>
+    );
+};
+
+const ConnectionCard = ({ connection, isSelected, status, onSelect, onTest }: { connection: Connection, isSelected: boolean, status: StatusType, onSelect: () => void, onTest: (e: React.MouseEvent) => void }) => {
     return (
         <button
-            onClick={onClick}
-            className={`relative text-left w-full p-4 rounded-xl transition-all duration-200 group
+            onClick={onSelect}
+            className={`
+                relative w-full text-left p-3 rounded-lg border-2 transition-all duration-200
+                focus:outline-none focus:ring-4
                 ${isSelected
-                    ? 'bg-white dark:bg-slate-800/80 ring-2 ring-indigo-500 shadow-lg'
-                    : 'bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-xl hover:-translate-y-1'
-                }`}
+                    ? 'bg-indigo-50 border-indigo-500 dark:bg-indigo-500/20 dark:border-indigo-500 focus:ring-indigo-300 dark:focus:ring-indigo-400/50'
+                    : 'bg-white border-slate-200 hover:border-slate-300 dark:bg-slate-800 dark:border-slate-700 dark:hover:border-slate-600 focus:ring-slate-300 dark:focus:ring-slate-600'
+                }
+            `}
         >
-            {isSelected ? (
-                <CheckCircle2 size={20} className="absolute top-4 right-4 text-indigo-600 dark:text-indigo-400" />
-            ) : (
-                <div className="absolute top-4 right-4 w-3 h-3 rounded-full bg-green-400 border-2 border-white dark:border-slate-800 group-hover:scale-125 transition-transform"></div>
-            )}
-
-            <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 w-12 h-12 flex items-center justify-center bg-slate-100 dark:bg-slate-900/50 rounded-lg">
-                    <DatabaseIcon type={connection.dataFormat} />
-                </div>
-                <div className="flex-grow">
-                    <h3 className="font-bold text-slate-800 dark:text-slate-100">{connection.name}</h3>
-                    <p className="text-sm text-slate-500 dark:text-slate-400 capitalize">{connection.dataFormat}</p>
-                    <div className="mt-3 text-xs text-slate-600 dark:text-slate-400 space-y-1">
-                        <p><span className="font-semibold text-slate-500 dark:text-slate-500">Host:</span> {connection.host}</p>
-                        <p><span className="font-semibold text-slate-500 dark:text-slate-500">Database:</span> {connection.dbName}</p>
+            <div className="flex justify-between items-start">
+                <div className="flex items-center gap-2">
+                    <div className={`flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-md ${isSelected ? 'bg-indigo-100 dark:bg-indigo-500/30' : 'bg-slate-100 dark:bg-slate-700'}`}>
+                        <DatabaseIcon type={connection.dataFormat} className="w-5 h-5 text-slate-600 dark:text-slate-300" />
+                    </div>
+                    <div>
+                        <h3 className={`text-sm font-semibold text-slate-800 dark:text-slate-100 ${isSelected ? 'text-indigo-900 dark:text-indigo-200' : ''}`}>{connection.name}</h3>
+                        <p className={`text-xs text-slate-500 dark:text-slate-400 ${isSelected ? 'text-indigo-700/80 dark:text-indigo-300/80' : ''}`}>{connection.dataFormat}</p>
                     </div>
                 </div>
+                {isSelected && <CheckCircle2 className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />}
+            </div>
+
+            <div className="mt-3 space-y-0.5 text-xs text-slate-600 dark:text-slate-400">
+                <p><strong>Host:</strong> {connection.host}</p>
+                <p><strong>Database:</strong> {connection.dbName}</p>
             </div>
         </button>
     );

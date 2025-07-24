@@ -1,5 +1,5 @@
 import { HTMLMotionProps, motion } from "framer-motion";
-import { Database, Server } from "lucide-react";
+import { Database, HardDrive, Server, Snowflake } from "lucide-react";
 import React from "react";
 
 export const pageVariants = { initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 }, exit: { opacity: 0, y: -20 } };
@@ -60,16 +60,19 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
 };
 
 // A simple component to get a representative icon for the DB type
-export const DatabaseIcon = ({ type }: { type: string }) => {
-    const lowerType = type.toLowerCase();
-    if (lowerType.includes('postgres')) {
-        return <Database size={24} className="text-blue-500" />;
+export const DatabaseIcon = ({ type, className }: { type: string | null, className?: string }) => {
+    const defaultClassName = "w-6 h-6 text-slate-500 dark:text-slate-400";
+    const iconProps = { className: className || defaultClassName };
+
+    switch (type?.toLowerCase()) {
+        case 'postgresql':
+            return <Server {...iconProps} />;
+        case 'mysql':
+            return <Database {...iconProps} />;
+        case 'snowflake':
+            return <Snowflake {...iconProps} />;
+        default:
+            return <HardDrive {...iconProps} />;
     }
-    if (lowerType.includes('mysql')) {
-        return <Database size={24} className="text-orange-500" />;
-    }
-    if (lowerType.includes('snowflake')) {
-        return <Database size={24} className="text-cyan-500" />;
-    }
-    return <Database size={24} className="text-slate-500" />;
 };
+

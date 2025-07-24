@@ -64,8 +64,8 @@ const InnerApp: React.FC = () => {
         <div className="h-screen bg-slate-100 dark:bg-slate-900 font-sans antialiased text-slate-700 dark:text-slate-200 flex flex-col">
             <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-indigo-50 via-white to-cyan-50 dark:from-slate-900 dark:to-indigo-900 -z-10"></div>
             {user && pathname !== '/login' && <Header view={view} setView={navigate} isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} />}
-            <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
-                <div className="max-w-7xl mx-auto">
+            <main className="flex-1 overflow-y-auto">
+                <div className="w-full h-full p-4 sm:p-6 lg:p-8">
                     <Routes>
                         <Route path="/login" element={<LoginPage />} />
                         <Route path="/*">
@@ -102,34 +102,6 @@ const InnerApp: React.FC = () => {
                                     />
                                 }
                             />
-                            {/* 
-                                }
-                            />
-                            <Route
-                                path="run/:runId"
-                                element={
-                                <MigrationRunDetails
-                                    runId={location.state?.runId}
-                                    onBack={() => goTo('executions')}
-                                />
-                                }
-                            />
-                            
-                            <Route
-                                path="definitions/:defId"
-                                element={
-                                <MigrationDefinitionDetails
-                                    defId={location.state?.defId}
-                                    onBack={() => goTo('definitions')}
-                                />
-                                }
-                            />
-                            <Route
-                                path="executions"
-                                element={<ExecutionsList />}
-                            />
-                            
-                             */}
                         </Route>
                     </Routes>
                 </div>

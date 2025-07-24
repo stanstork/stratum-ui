@@ -121,11 +121,11 @@ const Step3_SelectTable: React.FC<Step3_SelectTableProps> = ({ config, metadata,
     }, [selectedTableSchema]);
 
     return (
-        <Card>
-            <CardHeader
+        <div className="space-y-6">
+            {/* <CardHeader
                 title="Source & Destination"
                 subtitle="Choose the main table to migrate from and name the destination table."
-            />
+            /> */}
             <div className="p-6 flex flex-col lg:flex-row gap-8">
                 <div className="w-full lg:w-1/3">
                     <h3 className="font-semibold text-slate-700 dark:text-slate-200 mb-3">
@@ -279,7 +279,7 @@ const Step3_SelectTable: React.FC<Step3_SelectTableProps> = ({ config, metadata,
                     </div>
                 </div>
             )}
-        </Card>
+        </div>
     );
 };
 

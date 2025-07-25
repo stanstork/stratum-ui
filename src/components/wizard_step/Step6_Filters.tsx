@@ -1,10 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Plus, X, FolderPlus, CircleDot } from 'lucide-react';
+import { Plus, X, FolderPlus, CircleDot, Filter as FilterIcon } from 'lucide-react';
 import AllAvailableTablesProvider from './AllAvailableTablesProvider';
 import { ConditionExpr, Expression, LiteralExpr, LookupExpr, MigrateItem, MigrationConfig, FunctionCallExpr } from '../../types/MigrationConfig';
 import { TableMetadata } from '../../types/Metadata';
-import Card from '../common/v2/Card';
-import CardHeader from '../common/v2/CardHeader';
 import Button from '../common/v2/Button';
 import ColumnSelector from '../common/v2/ColumnSelector';
 import Select from '../common/v2/Select';
@@ -51,9 +49,6 @@ const getLiteralValue = (expr?: Expression): string => {
     return '';
 };
 
-/**
- * Converts the config's Expression tree into a UI-friendly tree.
- */
 const expressionToUINode = (expression?: Expression | null): UINode | null => {
     const expr: Expression | undefined = expression === null ? undefined : expression;
     if (isFunctionCall(expr)) {
@@ -80,9 +75,6 @@ const expressionToUINode = (expression?: Expression | null): UINode | null => {
     return null;
 };
 
-/**
- * Converts the UI tree back into a config-compatible Expression tree.
- */
 const uiNodeToExpression = (node: UINode): Expression | null => {
     if (node.type === 'condition') {
         if (!node.left.column || !node.op) return null;
@@ -106,6 +98,7 @@ const uiNodeToExpression = (node: UINode): Expression | null => {
 
     if (node.type === 'group') {
         const childrenExpr = node.children.map(uiNodeToExpression).filter(Boolean) as Expression[];
+        if (childrenExpr.length === 0) return null;
         return {
             FunctionCall: [node.op, childrenExpr],
         };
@@ -227,7 +220,6 @@ const Step6_Filters: React.FC<Step6_FiltersProps> = ({ config, migrateItem, meta
                     targetGroup.children.push({ type: 'group', id: `g-${Date.now()}-${Math.random()}`, op: 'AND', children: [] });
                 }
             }
-
             return newRoot;
         });
     }, []);
@@ -236,9 +228,18 @@ const Step6_Filters: React.FC<Step6_FiltersProps> = ({ config, migrateItem, meta
     return (
         <AllAvailableTablesProvider migrateItem={migrateItem} metadata={metadata}>
             {(allAvailableTables) => (
-                <Card>
-                    <CardHeader title="Filters (WHERE Clause)" subtitle="Filter the data to be migrated based on specific conditions." />
-                    <div className="p-6">
+                <>
+                    {/* Section Intro */}
+                    <div className="flex justify-between items-center">
+                        <div>
+                            <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Filters (WHERE Clause)</h2>
+                            <p className="text-slate-500 dark:text-slate-400 mt-1">
+                                Filter the data to be migrated based on specific conditions.
+                            </p>
+                        </div>
+                    </div>
+                    {/* Body */}
+                    <div className="pt-8 border-slate-200 dark:border-slate-700/60">
                         <FilterNode
                             node={rootNode}
                             path={[]}
@@ -247,7 +248,7 @@ const Step6_Filters: React.FC<Step6_FiltersProps> = ({ config, migrateItem, meta
                             onModify={modifyNodeByPath}
                         />
                     </div>
-                </Card>
+                </>
             )}
         </AllAvailableTablesProvider>
     );
@@ -283,41 +284,37 @@ const FilterNode: React.FC<FilterNodeProps> = ({ node, ...props }) => {
 
 const FilterGroup: React.FC<{ node: UIGroup } & Omit<FilterNodeProps, 'node'>> = ({ node, path, allAvailableTables, onUpdate, onModify }) => {
     const isRoot = path.length === 0;
-    // The path to the current group node itself
     const currentPath = isRoot ? [node.id] : [...path, node.id];
+    const opColorClass = node.op === 'AND' ? 'border-sky-500' : 'border-amber-500';
 
     return (
-        <div className={`pl-4 border-l-2 ${node.op === 'AND' ? 'border-sky-500' : 'border-amber-500'} ${isRoot ? 'border-none pl-0' : 'pt-2'}`}>
-            <div className="flex items-center gap-4 mb-2 flex-wrap">
-                <div className="flex items-center rounded-full border border-slate-300 dark:border-slate-600">
-                    <button onClick={() => onUpdate(currentPath, n => ({ ...(n as UIGroup), op: 'AND' }))} className={`px-3 py-1 text-xs font-semibold rounded-l-full transition-colors ${node.op === 'AND' ? 'bg-sky-500 text-white' : 'bg-transparent text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700'}`}>AND</button>
-                    <button onClick={() => onUpdate(currentPath, n => ({ ...(n as UIGroup), op: 'OR' }))} className={`px-3 py-1 text-xs font-semibold rounded-r-full transition-colors ${node.op === 'OR' ? 'bg-amber-500 text-white' : 'bg-transparent text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700'}`}>OR</button>
+        <div className={`p-4 rounded-lg ${isRoot ? '' : 'bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/60'}`}>
+            <div className="flex items-center gap-4 mb-4 flex-wrap">
+                <div className="flex items-center rounded-lg border border-slate-300 dark:border-slate-600 p-0.5">
+                    <button onClick={() => onUpdate(currentPath, n => ({ ...(n as UIGroup), op: 'AND' }))} className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${node.op === 'AND' ? 'bg-slate-700 text-white shadow' : 'bg-transparent text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700'}`}>AND</button>
+                    <button onClick={() => onUpdate(currentPath, n => ({ ...(n as UIGroup), op: 'OR' }))} className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${node.op === 'OR' ? 'bg-slate-700 text-white shadow' : 'bg-transparent text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700'}`}>OR</button>
                 </div>
                 <div className="flex items-center gap-2">
-                    <Button onClick={() => onModify(currentPath, 'add-condition')} variant="secondary"><Plus size={14} className="mr-1.5" />Condition</Button>
-                    <Button onClick={() => onModify(currentPath, 'add-group')} variant="secondary"><FolderPlus size={14} className="mr-1.5" />Group</Button>
+                    <Button onClick={() => onModify(currentPath, 'add-condition')} variant="outline"><Plus size={14} className="mr-1.5" />Condition</Button>
+                    <Button onClick={() => onModify(currentPath, 'add-group')} variant="outline"><FolderPlus size={14} className="mr-1.5" />Group</Button>
                 </div>
                 {!isRoot && (
-                    <button onClick={() => onModify(currentPath, 'remove')} className="ml-auto text-slate-400 hover:text-red-600 dark:hover:text-red-400"><X size={16} /></button>
+                    <button onClick={() => onModify(currentPath, 'remove')} className="ml-auto p-2 text-slate-400 hover:text-red-600 dark:hover:text-red-400"><X size={16} /></button>
                 )}
             </div>
-            <div className="space-y-2 mt-3">
-                {node.children.map((child) => (
-                    <div key={child.id} className="flex items-start gap-2">
-                        <CircleDot size={12} className={`mt-3 flex-shrink-0 ${node.op === 'AND' ? 'text-sky-500' : 'text-amber-500'}`} />
-                        <div className="w-full">
-                            <FilterNode
-                                node={child}
-                                path={currentPath}
-                                allAvailableTables={allAvailableTables}
-                                onUpdate={onUpdate}
-                                onModify={onModify}
-                            />
-                        </div>
+            <div className={`space-y-3 pl-6 border-l-2 ${opColorClass}`}>
+                {node.children.length > 0 ? node.children.map((child) => (
+                    <div key={child.id} className="relative">
+                        <FilterNode
+                            node={child}
+                            path={currentPath}
+                            allAvailableTables={allAvailableTables}
+                            onUpdate={onUpdate}
+                            onModify={onModify}
+                        />
                     </div>
-                ))}
-                {node.children.length === 0 && (
-                    <p className="text-sm text-slate-500 dark:text-slate-400 pl-5 py-2">This group is empty. Add a condition or another group.</p>
+                )) : (
+                    <p className="text-sm text-slate-500 dark:text-slate-400 py-2">This group is empty. Add a condition or another group.</p>
                 )}
             </div>
         </div>
@@ -327,7 +324,7 @@ const FilterGroup: React.FC<{ node: UIGroup } & Omit<FilterNodeProps, 'node'>> =
 const FilterCondition: React.FC<{ node: UICondition } & Omit<FilterNodeProps, 'node'>> = ({ node, path, allAvailableTables, onUpdate, onModify }) => {
     const currentPath = [...path, node.id];
     return (
-        <div className="grid grid-cols-1 md:grid-cols-10 gap-2 items-center w-full bg-slate-50/80 dark:bg-slate-800/40 p-3 rounded-lg">
+        <div className="grid grid-cols-1 md:grid-cols-10 gap-2 items-center w-full bg-white dark:bg-slate-800 p-3 rounded-lg border border-slate-200 dark:border-slate-700">
             <div className="md:col-span-4">
                 <ColumnSelector
                     allTables={allAvailableTables}
@@ -355,7 +352,7 @@ const FilterCondition: React.FC<{ node: UICondition } & Omit<FilterNodeProps, 'n
                 )}
             </div>
             <div className="md:col-span-1 text-right">
-                <button onClick={() => onModify(currentPath, 'remove')} className="text-slate-400 hover:text-red-600 dark:hover:text-red-400">
+                <button onClick={() => onModify(currentPath, 'remove')} className="p-2 text-slate-400 hover:text-red-600 dark:hover:text-red-400">
                     <X size={18} />
                 </button>
             </div>

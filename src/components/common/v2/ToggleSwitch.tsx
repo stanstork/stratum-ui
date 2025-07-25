@@ -1,14 +1,35 @@
-type ToggleSwitchProps = {
-    label: string;
-    enabled: boolean;
-    setEnabled: (value: boolean) => void;
-};
+import React from 'react';
 
-const ToggleSwitch = ({ label, enabled, setEnabled }: ToggleSwitchProps) => (
-    <div onClick={() => setEnabled(!enabled)} className="flex items-center justify-between cursor-pointer p-4 rounded-lg bg-slate-50/70 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-700 hover:bg-slate-100/80 dark:hover:bg-slate-700/80 transition-colors">
-        <span className="font-medium text-slate-700 dark:text-slate-200">{label}</span>
-        <div className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors ${enabled ? 'bg-indigo-600' : 'bg-slate-300 dark:bg-slate-600'}`}><span className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform ${enabled ? 'translate-x-6' : 'translate-x-1'}`} /></div>
-    </div>
-);
+interface ToggleSwitchProps {
+    label?: string;
+    description?: string;
+    enabled: boolean;
+    setEnabled: (enabled: boolean) => void;
+}
+
+const ToggleSwitch: React.FC<ToggleSwitchProps> = ({ label, description, enabled, setEnabled }) => {
+    return (
+        <div className="flex justify-between items-center">
+            <div className="flex-grow">
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-200">{label}</label>
+                {description && <p className="text-xs text-slate-500 dark:text-slate-400">{description}</p>}
+            </div>
+            <button
+                type="button"
+                className={`${enabled ? 'bg-indigo-600' : 'bg-slate-200 dark:bg-slate-700'
+                    } relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:ring-offset-slate-800`}
+                role="switch"
+                aria-checked={enabled}
+                onClick={() => setEnabled(!enabled)}
+            >
+                <span
+                    aria-hidden="true"
+                    className={`${enabled ? 'translate-x-5' : 'translate-x-0'
+                        } pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
+                />
+            </button>
+        </div>
+    );
+};
 
 export default ToggleSwitch;

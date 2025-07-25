@@ -1,14 +1,11 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { Wand2, Plus, ArrowRight, X, Type, AtSign, Sigma, FunctionSquare, Pilcrow, Hash } from 'lucide-react';
+import { Wand2, Plus, ArrowRight, X, Type, AtSign, Sigma, FunctionSquare, Pilcrow, Check, ListTree, ChevronsLeft, ChevronsRight, Search } from 'lucide-react';
 import AllAvailableTablesProvider from './AllAvailableTablesProvider';
 import { Expression, LiteralExpr, LookupExpr, Mapping, MapStep, MigrateItem, MigrationConfig, FunctionCallExpr, ArithmeticExpr } from '../../types/MigrationConfig';
 import { TableMetadata } from '../../types/Metadata';
-import Card from '../common/v2/Card';
-import CardHeader from '../common/v2/CardHeader';
 import Button from '../common/v2/Button';
 import ColumnSelector from '../common/v2/ColumnSelector';
 import Input from '../common/v2/Input';
-import Select from '../common/v2/Select';
 
 // --- Type Guards & Helpers ---
 const isLookup = (expr: Expression): expr is LookupExpr => !!(expr as LookupExpr)?.Lookup;
@@ -32,7 +29,7 @@ const getEmptyExprForMode = (mode: SourceMode): Expression => {
         case 'function':
             return { FunctionCall: ['CONCAT', []] };
         case 'arithmetic':
-            return { Arithmetic: { left: { Lookup: { entity: '', field: null, key: '' } }, operator: '+', right: { Literal: { Integer: 0 } } } };
+            return { Arithmetic: { left: { Lookup: { entity: '', field: null, key: '' } }, operator: 'Add', right: { Literal: { Integer: 0 } } } };
         case 'literal':
         default:
             return { Literal: { String: '' } };
@@ -78,7 +75,7 @@ const FunctionArgumentEditor: React.FC<{
                         selectedTable={(arg as LookupExpr).Lookup?.entity || ''}
                         selectedColumn={(arg as LookupExpr).Lookup?.key || ''}
                         onTableChange={(val) => onUpdate({ Lookup: { entity: val, key: null, field: '' } })}
-                        onColumnChange={(val) => onUpdate({ Lookup: { entity: (arg as LookupExpr).Lookup?.entity, key: val, field: '' } })}
+                        onColumnChange={(val) => onUpdate({ Lookup: { entity: (arg as LookupExpr).Lookup?.entity || '', key: val, field: '' } })}
                     />
                 ) : (
                     <Input
@@ -116,7 +113,7 @@ const FunctionCallEditor: React.FC<ExpressionEditorProps> = ({ expression, onUpd
     return (
         <div className="flex flex-col gap-2">
             <Input value={name} onChange={e => handleNameChange(e.target.value)} placeholder="Function Name (e.g. CONCAT)" className="font-mono font-bold" />
-            <div className='pl-4 border-l-2 border-slate-200 dark:border-slate-700 space-y-2'>
+            <div className='pl-4 border-l-2 border-slate-200 dark:border-slate-700 space-y-2 mt-2 pt-2'>
                 <h4 className='text-xs font-semibold text-slate-500 dark:text-slate-400'>ARGUMENTS</h4>
                 {args.map((arg, i) => (
                     <div key={i} className="flex items-center gap-2">
@@ -138,17 +135,10 @@ const ArithmeticEditor: React.FC<ExpressionEditorProps> = ({ expression, onUpdat
     const { left, operator, right } = (expression as ArithmeticExpr).Arithmetic;
 
     const handleUpdate = (field: 'left' | 'operator' | 'right', value: any) => {
-        const val = field === 'operator' ? operatorOptionsMap[value] : value;
-        onUpdate({ Arithmetic: { left, operator, right, ...{ [field]: val } } });
+        onUpdate({ Arithmetic: { left, operator, right, ...{ [field]: value } } });
     };
 
-    const operatorOptions = ['+', '-', '*', '/'];
-    const operatorOptionsMap: Record<string, string> = {
-        '+': 'Add',
-        '-': 'Subtract',
-        '*': 'Multiply',
-        '/': 'Divide'
-    };
+    const operatorOptions = ['Add', 'Subtract', 'Multiply', 'Divide'];
 
     return (
         <div className="space-y-3">
@@ -165,12 +155,15 @@ const ArithmeticEditor: React.FC<ExpressionEditorProps> = ({ expression, onUpdat
                         <button
                             key={op}
                             onClick={() => handleUpdate('operator', op)}
-                            className={`flex items-center justify-center w-10 h-8 text-lg font-mono rounded-md transition-colors ${operator === operatorOptionsMap[op]
+                            className={`flex items-center justify-center w-10 h-8 text-lg font-mono rounded-md transition-colors ${operator === op
                                 ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 shadow-sm'
                                 : 'bg-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
                                 }`}
                         >
-                            {op}
+                            {op === 'Add' && '+'}
+                            {op === 'Subtract' && '-'}
+                            {op === 'Multiply' && '*'}
+                            {op === 'Divide' && '/'}
                         </button>
                     ))}
                 </div>
@@ -201,18 +194,18 @@ interface MappingRowProps {
 const MappingRow: React.FC<MappingRowProps> = ({ mapping, index, allAvailableTables, onUpdate, onSetSourceMode, onRemove }) => {
     const mode = getSourceMode(mapping.source);
     const sourceModeOptions = [
-        { value: 'lookup', label: 'Column', icon: <AtSign size={14} /> },
-        { value: 'literal', label: 'Text', icon: <Type size={14} /> },
-        { value: 'function', label: 'Function', icon: <FunctionSquare size={14} /> },
-        { value: 'arithmetic', label: 'Math', icon: <Sigma size={14} /> },
+        { value: 'lookup', label: 'Column', icon: <AtSign size={16} /> },
+        { value: 'literal', label: 'Text', icon: <Type size={16} /> },
+        { value: 'function', label: 'Function', icon: <FunctionSquare size={16} /> },
+        { value: 'arithmetic', label: 'Math', icon: <Sigma size={16} /> },
     ];
 
     return (
-        <div className="flex flex-col md:flex-row items-stretch gap-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl p-3 border border-slate-200 dark:border-slate-700/50">
+        <div className="p-5 rounded-lg bg-white dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
             {/* Source Section */}
-            <div className="flex-grow md:w-7/12 p-4 bg-white dark:bg-slate-800 rounded-lg border border-slate-200/80 dark:border-slate-700">
-                <div className="flex justify-between items-center mb-4">
-                    <h3 className="font-semibold text-slate-800 dark:text-slate-100">Source</h3>
+            <div className="md:col-span-7">
+                <div className="flex justify-between items-center mb-3">
+                    <h3 className="font-semibold text-sm text-slate-600 dark:text-slate-300">Source</h3>
                     <div className="flex items-center rounded-lg border border-slate-200 dark:border-slate-700 p-0.5 bg-slate-100 dark:bg-slate-900">
                         {sourceModeOptions.map((option) => (
                             <button
@@ -238,23 +231,90 @@ const MappingRow: React.FC<MappingRowProps> = ({ mapping, index, allAvailableTab
             </div>
 
             {/* Arrow */}
-            <div className="flex items-center justify-center text-slate-400 dark:text-slate-500 my-2 md:my-0">
+            <div className="md:col-span-1 flex items-center justify-center text-slate-400 dark:text-slate-500 my-2 md:my-0 h-full">
                 <ArrowRight size={20} />
             </div>
 
             {/* Destination Section */}
-            <div className="md:w-4/12 p-4 bg-white dark:bg-slate-800 rounded-lg border border-slate-200/80 dark:border-slate-700 flex flex-col justify-center">
-                <label className="block text-sm font-semibold text-slate-800 dark:text-slate-100 mb-2">Destination Column</label>
+            <div className="md:col-span-3 flex flex-col justify-center h-full">
+                <label className="block text-sm font-semibold text-slate-600 dark:text-slate-300 mb-2">Destination Column</label>
                 <Input value={mapping.target} onChange={e => onUpdate(index, 'target', e.target.value)} placeholder="e.g., full_name" />
             </div>
 
             {/* Remove Button */}
-            <div className="flex items-center justify-end md:justify-center">
+            <div className="md:col-span-1 flex items-center justify-start md:justify-end h-full">
                 <button onClick={() => onRemove(index)} className="p-2 text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition-colors rounded-md"><X size={18} /></button>
             </div>
         </div>
     );
 }
+
+// Available Columns Panel
+interface AvailableColumnsPanelProps {
+    columns: { table: string; column: string }[];
+    mappedColumns: Set<string>;
+    isCollapsed: boolean;
+    searchTerm: string;
+    onSearchChange: (term: string) => void;
+    onAddMapping: (table: string, column: string) => void;
+    onToggle: () => void;
+}
+
+const AvailableColumnsPanel: React.FC<AvailableColumnsPanelProps> = ({ columns, mappedColumns, isCollapsed, searchTerm, onSearchChange, onAddMapping, onToggle }) => {
+    if (isCollapsed) {
+        return (
+            <div className="p-2 rounded-lg bg-white dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 h-fit flex justify-center">
+                <Button onClick={onToggle} variant="ghost" title="Show Available Columns">
+                    <ChevronsRight />
+                </Button>
+            </div>
+        )
+    }
+
+    return (
+        <div className="p-4 rounded-lg bg-white dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 h-fit">
+            <div className="flex justify-between items-center mb-3">
+                <h3 className="font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                    <ListTree size={18} />
+                    Available Columns
+                </h3>
+                <Button onClick={onToggle} variant="ghost" title="Hide Panel">
+                    <ChevronsLeft />
+                </Button>
+            </div>
+            <div className="relative mb-3">
+                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <Input
+                    placeholder="Search columns..."
+                    value={searchTerm}
+                    onChange={(e) => onSearchChange(e.target.value)}
+                    className="pl-9 text-sm"
+                />
+            </div>
+            <div className="space-y-1 max-h-[60vh] overflow-y-auto">
+                {columns.map(({ table, column }) => {
+                    const isMapped = mappedColumns.has(`${table}.${column}`);
+                    return (
+                        <div key={`${table}.${column}`} className={`flex items-center justify-between rounded-md ${isMapped ? 'bg-slate-100 dark:bg-slate-700/50 p-2' : ''}`}>
+                            <p className={`text-sm ${isMapped ? 'text-slate-500 dark:text-slate-400' : 'text-slate-700 dark:text-slate-200'}`}>
+                                <span className="font-mono text-xs bg-slate-200 dark:bg-slate-700 p-1 rounded">{table}</span>
+                                <span className="mx-1">.</span>
+                                <span>{column}</span>
+                            </p>
+                            {isMapped ? (
+                                <span className="text-green-500 flex items-center text-xs gap-1 font-medium"><Check size={14} /> Mapped</span>
+                            ) : (
+                                <Button variant="ghost" onClick={() => onAddMapping(table, column)}>
+                                    Add
+                                </Button>
+                            )}
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
+    );
+};
 
 // --- Main Component ---
 
@@ -266,6 +326,8 @@ type Step5_ColumnMappingProps = {
 };
 
 const Step5_ColumnMapping: React.FC<Step5_ColumnMappingProps> = ({ config, migrateItem, metadata, setConfig }) => {
+    const [isPanelCollapsed, setIsPanelCollapsed] = useState(false);
+    const [columnSearchTerm, setColumnSearchTerm] = useState('');
     const { mappings } = useMemo(() => migrateItem.map || { mappings: [] }, [migrateItem.map]);
 
     const updateMapStep = (updatedMapStep: MapStep) => {
@@ -276,9 +338,23 @@ const Step5_ColumnMapping: React.FC<Step5_ColumnMappingProps> = ({ config, migra
         });
     };
 
+    const addMapping = (sourceExpr?: Expression, targetName?: string) => {
+        const newMapping: Mapping = {
+            source: sourceExpr || { Lookup: { entity: '', key: null, field: '' } },
+            target: targetName || '',
+        };
+        updateMapStep({ mappings: [...mappings, newMapping] });
+    };
+
+    const addMappingFromSource = (table: string, column: string) => {
+        const newSourceExpr: Expression = { Lookup: { entity: table, key: column, field: '' } };
+        const newTargetName = `${table}_${column}`;
+        addMapping(newSourceExpr, newTargetName);
+    };
+
     const autoMapAll = useCallback((allAvailableTables: TableMetadata[]) => {
         const existingTargets = new Set(mappings.map(m => m.target));
-        const newMappings: Mapping[] = [];
+        let newMappings: Mapping[] = [];
         allAvailableTables.forEach(table => {
             Object.keys(table.columns).forEach(columnName => {
                 const targetName = `${table.name}_${columnName}`;
@@ -290,18 +366,16 @@ const Step5_ColumnMapping: React.FC<Step5_ColumnMappingProps> = ({ config, migra
                 }
             });
         });
+
+        const destTableName = config.migration.migrateItems[0].destination.names[0];
+        if (destTableName && allAvailableTables.length === 1 && allAvailableTables[0].name !== destTableName) {
+            newMappings = newMappings.map(m => ({ ...m, target: m.target.replace(`${allAvailableTables[0].name}_`, '') }))
+        }
+
         if (newMappings.length > 0) {
             updateMapStep({ mappings: [...mappings, ...newMappings] });
         }
-    }, [mappings]);
-
-    const addMapping = () => {
-        const newMapping: Mapping = {
-            source: { Lookup: { entity: '', key: null, field: '' } },
-            target: '',
-        };
-        updateMapStep({ mappings: [...mappings, newMapping] });
-    };
+    }, [mappings, config.migration.migrateItems, updateMapStep]);
 
     const removeMapping = (mappingIndex: number) => {
         const newMappings = mappings.filter((_, index) => index !== mappingIndex);
@@ -325,43 +399,92 @@ const Step5_ColumnMapping: React.FC<Step5_ColumnMappingProps> = ({ config, migra
         updateMapStep({ mappings: newMappings });
     };
 
+    const mappedSourceColumns = useMemo(() => {
+        return new Set(
+            mappings
+                .filter(m => isLookup(m.source))
+                .map(m => {
+                    const lookup = (m.source as LookupExpr).Lookup;
+                    return `${lookup.entity}.${lookup.key}`;
+                })
+        );
+    }, [mappings]);
+
     return (
         <AllAvailableTablesProvider migrateItem={migrateItem} metadata={metadata}>
-            {(allAvailableTables) => (
-                <Card>
-                    <CardHeader
-                        title="Column Mapping"
-                        subtitle="Define the structure of your destination table."
-                    />
-                    <div className="p-6">
-                        <div className="flex justify-end gap-2 mb-6">
-                            <Button onClick={() => autoMapAll(allAvailableTables)} >
-                                <Wand2 size={16} className="mr-2" /> Auto-map 1:1
-                            </Button>
-                            <Button onClick={addMapping} variant="secondary">
-                                <Plus size={16} className="mr-2" /> Add Mapping
-                            </Button>
+            {(allAvailableTables) => {
+                const allSourceColumns = allAvailableTables.flatMap(table =>
+                    Object.keys(table.columns).map(column => ({ table: table.name, column }))
+                );
+
+                const filteredColumns = !columnSearchTerm
+                    ? allSourceColumns
+                    : allSourceColumns.filter(
+                        c => c.column.toLowerCase().includes(columnSearchTerm.toLowerCase()) ||
+                            c.table.toLowerCase().includes(columnSearchTerm.toLowerCase())
+                    );
+
+                return (
+                    <>
+                        {/* Section Intro */}
+                        <div className="flex justify-between items-center">
+                            <div>
+                                <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Column Mapping</h2>
+                                <p className="text-slate-500 dark:text-slate-400 mt-1">
+                                    Define the structure of your destination table by mapping source columns and expressions.
+                                </p>
+                            </div>
+                            <div className="flex justify-end gap-2">
+                                <Button onClick={() => autoMapAll(allAvailableTables)} variant="outline" >
+                                    <Wand2 size={16} className="mr-2" /> Auto-map 1:1
+                                </Button>
+                                <Button onClick={() => addMapping()} variant="outline">
+                                    <Plus size={16} className="mr-2" /> Add Mapping
+                                </Button>
+                            </div>
                         </div>
-                        <div className="space-y-4">
-                            {mappings.length === 0 ? (
-                                <div className="text-slate-500 dark:text-slate-400 text-center py-8 bg-slate-50/80 dark:bg-slate-800/50 rounded-lg">
-                                    No mappings defined yet.
+                        {/* Body */}
+                        <div className="pt-8 border-slate-200 dark:border-slate-700/60">
+                            <div className="grid grid-cols-12 gap-8 items-start">
+                                {/* Left Panel: Available Columns */}
+                                <div className={`lg:sticky lg:top-8 transition-all duration-300 ${isPanelCollapsed ? 'col-span-1' : 'lg:col-span-3 col-span-12'}`}>
+                                    <AvailableColumnsPanel
+                                        columns={filteredColumns}
+                                        mappedColumns={mappedSourceColumns}
+                                        isCollapsed={isPanelCollapsed}
+                                        searchTerm={columnSearchTerm}
+                                        onSearchChange={setColumnSearchTerm}
+                                        onToggle={() => setIsPanelCollapsed(!isPanelCollapsed)}
+                                        onAddMapping={addMappingFromSource}
+                                    />
                                 </div>
-                            ) : (mappings.map((map, index) => (
-                                <MappingRow
-                                    key={index}
-                                    mapping={map}
-                                    index={index}
-                                    allAvailableTables={allAvailableTables}
-                                    onUpdate={updateMapping}
-                                    onSetSourceMode={setSourceMode}
-                                    onRemove={removeMapping}
-                                />
-                            )))}
+                                {/* Right Panel: Mappings */}
+                                <div className={`space-y-4 transition-all duration-300 ${isPanelCollapsed ? 'col-span-11' : 'lg:col-span-9 col-span-12'}`}>
+                                    {mappings.length === 0 ? (
+                                        <div className="text-center py-16 bg-white dark:bg-slate-800/50 rounded-lg border border-slate-200/80 dark:border-slate-700/80">
+                                            <div className="mx-auto bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 p-4 rounded-full w-fit mb-4">
+                                                <ArrowRight size={32} />
+                                            </div>
+                                            <h3 className="text-xl font-semibold text-slate-700 dark:text-slate-200">No Mappings Defined</h3>
+                                            <p className="text-slate-500 dark:text-slate-400 mt-1">Add mappings manually or use the reference list.</p>
+                                        </div>
+                                    ) : (mappings.map((map, index) => (
+                                        <MappingRow
+                                            key={index}
+                                            mapping={map}
+                                            index={index}
+                                            allAvailableTables={allAvailableTables}
+                                            onUpdate={updateMapping}
+                                            onSetSourceMode={setSourceMode}
+                                            onRemove={removeMapping}
+                                        />
+                                    )))}
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                </Card>
-            )}
+                    </>
+                )
+            }}
         </AllAvailableTablesProvider>
     );
 };

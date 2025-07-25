@@ -12,6 +12,7 @@ import Step7_Settings from "../components/wizard_step/Step7_Settings";
 import PreviewModal from "../components/PreviewModal";
 import { TableMetadata } from "../types/Metadata";
 import apiClient from "../services/apiClient";
+import Step8_Preview from "../components/wizard_step/Step8_Preview";
 
 type MigrationWizardProps = {
     onBack: () => void;
@@ -66,10 +67,11 @@ const MigrationWizard = ({ onBack, setView }: MigrationWizardProps) => {
         { num: 1, title: 'Details', isComplete: isStep1Complete, isDisabled: false },
         { num: 2, title: 'Connections', isComplete: isStep2Complete, isDisabled: !isStep1Complete },
         { num: 3, title: 'Source Table', isComplete: isStep3Complete, isDisabled: !isStep2Complete },
-        { num: 4, title: 'Joins', isComplete: true, isDisabled: !isStep3Complete }, // Logic needed
-        { num: 5, title: 'Column Mapping', isComplete: true, isDisabled: !isStep3Complete }, // Logic needed
-        { num: 6, title: 'Filters', isComplete: true, isDisabled: !isStep3Complete }, // Logic needed
-        { num: 7, title: 'Settings', isComplete: true, isDisabled: !isStep3Complete }, // Logic needed
+        { num: 4, title: 'Joins', isComplete: true, isDisabled: !isStep3Complete },
+        { num: 5, title: 'Column Mapping', isComplete: true, isDisabled: !isStep3Complete },
+        { num: 6, title: 'Filters', isComplete: true, isDisabled: !isStep3Complete },
+        { num: 7, title: 'Settings', isComplete: true, isDisabled: !isStep3Complete },
+        { num: 8, title: 'Preview', isComplete: true, isDisabled: !isStep3Complete }
     ];
 
     const renderStep = () => {
@@ -81,6 +83,7 @@ const MigrationWizard = ({ onBack, setView }: MigrationWizardProps) => {
             case 5: return <Step5_ColumnMapping config={config} setConfig={setConfig} metadata={metadata} migrateItem={config.migration.migrateItems[0]} />;
             case 6: return <Step6_Filters config={config} setConfig={setConfig} metadata={metadata} migrateItem={config.migration.migrateItems[0]} />;
             case 7: return <Step7_Settings config={config} setConfig={setConfig} migrateItem={config.migration.migrateItems[0]} />;
+            case 8: return <Step8_Preview config={config} setView={setView} onEditStep={setCurrentStep} />;
             default: return <Step1_Details config={config} setConfig={setConfig} />;
         }
     };

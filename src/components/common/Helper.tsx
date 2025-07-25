@@ -61,12 +61,13 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
 
 // A simple component to get a representative icon for the DB type
 export const DatabaseIcon = ({ type, className }: { type: string | null, className?: string }) => {
-    const defaultClassName = "w-6 h-6 text-slate-500 dark:text-slate-400";
-    const iconProps = { className: className || defaultClassName };
+    // Default to white text, but allow override for specific cases (like the summary section in light mode)
+    const finalClassName = className || "w-6 h-6 text-white";
+    const iconProps = { className: finalClassName };
 
     switch (type?.toLowerCase()) {
-        case 'postgresql':
-            return <Server {...iconProps} />;
+        case 'pg':
+            return <Database {...iconProps} />;
         case 'mysql':
             return <Database {...iconProps} />;
         case 'snowflake':

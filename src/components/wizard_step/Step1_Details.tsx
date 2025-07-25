@@ -10,17 +10,14 @@ type Step1DetailsProps = {
 const Step1_Details = ({ config, setConfig }: Step1DetailsProps) => {
     return (
         <div className="space-y-8">
-            {/* <div className="flex items-center gap-4">
-                <div className="bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 p-3 rounded-lg">
-                    <FileText size={24} />
-                </div>
+            <div className="flex items-center gap-4">
                 <div>
                     <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Migration Details</h2>
                     <p className="text-slate-500 dark:text-slate-400 mt-1">
                         Provide basic information about your migration project. This helps organize and track your configurations.
                     </p>
                 </div>
-            </div> */}
+            </div>
 
             {/* Section for Migration Name */}
             <div className="border border-slate-200 dark:border-slate-700 rounded-xl p-6 space-y-4">

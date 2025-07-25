@@ -1,6 +1,6 @@
 import { exitCode } from "process";
 import { ConnectionPair } from "../components/ConnectionEditor";
-import { Connection, emptyConnection } from "./Connection";
+import { Connection, emptyConnection, StatusType } from "./Connection";
 
 // Root config
 export interface MigrationConfig {
@@ -21,6 +21,7 @@ export interface ConnectionPairInfo {
 export interface ConnectionInfo {
     id: string;
     name: string;
+    status: StatusType;
     database: string;
     dataFormat: string;
     description: string;
@@ -195,7 +196,8 @@ export function emptyConnectionInfo(): ConnectionInfo {
     return {
         id: '',
         name: '',
-        database: '', // Optional, can be empty if not set
+        status: 'untested', // Default status
+        database: '',
         dataFormat: '',
         description: ''
     };
@@ -206,6 +208,7 @@ export function getConnectionInfo(connection: Connection): ConnectionInfo {
         id: connection.id,
         name: connection.name,
         database: connection.dbName,
+        status: connection.status,
         dataFormat: connection.dataFormat,
         description: `${connection.dataFormat} - ${connection.host}:${connection.port}`
     };

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { emptyMigrationConfig, MigrationConfig } from "../types/MigrationConfig";
-import { ArrowRight, ArrowRightLeft, Check, ChevronRight, Database, FileText, Filter, Link2, Settings, Table } from "lucide-react";
+import { ArrowRight, ArrowRightLeft, Check, CheckCircle2, Database, FileText, Filter, Link2, Loader, Settings, Table } from "lucide-react";
 import Button from "../components/common/v2/Button";
 import Step1_Details from "../components/wizard_step/Step1_Details";
 import Step2_Connections from "../components/wizard_step/Step2_Connections";
@@ -9,26 +9,24 @@ import Step4_Joins from "../components/wizard_step/Step4_Joins";
 import Step5_ColumnMapping from "../components/wizard_step/Step5_ColumnMapping";
 import Step6_Filters from "../components/wizard_step/Step6_Filters";
 import Step7_Settings from "../components/wizard_step/Step7_Settings";
-import PreviewModal from "../components/PreviewModal";
 import { TableMetadata } from "../types/Metadata";
 import apiClient from "../services/apiClient";
 import Step8_Preview from "../components/wizard_step/Step8_Preview";
+import React from "react";
 
 type MigrationWizardProps = {
-    onBack: () => void;
     setView: (view: string, params?: any) => void;
+    onBack: () => void;
 };
 
-const MigrationWizard = ({ onBack, setView }: MigrationWizardProps) => {
+const MigrationWizard: React.FC<MigrationWizardProps> = ({ setView, onBack }) => {
     const [currentStep, setCurrentStep] = useState(1);
-    const [isPreviewVisible, setIsPreviewVisible] = useState(false);
     const [config, setConfig] = useState<MigrationConfig>(emptyMigrationConfig());
-    const [metadata, setMetadata] = useState<Record<string, TableMetadata> | null>(null);
     const [isMetadataLoading, setIsMetadataLoading] = useState(false);
+    const [metadata, setMetadata] = useState<Record<string, TableMetadata> | null>(null);
+    const [isSaving, setIsSaving] = useState(false);
 
-    const sourceName = config.connections.source.name || '...';
-    const destName = config.connections.dest.name || '...';
-
+    // Fetch metadata when source connection changes
     useEffect(() => {
         const loadMetadata = async () => {
             const sourceId = config.connections.source?.id;
@@ -50,140 +48,155 @@ const MigrationWizard = ({ onBack, setView }: MigrationWizardProps) => {
         loadMetadata();
     }, [config.connections.source?.id]);
 
-    useEffect(() => {
-        if (isPreviewVisible) {
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = 'auto';
-        }
-        return () => { document.body.style.overflow = 'auto'; };
-    }, [isPreviewVisible]);
-
-    const isStep1Complete = config.name.trim() !== '';
-    const isStep2Complete = !!(config.connections.source.id && config.connections.dest.id);
-    const isStep3Complete = !!config.migration.migrateItems[0]?.source.names[0];
-
     const steps = [
-        { num: 1, title: 'Details', isComplete: isStep1Complete, isDisabled: false },
-        { num: 2, title: 'Connections', isComplete: isStep2Complete, isDisabled: !isStep1Complete },
-        { num: 3, title: 'Source Table', isComplete: isStep3Complete, isDisabled: !isStep2Complete },
-        { num: 4, title: 'Joins', isComplete: true, isDisabled: !isStep3Complete },
-        { num: 5, title: 'Column Mapping', isComplete: true, isDisabled: !isStep3Complete },
-        { num: 6, title: 'Filters', isComplete: true, isDisabled: !isStep3Complete },
-        { num: 7, title: 'Settings', isComplete: true, isDisabled: !isStep3Complete },
-        { num: 8, title: 'Preview', isComplete: true, isDisabled: !isStep3Complete }
+        { num: 1, title: 'Details', icon: <FileText size={20} /> },
+        { num: 2, title: 'Connections', icon: <Database size={20} /> },
+        { num: 3, title: 'Source Table', icon: <Table size={20} /> },
+        { num: 4, title: 'Joins', icon: <Link2 size={20} /> },
+        { num: 5, title: 'Column Mapping', icon: <ArrowRightLeft size={20} /> },
+        { num: 6, title: 'Filters', icon: <Filter size={20} /> },
+        { num: 7, title: 'Settings', icon: <Settings size={20} /> },
+        { num: 8, title: 'Preview', icon: <CheckCircle2 size={20} /> }
     ];
 
-    const renderStep = () => {
-        switch (currentStep) {
-            case 1: return <Step1_Details config={config} setConfig={setConfig} />;
-            case 2: return <Step2_Connections config={config} setConfig={setConfig} />;
-            case 3: return <Step3_SelectTable config={config} setConfig={setConfig} migrateItem={config.migration.migrateItems[0]} metadata={metadata} isMetadataLoading={isMetadataLoading} />;
-            case 4: return <Step4_Joins config={config} setConfig={setConfig} metadata={metadata} migrateItem={config.migration.migrateItems[0]} />;
-            case 5: return <Step5_ColumnMapping config={config} setConfig={setConfig} metadata={metadata} migrateItem={config.migration.migrateItems[0]} />;
-            case 6: return <Step6_Filters config={config} setConfig={setConfig} metadata={metadata} migrateItem={config.migration.migrateItems[0]} />;
-            case 7: return <Step7_Settings config={config} setConfig={setConfig} migrateItem={config.migration.migrateItems[0]} />;
-            case 8: return <Step8_Preview config={config} setView={setView} onEditStep={setCurrentStep} />;
-            default: return <Step1_Details config={config} setConfig={setConfig} />;
+    const isStepDisabled = (stepNum: number) => {
+        if (stepNum === 1) return false;
+        if (!config.name) return true; // Step 1 must be complete
+        if (stepNum > 2 && (!config.connections.source?.id || !config.connections.dest?.id)) return true; // Step 2 must be complete
+        if (stepNum > 3 && !config.migration.migrateItems[0].source.names[0]) return true; // Step 3 must be complete
+        return false;
+    };
+
+    const handleNext = () => {
+        if (currentStep < steps.length) {
+            const nextStep = currentStep + 1;
+            if (!isStepDisabled(nextStep)) {
+                setCurrentStep(nextStep);
+            }
         }
     };
 
-    const handleNext = () => { if (currentStep < steps.length) setCurrentStep(currentStep + 1); };
-    const handlePrev = () => { if (currentStep > 1) setCurrentStep(currentStep - 1); };
-
-    const isNextDisabled = () => {
-        const currentStepConfig = steps.find(s => s.num === currentStep);
-        return !currentStepConfig?.isComplete;
+    const handlePrev = () => {
+        if (currentStep > 1) {
+            setCurrentStep(currentStep - 1);
+        }
     };
 
-    const isLastStep = currentStep === steps.length;
+    const goToStep = (stepNum: number) => {
+        if (!isStepDisabled(stepNum)) {
+            setCurrentStep(stepNum);
+        }
+    }
+
+    const renderStep = () => {
+        const props = { config, setConfig, migrateItem: config.migration.migrateItems[0] };
+        switch (currentStep) {
+            case 1: return <Step1_Details {...props} />;
+            case 2: return <Step2_Connections {...props} />;
+            case 3: return <Step3_SelectTable {...props} metadata={metadata} isMetadataLoading={isMetadataLoading} />;
+            case 4: return <Step4_Joins {...props} metadata={metadata} />;
+            case 5: return <Step5_ColumnMapping {...props} metadata={metadata} />;
+            case 6: return <Step6_Filters {...props} metadata={metadata} />;
+            case 7: return <Step7_Settings {...props} />;
+            case 8: return <Step8_Preview {...props} onEditStep={goToStep} setView={setView} />;
+            default: return <Step1_Details {...props} />;
+        }
+    };
+
+    const isNextDisabled = () => {
+        switch (currentStep) {
+            case 1: return !config.name;
+            case 2: return !config.connections.source?.id || !config.connections.dest?.id;
+            case 3: return !config.migration.migrateItems[0].source.names[0];
+            default: return false;
+        }
+    };
+
+    const handleSave = async () => {
+        setIsSaving(true);
+        try {
+            console.log("Saving migration config:", config);
+            // await apiClient.createJobDefinition(config);
+            // setView('definitions'); // Navigate on success
+        } catch (error) {
+            console.error("Failed to save migration:", error);
+            // Optionally show an error message to the user
+        } finally {
+            setIsSaving(false);
+        }
+    };
 
     return (
-        <div className="pb-8">
-            <div className="bg-white dark:bg-slate-800/50 rounded-lg shadow-sm flex flex-col">
-                {/* Header Area */}
-                <div className="p-6">
-                    <div className="mb-6">
+        <div className="w-full">
+            <div className="bg-white dark:bg-slate-800/60 rounded-xl shadow-lg">
+
+                {/* Header Zone: Title & Buttons */}
+                <div className="p-6 border-b border-slate-200 dark:border-slate-700/60">
+                    <div className="flex justify-between items-center">
                         <div>
-                            <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">New Migration Configuration</h1>
+                            <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100">New Migration Configuration</h2>
                             <p className="text-slate-500 dark:text-slate-400 mt-1">
-                                Configure data migration from <span className="font-semibold text-slate-600 dark:text-slate-300">{sourceName}</span> to <span className="font-semibold text-slate-600 dark:text-slate-300">{destName}</span>
+                                {config.connections.source.name ? `From ${config.connections.source.name} to ${config.connections.dest.name || '...'}` : 'Configure your data transfer job.'}
                             </p>
                         </div>
+                        <div className="flex gap-2">
+                            <Button variant="outline" onClick={onBack}>Cancel</Button>
+                            <Button variant="outline">Save Draft</Button>
+                        </div>
                     </div>
-                    <nav>
-                        <ol className="flex items-center">
-                            {steps.map((step, index) => {
-                                const isCompleted = currentStep > step.num;
-                                const isActive = currentStep === step.num;
-                                let statusClasses;
-                                if (isActive) {
-                                    statusClasses = {
-                                        circle: 'bg-indigo-600 text-white',
-                                        text: 'text-indigo-600 dark:text-indigo-400 font-semibold'
-                                    };
-                                } else if (step.isDisabled) {
-                                    statusClasses = {
-                                        circle: 'bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed',
-                                        text: 'text-slate-400 dark:text-slate-500 cursor-not-allowed'
-                                    };
-                                } else if (step.isComplete) {
-                                    statusClasses = {
-                                        circle: 'bg-indigo-200 dark:bg-indigo-500/30 text-indigo-700 dark:text-indigo-300',
-                                        text: 'text-slate-600 dark:text-slate-300 font-medium'
-                                    };
-                                }
-                                else {
-                                    statusClasses = {
-                                        circle: 'bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-500 dark:text-slate-400',
-                                        text: 'text-slate-500 dark:text-slate-400 font-medium'
-                                    };
-                                }
+                </div>
 
-                                return (
-                                    <li key={step.num} className="flex items-center">
+                {/* Stepper Zone */}
+                <div className="p-6 border-b border-slate-200 dark:border-slate-700/60">
+                    <ol className="flex items-center w-full">
+                        {steps.map((step, index) => {
+                            const isDisabled = isStepDisabled(step.num);
+                            const isCompleted = currentStep > step.num && !isDisabled;
+                            const isActive = currentStep === step.num;
+                            return (
+                                <React.Fragment key={step.num}>
+                                    <li className="relative flex items-center">
                                         <button
-                                            onClick={() => !step.isDisabled && setCurrentStep(step.num)}
-                                            disabled={step.isDisabled}
-                                            className="flex items-center gap-3 p-2 rounded-lg"
+                                            onClick={() => goToStep(step.num)}
+                                            disabled={isDisabled}
+                                            className="flex items-center gap-3 text-sm font-medium transition-colors"
                                         >
-                                            <span className={`flex items-center justify-center w-7 h-7 rounded-full text-sm ${statusClasses.circle}`}>
-                                                {step.isComplete && !isActive ? <Check size={16} /> : step.num}
+                                            <span className={`flex items-center justify-center w-8 h-8 rounded-full transition-colors duration-300 border-2 ${isActive ? 'bg-indigo-600 border-indigo-600 text-white' : isCompleted ? 'bg-white dark:bg-slate-700 border-indigo-600 text-indigo-600' : isDisabled ? 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-400 cursor-not-allowed' : 'bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-500 hover:border-slate-400'}`}>
+                                                {isCompleted ? <Check size={16} /> : <span className="text-xs font-bold">{step.num}</span>}
                                             </span>
-                                            <span className={`text-sm ${statusClasses.text}`}>
-                                                {step.title}
-                                            </span>
+                                            <span className={`${isActive ? 'text-indigo-600 dark:text-indigo-300' : 'text-slate-700 dark:text-slate-300'} ${isDisabled ? 'text-slate-400' : ''}`}>{step.title}</span>
                                         </button>
-                                        {index < steps.length - 1 && <ChevronRight className="w-5 h-5 text-slate-300 dark:text-slate-600 mx-1" />}
                                     </li>
-                                );
-                            })}
-                        </ol>
-                    </nav>
+                                    {index < steps.length - 1 && <div className={`flex-auto border-t-2 mx-4 transition duration-500 ${isCompleted ? 'border-indigo-600' : 'border-slate-200 dark:border-slate-700'}`}></div>}
+                                </React.Fragment>
+                            );
+                        })}
+                    </ol>
                 </div>
 
-                {/* Divider */}
-                <hr className="border-slate-200 dark:border-slate-700" />
-
-                {/* Step Content Area */}
-                <div className="p-6">
+                {/* Step Content Zone */}
+                <main className="p-6">
                     {renderStep()}
-                </div>
+                </main>
 
-                {/* Footer Area */}
-                <div className="p-6 border-t border-slate-200 dark:border-slate-700 flex justify-end">
-                    <div className="flex items-center gap-3">
-                        <Button onClick={onBack} variant="secondary">Cancel</Button>
-                        <Button variant="outline">Save Draft</Button>
-                        {currentStep > 1 && <Button onClick={handlePrev} variant="secondary">Previous</Button>}
-                        {isLastStep
-                            ? <Button onClick={() => setIsPreviewVisible(true)} variant="primary" disabled={isNextDisabled()}>Finish & Review</Button>
-                            : <Button onClick={handleNext} disabled={isNextDisabled()}>Next Step <ArrowRight size={16} className="ml-2" /></Button>
-                        }
+                {/* Footer Actions Zone */}
+                <footer className="p-4 bg-slate-50 dark:bg-slate-900/30 rounded-b-xl border-t border-slate-200 dark:border-slate-700/60">
+                    <div className="flex justify-between items-center">
+                        <Button onClick={handlePrev} variant="outline" className={currentStep === 1 ? 'invisible' : ''}>
+                            Previous Step
+                        </Button>
+                        {currentStep < steps.length ? (
+                            <Button onClick={handleNext} disabled={isNextDisabled()}>
+                                Next Step <ArrowRight size={16} className="ml-2" />
+                            </Button>
+                        ) : (
+                            <Button onClick={handleSave} variant="primary" disabled={isSaving}>
+                                {isSaving && <Loader size={16} className="animate-spin mr-2" />}
+                                {isSaving ? 'Saving...' : 'Confirm & Save'}
+                            </Button>
+                        )}
                     </div>
-                </div>
-
-                {isPreviewVisible && <PreviewModal config={config} onClose={() => setIsPreviewVisible(false)} setView={setView} />}
+                </footer>
             </div>
         </div>
     );

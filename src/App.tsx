@@ -65,7 +65,8 @@ const InnerApp: React.FC = () => {
             <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-indigo-50 via-white to-cyan-50 dark:from-slate-900 dark:to-indigo-900 -z-10"></div>
             {user && pathname !== '/login' && <Header view={view} setView={navigate} isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} />}
             <main className="flex-1 overflow-y-auto">
-                <div className="w-full h-full p-4 sm:p-6 lg:p-8">
+                {/* Global content container with max-width and centering */}
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     <Routes>
                         <Route path="/login" element={<LoginPage />} />
                         <Route path="/*">

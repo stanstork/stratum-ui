@@ -3,7 +3,6 @@ import { ArrowRight, CheckCircle, CheckCircle2, Edit, GitMerge, Loader, AlertTri
 import {
     MigrationConfig, Expression, LookupExpr, LiteralExpr, ConditionExpr, MigrateItem, ArithmeticExpr, FunctionCallExpr, Mapping, JoinCondition
 } from "../../types/MigrationConfig";
-import Button from "../common/v2/Button";
 import apiClient from '../../services/apiClient';
 
 // --- Type Guards & Helpers ---
@@ -54,13 +53,13 @@ const ConnectionSummary: React.FC<{ config: MigrationConfig }> = ({ config }) =>
     <div className="flex items-center justify-center gap-4 md:gap-8">
         <div className="flex-1 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-200 dark:border-slate-700 space-y-2">
             <div className="flex items-center gap-2">
-                <div className="w-6 h-6 flex items-center justify-center bg-green-100 dark:bg-green-900/50 rounded-md text-green-600 dark:text-green-300">
+                <div className="w-6 h-6 flex items-center justify-center bg-green-100 dark:bg-green-900/50 rounded-md text-blue-600 dark:text-blue-300">
                     <Database size={14} />
                 </div>
-                <p className="text-sm font-semibold text-slate-800 dark:text-slate-300">Source</p>
+                <p className="text-sm font-semibold text-green-800 dark:text-green-300">Source</p>
             </div>
             <p className="text-sm"><span className="font-medium text-slate-600 dark:text-slate-300">Type:</span> {config.connections.source.dataFormat}</p>
-            <p className="text-sm"><span className="font-medium text-slate-600 dark:text-slate-300">Server:</span> {config.connections.source.database}</p>
+            <p className="text-sm"><span className="font-medium text-slate-600 dark:text-slate-300">Database:</span> {config.connections.source.database}</p>
         </div>
         <ArrowRight size={24} className="text-slate-400 dark:text-slate-500 flex-shrink-0" />
         <div className="flex-1 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700/50 space-y-2">
@@ -71,7 +70,7 @@ const ConnectionSummary: React.FC<{ config: MigrationConfig }> = ({ config }) =>
                 <p className="text-sm font-semibold text-blue-800 dark:text-blue-300">Destination</p>
             </div>
             <p className="text-sm"><span className="font-medium text-slate-600 dark:text-slate-300">Type:</span> {config.connections.dest.dataFormat}</p>
-            <p className="text-sm"><span className="font-medium text-slate-600 dark:text-slate-300">Server:</span> {config.connections.dest.database}</p>
+            <p className="text-sm"><span className="font-medium text-slate-600 dark:text-slate-300">Database:</span> {config.connections.dest.database}</p>
         </div>
     </div>
 );
@@ -81,7 +80,7 @@ const TableMappingSummary: React.FC<{ migrateItem: MigrateItem }> = ({ migrateIt
         <div className="flex-1 flex items-center gap-3 p-4">
             <Table size={20} className="text-green-500 flex-shrink-0" />
             <div>
-                <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">SOURCE TABLE</p>
+                <p className="text-sm font-semibold text-green-500 dark:text-green-400">SOURCE TABLE</p>
                 <p className="font-mono text-base text-slate-800 dark:text-slate-200">{migrateItem.source.names[0]}</p>
             </div>
         </div>
@@ -89,7 +88,7 @@ const TableMappingSummary: React.FC<{ migrateItem: MigrateItem }> = ({ migrateIt
         <div className="flex-1 flex items-center gap-3 p-4">
             <Table size={20} className="text-blue-500 flex-shrink-0" />
             <div>
-                <p className="text-sm font-semibold text-blue-800 dark:text-blue-300">DESTINATION TABLE</p>
+                <p className="text-sm font-semibold text-blue-500 dark:text-blue-400">DESTINATION TABLE</p>
                 <p className="font-mono text-base text-slate-800 dark:text-slate-200">{migrateItem.destination.names[0]}</p>
             </div>
         </div>
@@ -134,7 +133,7 @@ const JoinSummary: React.FC<{ join: JoinCondition }> = ({ join }) => (
                 <div className="w-10 h-10 flex items-center justify-center bg-blue-100 dark:bg-blue-500/20 rounded-full text-blue-600 dark:text-blue-300">
                     <GitMerge size={20} />
                 </div>
-                <p className="text-xs font-semibold mt-1 text-slate-500 dark:text-slate-400">INNER JOIN</p>
+                {/* <p className="text-xs font-semibold mt-1 text-slate-500 dark:text-slate-400">INNER JOIN</p> */}
             </div>
             <div className="flex-1">
                 <p className="text-xs text-slate-500 dark:text-slate-400 uppercase font-semibold">JOINED TABLE</p>
@@ -209,56 +208,69 @@ const Step8_Preview: React.FC<Step8PreviewProps> = ({ config, onEditStep, setVie
         return <div className="text-center text-slate-500 dark:text-slate-400">Configuration is not available.</div>;
     }
 
+    const stepsCompleted = 7;
+    const totalSteps = 7;
+    const progressPercentage = (stepsCompleted / totalSteps) * 100;
+
     return (
-        <div className="space-y-6">
-            <SectionCard title="Connections" icon={<Database size={20} />}>
-                <ConnectionSummary config={config} />
-            </SectionCard>
-
-            <SectionCard title="Table Mapping" icon={<Table size={20} />}>
-                <TableMappingSummary migrateItem={migrateItem} />
-            </SectionCard>
-
-            <SectionCard title="Column Mappings" icon={<ArrowRightLeft size={20} />}>
-                <div className="space-y-2">
-                    {migrateItem.map.mappings.map((mapping, i) => (
-                        <ColumnMappingRow key={i} mapping={mapping} status={'ok'} /> // Status is hardcoded for now
-                    ))}
-                    {migrateItem.map.mappings.length === 0 && <p className="text-center text-slate-500 py-4">No columns mapped.</p>}
+        <div className="space-y-8">
+            {/* Header Zone */}
+            <div className="p-6 text-center bg-white dark:bg-slate-800/50 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700/60">
+                <div className="mx-auto bg-green-100 dark:bg-green-500/20 text-green-600 dark:text-green-300 w-14 h-14 flex items-center justify-center rounded-full">
+                    <CheckCircle2 size={32} />
                 </div>
-            </SectionCard>
+                <h2 className="text-3xl font-bold text-slate-800 dark:text-slate-100 mt-4">Migration Summary</h2>
+                <p className="text-base text-slate-500 dark:text-slate-400 mt-2">
+                    Review your migration configuration before executing.
+                </p>
+                <div className="mt-6 max-w-2xl mx-auto">
+                    <div className="flex justify-between items-center mb-2">
+                        <h3 className="text-base font-semibold text-slate-700 dark:text-slate-200">Configuration Progress</h3>
+                        <span className="text-sm font-medium text-green-600 dark:text-green-400">{stepsCompleted}/{totalSteps} steps configured</span>
+                    </div>
+                    <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2.5">
+                        <div className="bg-green-500 h-2.5 rounded-full" style={{ width: `${progressPercentage}%` }}></div>
+                    </div>
+                </div>
+            </div>
 
-            {migrateItem.load.matches.length > 0 && (
-                <SectionCard title="Table Joins" icon={<GitMerge size={20} />}>
-                    <div className="space-y-4">
-                        {migrateItem.load.matches.map((join, i) => (
-                            <JoinSummary key={i} join={join} />
+            <div className="space-y-6">
+                <SectionCard title="Connections" icon={<Database size={20} />}>
+                    <ConnectionSummary config={config} />
+                </SectionCard>
+
+                <SectionCard title="Table Mapping" icon={<Table size={20} />}>
+                    <TableMappingSummary migrateItem={migrateItem} />
+                </SectionCard>
+
+                <SectionCard title="Column Mappings" icon={<ArrowRightLeft size={20} />}>
+                    <div className="space-y-2">
+                        {migrateItem.map.mappings.map((mapping, i) => (
+                            <ColumnMappingRow key={i} mapping={mapping} status={'ok'} /> // Status is hardcoded for now
                         ))}
+                        {migrateItem.map.mappings.length === 0 && <p className="text-center text-slate-500 py-4">No columns mapped.</p>}
                     </div>
                 </SectionCard>
-            )}
 
-            {migrateItem.filter.expression && (
-                <SectionCard title="Data Filters" icon={<Filter size={20} />}>
-                    <FilterSummary expression={migrateItem.filter.expression} />
-                </SectionCard>
-            )}
-
-            <SectionCard title="Migration Settings" icon={<Settings size={20} />}>
-                <SettingsSummary settings={migrateItem.settings} />
-            </SectionCard>
-
-            {/* Footer Actions Zone */}
-            <div className="pt-6 flex justify-end">
-                {error && (
-                    <div className="w-full mr-4 p-3 bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-300 rounded-lg text-sm">
-                        <strong>Error:</strong> {error}
-                    </div>
+                {migrateItem.load.matches.length > 0 && (
+                    <SectionCard title="Table Joins" icon={<GitMerge size={20} />}>
+                        <div className="space-y-4">
+                            {migrateItem.load.matches.map((join, i) => (
+                                <JoinSummary key={i} join={join} />
+                            ))}
+                        </div>
+                    </SectionCard>
                 )}
-                <Button onClick={handleSave} variant="primary" disabled={isSaving}>
-                    {isSaving && <Loader size={18} className="animate-spin mr-2" />}
-                    {isSaving ? 'Saving Migration...' : 'Confirm & Save Migration'}
-                </Button>
+
+                {migrateItem.filter.expression && (
+                    <SectionCard title="Data Filters" icon={<Filter size={20} />}>
+                        <FilterSummary expression={migrateItem.filter.expression} />
+                    </SectionCard>
+                )}
+
+                <SectionCard title="Migration Settings" icon={<Settings size={20} />}>
+                    <SettingsSummary settings={migrateItem.settings} />
+                </SectionCard>
             </div>
         </div>
     );

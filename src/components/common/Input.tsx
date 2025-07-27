@@ -1,40 +1,17 @@
-import React from "react";
+import React from 'react';
 
-type InputProps = {
-    label?: string;
+interface InputProps {
     value: string;
-    onChange?: React.ChangeEventHandler<HTMLInputElement>;
-    type?: string;
+    onChange: React.ChangeEventHandler<HTMLInputElement>;
     placeholder?: string;
-    readOnly?: boolean;
-};
+    className?: string;
+    type?: string;
+    disabled?: boolean;
+    step?: string; // Optional for number inputs
+}
 
-const Input: React.FC<InputProps> = ({
-    label,
-    value,
-    onChange,
-    type = "text",
-    placeholder,
-    readOnly = false,
-}) => (
-    <div className="w-full">
-        {label && (
-            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
-                {label}
-            </label>
-        )}
-        <input
-            type={type}
-            value={value}
-            onChange={onChange}
-            placeholder={placeholder}
-            readOnly={readOnly}
-            className={`w-full p-2 bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 rounded-md shadow-sm focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-shadow ${readOnly
-                ? "text-slate-500 dark:text-slate-400 cursor-not-allowed bg-slate-100 dark:bg-slate-800"
-                : "dark:text-slate-200"
-                }`}
-        />
-    </div>
+const Input: React.FC<InputProps> = ({ value, onChange, placeholder, className = '', type = 'text', disabled = false, step = 'any' }) => (
+    <input step={step} disabled={disabled} type={type} value={value} onChange={onChange} placeholder={placeholder} className={`w-full bg-white/80 dark:bg-slate-700/80 border border-slate-300 dark:border-slate-600 rounded-lg py-2.5 px-3 text-slate-700 dark:text-slate-200 leading-tight focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-500 ${className}`} />
 );
 
 export default Input;

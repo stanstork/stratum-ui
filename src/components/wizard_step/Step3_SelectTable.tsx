@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { MigrateItem, MigrationConfig } from '../../types/MigrationConfig';
 import { Key, Search, Table, Link2, GitMerge, ChevronDown, Database, ArrowRight } from 'lucide-react';
 import { TableMetadata } from '../../types/Metadata';
-import Input from '../common/v2/Input';
+import Input from '../common/Input';
 import SchemaDiagram from '../SchemaDiagram';
 import { ReactFlowProvider } from 'reactflow';
 

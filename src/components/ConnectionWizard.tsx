@@ -1,10 +1,10 @@
 import { useState } from "react";
-import Card from "./common/v2/Card";
-import CardHeader from "./common/v2/CardHeader";
-import Input from "./common/v2/Input";
-import Button from "./common/v2/Button";
+import Card from "./common/Card";
+import CardHeader from "./common/CardHeader";
+import Input from "./common/Input";
+import Button from "./common/Button";
 import { Loader, Wifi } from "lucide-react";
-import Select from "./common/v2/Select";
+import Select from "./common/Select";
 import apiClient from "../services/apiClient";
 import { Connection, createConnectionString } from "../types/Connection";
 

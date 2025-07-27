@@ -3,9 +3,9 @@ import { Wand2, Plus, ArrowRight, X, Type, AtSign, Sigma, FunctionSquare, Pilcro
 import AllAvailableTablesProvider from './AllAvailableTablesProvider';
 import { Expression, LiteralExpr, LookupExpr, Mapping, MapStep, MigrateItem, MigrationConfig, FunctionCallExpr, ArithmeticExpr } from '../../types/MigrationConfig';
 import { TableMetadata } from '../../types/Metadata';
-import Button from '../common/v2/Button';
-import ColumnSelector from '../common/v2/ColumnSelector';
-import Input from '../common/v2/Input';
+import Button from '../common/Button';
+import ColumnSelector from '../common/ColumnSelector';
+import Input from '../common/Input';
 
 // --- Type Guards & Helpers ---
 const isLookup = (expr: Expression): expr is LookupExpr => !!(expr as LookupExpr)?.Lookup;

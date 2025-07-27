@@ -10,8 +10,8 @@ import {
     ArithmeticExpr,
     FunctionCallExpr
 } from "../types/MigrationConfig";
-import Button from "./common/v2/Button";
-import ConfigSection from "./common/v2/ConfigSection";
+import Button from "./common/Button";
+import ConfigSection from "./common/ConfigSection";
 import apiClient from '../services/apiClient';
 
 // --- Type Guards ---

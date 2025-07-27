@@ -1,11 +1,11 @@
 import { ArrowRight, Plus } from "lucide-react";
-import Button from "../../components/common/v2/Button";
-import Card from "../../components/common/v2/Card";
-import CardHeader from "../../components/common/v2/CardHeader";
-import { JobDefinition } from "../../types/JobDefinition";
+import Button from "../components/common/Button";
+import Card from "../components/common/Card";
+import CardHeader from "../components/common/CardHeader";
+import { JobDefinition } from "../types/JobDefinition";
 import { useEffect, useState } from "react";
-import apiClient from "../../services/apiClient";
-import { Spinner } from "../../components/common/Helper";
+import apiClient from "../services/apiClient";
+import { Spinner } from "../components/common/Helper";
 
 type MigrationDefinitionsListProps = {
     setView: (view: string, options?: Record<string, any>) => void;

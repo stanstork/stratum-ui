@@ -1,9 +1,9 @@
 import { Settings, Info, Database } from "lucide-react";
 import { MigrateItem, MigrationConfig, MigrationSettings } from "../../types/MigrationConfig";
-import Input from "../common/v2/Input";
-import Select from "../common/v2/Select";
-import ToggleSwitch from "../common/v2/ToggleSwitch";
-import Tooltip from "../common/v2/Tooltip";
+import Input from "../common/Input";
+import Select from "../common/Select";
+import ToggleSwitch from "../common/ToggleSwitch";
+import Tooltip from "../common/Tooltip";
 
 type Step7SettingsProps = {
     config: MigrationConfig;

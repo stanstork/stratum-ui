@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { emptyMigrationConfig, MigrationConfig } from "../types/MigrationConfig";
 import { ArrowRight, ArrowRightLeft, Check, CheckCircle2, Database, FileText, Filter, Link2, Loader, Settings, Table } from "lucide-react";
-import Button from "../components/common/v2/Button";
+import Button from "../components/common/Button";
 import Step1_Details from "../components/wizard_step/Step1_Details";
 import Step2_Connections from "../components/wizard_step/Step2_Connections";
 import Step3_SelectTable from "../components/wizard_step/Step3_SelectTable";

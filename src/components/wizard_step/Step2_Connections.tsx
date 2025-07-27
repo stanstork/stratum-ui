@@ -3,7 +3,7 @@ import { emptyMigrationConfig, getConnectionInfo, MigrationConfig } from "../../
 import { useEffect, useState } from "react";
 import { Connection, emptyConnection, StatusType } from "../../types/Connection";
 import apiClient from "../../services/apiClient";
-import Button from "../common/v2/Button";
+import Button from "../common/Button";
 import ConnectionCard from "../ConnectionCard";
 import { DatabaseIcon } from "../common/Helper";
 

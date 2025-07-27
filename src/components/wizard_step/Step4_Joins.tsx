@@ -1,9 +1,9 @@
 import React, { useMemo, useCallback, useState } from "react";
 import { TableMetadata } from "../../types/Metadata";
 import { JoinCondition, LoadStep, MigrateItem, MigrationConfig, LookupExpr } from "../../types/MigrationConfig";
-import Button from "../common/v2/Button";
+import Button from "../common/Button";
 import { Plus, Key, Link2, Eye, EyeOff, X, Database } from "lucide-react";
-import ColumnSelector from "../common/v2/ColumnSelector";
+import ColumnSelector from "../common/ColumnSelector";
 
 // --- Join Item Component ---
 interface JoinItemProps {

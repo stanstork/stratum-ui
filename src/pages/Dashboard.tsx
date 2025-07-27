@@ -7,9 +7,9 @@ import { Spinner, StatusBadge } from "../components/common/Helper";
 import { easeOut, Variants } from "framer-motion";
 import { ExecutionStat } from "../types/ExecutionStat";
 import { Plus } from "lucide-react";
-import Card from "../components/common/v2/Card";
-import CardHeader from "../components/common/v2/CardHeader";
-import Button from "../components/common/v2/Button";
+import Card from "../components/common/Card";
+import CardHeader from "../components/common/CardHeader";
+import Button from "../components/common/Button";
 import MigrationChart from "../components/MigrationChart";
 
 type ChartDataItem = { name: string; Succeeded: number; Failed: number; Running: number };
@@ -118,7 +118,7 @@ const Dashboard = ({ setView, isDarkMode }: DashboardProps) => {
             <div className="mb-8">
                 <MigrationChart isDarkMode={isDarkMode} chartData={stats.chartData} />
             </div>
-             <Card>
+            <Card>
                 <CardHeader title="Last 10 Runs" actions={<Button variant="secondary" onClick={() => setView('executions')}>View All</Button>} />
                 <div className="p-2">
                     <table className="w-full text-left">

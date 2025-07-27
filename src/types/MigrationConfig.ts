@@ -1,5 +1,4 @@
 import { exitCode } from "process";
-import { ConnectionPair } from "../components/ConnectionEditor";
 import { Connection, emptyConnection, StatusType } from "./Connection";
 
 // Root config

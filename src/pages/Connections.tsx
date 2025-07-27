@@ -1,11 +1,11 @@
 import { Plus } from "lucide-react";
-import Button from "../../components/common/v2/Button";
-import Card from "../../components/common/v2/Card";
-import CardHeader from "../../components/common/v2/CardHeader";
+import Button from "../components/common/Button";
+import Card from "../components/common/Card";
+import CardHeader from "../components/common/CardHeader";
 import { useEffect, useState } from "react";
-import { Connection } from "../../types/Connection";
-import apiClient from "../../services/apiClient";
-import { Spinner } from "../../components/common/Helper";
+import { Connection } from "../types/Connection";
+import apiClient from "../services/apiClient";
+import { Spinner } from "../components/common/Helper";
 
 type ConnectionsPageProps = {
     setView: (view: string) => void;

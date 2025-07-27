@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import Select from "./Select";
-import { TableMetadata } from "../../../types/Metadata";
+import { TableMetadata } from "../../types/Metadata";
 
 type ColumnSelectorProps = {
     allTables: TableMetadata[];

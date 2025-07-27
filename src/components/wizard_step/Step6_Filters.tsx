@@ -3,10 +3,10 @@ import { Plus, X, FolderPlus, CircleDot, Filter as FilterIcon } from 'lucide-rea
 import AllAvailableTablesProvider from './AllAvailableTablesProvider';
 import { ConditionExpr, Expression, LiteralExpr, LookupExpr, MigrateItem, MigrationConfig, FunctionCallExpr } from '../../types/MigrationConfig';
 import { TableMetadata } from '../../types/Metadata';
-import Button from '../common/v2/Button';
-import ColumnSelector from '../common/v2/ColumnSelector';
-import Select from '../common/v2/Select';
-import Input from '../common/v2/Input';
+import Button from '../common/Button';
+import ColumnSelector from '../common/ColumnSelector';
+import Select from '../common/Select';
+import Input from '../common/Input';
 
 // --- Type Guards ---
 const isLookup = (expr?: Expression): expr is LookupExpr => !!(expr as LookupExpr)?.Lookup;

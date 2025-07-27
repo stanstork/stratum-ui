@@ -2,9 +2,9 @@ import { useMemo } from "react";
 import { TableMetadata } from "../types/Metadata";
 import { JoinCondition, LoadStep } from "../types/MigrationConfig";
 import { getLookupData } from "../utils/meta";
-import Select from "./common/v2/Select";
+import Select from "./common/Select";
 import { X } from "lucide-react";
-import ColumnSelector from "./common/v2/ColumnSelector";
+import ColumnSelector from "./common/ColumnSelector";
 
 interface JoinItemProps {
     index: number;

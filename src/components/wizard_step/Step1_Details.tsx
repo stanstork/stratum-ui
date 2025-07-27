@@ -1,6 +1,6 @@
 import { FileText } from "lucide-react";
 import { MigrationConfig } from "../../types/MigrationConfig";
-import Input from "../common/v2/Input";
+import Input from "../common/Input";
 
 type Step1DetailsProps = {
     config: MigrationConfig

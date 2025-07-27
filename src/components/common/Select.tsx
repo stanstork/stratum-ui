@@ -1,22 +1,24 @@
-import { ChevronsUpDown } from 'lucide-react';
-import React, { ReactNode } from 'react';
+import { ChevronDown } from "lucide-react";
 
-interface SelectProps {
-    label: string;
+type Option = { value: string; label: string };
+
+type SelectProps = {
+    options: Option[];
     value: string;
-    onChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
-    children: ReactNode;
-}
+    onChange: React.ChangeEventHandler<HTMLSelectElement>;
+    placeholder: string;
+    disabled?: boolean;
+    className?: string;
+};
 
-const Select: React.FC<SelectProps> = ({ label, value, onChange, children }) => {
-    return (
-        <div className="w-full relative">
-            {label && <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">{label}</label>} <select value={value} onChange={onChange} className="w-full p-2 pr-8 bg-slate-50 dark:bg-slate-700/50 dark:text-slate-200 border border-slate-200 dark:border-slate-600 rounded-md shadow-sm focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-shadow appearance-none"> {children} </select>
-            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500 pt-5">
-                <ChevronsUpDown size={16} />
-            </div>
-        </div>
-    );
-}
+const Select: React.FC<SelectProps> = ({ options, value, onChange, placeholder, disabled = false, className = '' }) => (
+    <div className="relative w-full">
+        <select value={value} onChange={onChange} disabled={disabled} className={`w-full appearance-none bg-white/80 dark:bg-slate-700/80 border border-slate-300 dark:border-slate-600 rounded-lg py-2.5 px-3 text-slate-700 dark:text-slate-200 leading-tight focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-500 ${disabled ? 'bg-slate-100 dark:bg-slate-800 cursor-not-allowed' : ''} ${className}`}>
+            <option value="" disabled>{placeholder}</option>
+            {options.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+        </select>
+        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500 dark:text-slate-400"><ChevronDown size={18} /></div>
+    </div>
+);
 
 export default Select;

@@ -4,10 +4,10 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import LoginPage from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import { ThemeProvider } from './context/ThemeContext';
-import Header from './components/v2/Header';
-import ConnectionsPage from './pages/v2/Connections';
+import Header from './components/Header';
+import ConnectionsPage from './pages/Connections';
 import ConnectionWizard from './components/ConnectionWizard';
-import MigrationDefinitionsList from './pages/v2/MigrationDefinitionsList';
+import MigrationDefinitionsList from './pages/MigrationDefinitionsList';
 import MigrationWizard from './pages/MigrationWizard';
 
 interface AppContextProps {

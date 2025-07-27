@@ -1,6 +1,6 @@
 import { useMemo } from "react";
-import Card from "./common/v2/Card";
-import CardHeader from "./common/v2/CardHeader";
+import Card from "./common/Card";
+import CardHeader from "./common/CardHeader";
 import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 type ChartDataItem = { name: string; Succeeded: number; Failed: number; Running: number };
@@ -29,9 +29,9 @@ const MigrationChart = ({ isDarkMode, chartData }: MigrationChartProps) => {
                                 borderRadius: '0.5rem',
                                 fontSize: '0.875rem'
                             }}
-                            labelStyle={{color: isDarkMode ? '#cbd5e1' : '#1e293b'}}
+                            labelStyle={{ color: isDarkMode ? '#cbd5e1' : '#1e293b' }}
                         />
-                        <Legend wrapperStyle={{fontSize: '0.875rem'}}/>
+                        <Legend wrapperStyle={{ fontSize: '0.875rem' }} />
                         <Line type="monotone" dataKey="Succeeded" stroke="#22c55e" strokeWidth={2} activeDot={{ r: 6 }} />
                         <Line type="monotone" dataKey="Failed" stroke="#ef4444" strokeWidth={2} activeDot={{ r: 6 }} />
                         <Line type="monotone" dataKey="Running" stroke="#f59e0b" strokeWidth={2} activeDot={{ r: 6 }} />

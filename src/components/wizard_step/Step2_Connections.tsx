@@ -103,7 +103,7 @@ const Step2_Connections = ({ config, setConfig }: Step2ConnectionsProps) => {
         const iconColor = isSource ? "text-green-500" : "text-blue-500";
 
         return (
-            <div className="p-6 rounded-xl w-full border border-slate-200/80 dark:border-slate-700/80">
+            <div>
                 <div className="flex items-center gap-3 mb-5">
                     <DatabaseIcon type={isSource ? "mysql" : "pg"} className={`w-6 h-6 ${iconColor}`} />
                     <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">{title}</h2>

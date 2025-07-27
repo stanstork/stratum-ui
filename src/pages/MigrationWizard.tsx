@@ -116,8 +116,8 @@ const MigrationWizard: React.FC<MigrationWizardProps> = ({ setView, onBack }) =>
         setIsSaving(true);
         try {
             console.log("Saving migration config:", config);
-            // await apiClient.createJobDefinition(config);
-            // setView('definitions'); // Navigate on success
+            await apiClient.createJobDefinition(config);
+            setView('definitions'); // Navigate on success
         } catch (error) {
             console.error("Failed to save migration:", error);
             // Optionally show an error message to the user

@@ -164,7 +164,9 @@ const SettingsSummary: React.FC<{ settings: MigrateItem['settings'] }> = ({ sett
         { label: "Batch Size", value: `${settings.batchSize} rows` },
         { label: "Copy Columns", value: settings.copyColumns === 'All' ? "All" : "Mapped Only" },
         { label: "Infer Schema", value: settings.inferSchema ? 'Enabled' : 'Disabled' },
+        { label: "Cascade Schema", value: settings.cascadeSchema ? 'Enabled' : 'Disabled' },
         { label: "Ignore Constraints", value: settings.ignoreConstraints ? 'Enabled' : 'Disabled' },
+        { label: "Create Missing Tables", value: settings.createMissingTables ? 'Enabled' : 'Disabled' },
     ];
     return (
         <div className="grid grid-cols-2 gap-4">

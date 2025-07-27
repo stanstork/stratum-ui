@@ -81,8 +81,11 @@ const Step7_Settings = ({ config, setConfig, migrateItem }: Step7SettingsProps) 
             <div className="pt-8 border-slate-200 dark:border-slate-700/60">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <SettingsPanel title="Schema Options" description="Control how schema differences are handled during migration." icon={<Settings size={24} />}>
-                        <LabeledControl label="Infer Schema" description="Automatically detect schema changes." tooltip="Scans the source to determine data types and lengths.">
+                        <LabeledControl label="Infer Schema" description="Infer schema with all relations." tooltip="Automatically infers the schema of the source table and all related tables (including recursive relations), generating foreign key relationships where detected.">
                             <ToggleSwitch enabled={settings.inferSchema} setEnabled={(val) => updateSetting('inferSchema', val)} />
+                        </LabeledControl>
+                        <LabeledControl label="Cascade Schema" description="Cascade schema to related tables." tooltip="Copies data from all related tables detected during schema inference.">
+                            <ToggleSwitch enabled={settings.cascadeSchema} setEnabled={(val) => updateSetting('cascadeSchema', val)} />
                         </LabeledControl>
                         <LabeledControl label="Create Missing Tables" description="Create tables if they don't exist." tooltip="If the target table is not found in the destination, it will be created.">
                             <ToggleSwitch enabled={settings.createMissingTables} setEnabled={(val) => updateSetting('createMissingTables', val)} />

@@ -20,8 +20,8 @@ const Step3_SelectTable: React.FC<Step3_SelectTableProps> = ({ config, metadata,
     const [isDiagramVisible, setIsDiagramVisible] = useState(false);
 
     useEffect(() => {
-        setDestinationTableName(migrateItem.source.names?.[0] || '');
-    }, [migrateItem.source.names]);
+        setDestinationTableName(migrateItem.destination.names?.[0] || '');
+    }, [migrateItem.destination.names]);
 
 
     const availableTables = useMemo<TableMetadata[]>(() => {

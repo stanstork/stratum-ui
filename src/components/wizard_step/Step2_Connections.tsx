@@ -128,7 +128,7 @@ const Step2_Connections = ({ config, setConfig }: Step2ConnectionsProps) => {
     if (loading) {
         return (
             <div className="flex items-center justify-center h-64">
-                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-500"></div>
+                <RefreshCw className="animate-spin text-indigo-500" size={32} />
                 <p className="ml-4 text-slate-500 dark:text-slate-400">Loading connections...</p>
             </div>
         );

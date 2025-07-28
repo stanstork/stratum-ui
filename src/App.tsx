@@ -92,7 +92,7 @@ const InnerApp: React.FC = () => {
                             />
                             <Route
                                 path="definitions"
-                                element={<MigrationDefinitionsList setView={navigate} />}
+                                element={<MigrationDefinitionsList />}
                             />
                             <Route
                                 path="wizard"

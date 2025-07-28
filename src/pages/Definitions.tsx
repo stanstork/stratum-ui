@@ -1,21 +1,46 @@
 import { useEffect, useState } from "react";
-import { useAppContext } from "../App";
 import apiClient from "../services/apiClient";
 import { JobDefinition } from "../types/JobDefinition";
-import Card from "../components/common/Card";
-import { CardContent, CardHeader, Spinner } from "../components/common/Helper";
 import { motion } from "framer-motion";
-import { PlusIcon } from "../components/icons/Helper";
+import { Plus, Search, ArrowRight, RefreshCw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { DatabaseIcon } from "../components/common/Helper";
+
+const DefinitionCard = ({ def }: { def: JobDefinition }) => {
+    const navigate = useNavigate();
+
+    return (
+        <motion.div
+            variants={{ visible: { opacity: 1, y: 0 }, hidden: { opacity: 0, y: 20 } }}
+            className="bg-white dark:bg-slate-800/50 p-5 rounded-xl border border-slate-200 dark:border-slate-700/80 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer flex flex-col h-full"
+            onClick={() => navigate(`/definitions/${def.id}`)}
+        >
+            <div className="flex-grow">
+                <h3 className="font-bold text-lg text-slate-800 dark:text-slate-100">{def.name}</h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 line-clamp-2 h-10">{def.description || "No description provided."}</p>
+            </div>
+
+            <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700/80 flex items-center justify-between text-sm">
+                <div className="flex items-center gap-2 truncate">
+                    <DatabaseIcon type={def.sourceConnection?.dataFormat} className="w-5 h-5 text-slate-400 flex-shrink-0" />
+                    <span className="font-medium text-slate-700 dark:text-slate-300 truncate" title={def.sourceConnection?.name}>{def.sourceConnection?.name}</span>
+                </div>
+                <ArrowRight className="text-slate-400 dark:text-slate-500 mx-2 flex-shrink-0" />
+                <div className="flex items-center gap-2 truncate">
+                    <DatabaseIcon type={def.destinationConnection?.dataFormat} className="w-5 h-5 text-slate-400 flex-shrink-0" />
+                    <span className="font-medium text-slate-700 dark:text-slate-300 truncate" title={def.destinationConnection?.name}>{def.destinationConnection?.name}</span>
+                </div>
+            </div>
+        </motion.div>
+    )
+};
 
 
 const Definitions = () => {
     const [definitions, setDefinitions] = useState<JobDefinition[]>([]);
     const [loading, setLoading] = useState(true);
-    const { setPage, setViewDefinitionId } = useAppContext();
+    const [searchTerm, setSearchTerm] = useState('');
     const navigate = useNavigate();
-    const listVariants = { visible: { transition: { staggerChildren: 0.05 } }, hidden: {} };
-    const itemVariants = { visible: { opacity: 1, y: 0 }, hidden: { opacity: 0, y: 20 } };
 
     useEffect(() => {
         apiClient.getJobDefinitions().then((data) => {
@@ -24,38 +49,56 @@ const Definitions = () => {
         });
     }, []);
 
+    const filteredDefinitions = definitions
+        .filter(def => def.name.toLowerCase().includes(searchTerm.toLowerCase()));
+
     return (
-        <Card>
-            <CardHeader actions={
-                <button onClick={() => navigate("/definitions/new")} className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-sky-600 hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500 transition-all duration-200">
-                    <PlusIcon /> Create Definition
+        <div className="space-y-6">
+            <div className="flex justify-between items-center">
+                <div>
+                    <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-100">Migration Definitions</h1>
+                    <p className="text-slate-500 dark:text-slate-400 mt-1">Manage, edit, and create new migration jobs.</p>
+                </div>
+                <button onClick={() => navigate("/wizard")} className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200">
+                    <Plus size={18} /> Create Definition
                 </button>
-            }>Job Definitions</CardHeader>
-            <CardContent>
-                {loading ? <Spinner /> : (
-                    <motion.ul variants={listVariants} initial="hidden" animate="visible" role="list" className="divide-y divide-black/5 dark:divide-white/5">
-                        {definitions.map((def) => (
-                            <motion.li variants={itemVariants} key={def.id} className="relative py-5 px-1 hover:bg-gray-50/50 dark:hover:bg-white/5 rounded-lg transition-colors duration-150">
-                                <div className="flex justify-between space-x-3">
-                                    <div className="min-w-0 flex-1">
-                                        <a href="#" onClick={(e) => { e.preventDefault(); setViewDefinitionId(def.id); setPage('job-definition-detail'); }} className="block focus:outline-none">
-                                            <span className="absolute inset-0" aria-hidden="true" />
-                                            <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">{def.name}</p>
-                                            <p className="text-sm text-gray-500 dark:text-gray-400 truncate font-mono">{def.id}</p>
-                                        </a>
-                                    </div>
-                                </div>
-                                <div className="mt-1">
-                                    <p className="line-clamp-2 text-sm text-gray-600 dark:text-gray-300">
-                                        {"Hardcoded description for the job definition. This should be replaced with the actual description from the definition."}
-                                    </p>
-                                </div>
-                            </motion.li>
-                        ))}
-                    </motion.ul>
-                )}
-            </CardContent>
-        </Card>
+            </div>
+
+            <div className="flex items-center gap-4">
+                <div className="relative flex-grow">
+                    <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input
+                        type="text"
+                        placeholder="Search definitions..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
+                    />
+                </div>
+            </div>
+
+            {loading ? (
+                <div className="flex justify-center py-20">
+                    <RefreshCw className="animate-spin text-indigo-500" size={32} />
+                </div>
+            ) : (
+                <motion.div
+                    variants={{ visible: { transition: { staggerChildren: 0.07 } }, hidden: {} }}
+                    initial="hidden"
+                    animate="visible"
+                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                >
+                    {filteredDefinitions.length > 0 ? (
+                        filteredDefinitions.map((def) => <DefinitionCard key={def.id} def={def} />)
+                    ) : (
+                        <div className="col-span-full text-center py-16 text-slate-500 dark:text-slate-400">
+                            <p className="font-semibold">No definitions found.</p>
+                            <p>Try adjusting your search.</p>
+                        </div>
+                    )}
+                </motion.div>
+            )}
+        </div>
     );
 }
 

@@ -26,6 +26,15 @@ const ConnectionStatus = ({ status }: { status: StatusType }) => {
     );
 };
 
+const dataFormatLabels: { [key: string]: string } = {
+    mysql: 'MySQL',
+    pg: 'PostgreSQL',
+    snowflake: 'Snowflake',
+    sqlite: 'SQLite',
+    mongodb: 'MongoDB',
+    oracle: 'Oracle',
+    mssql: 'Microsoft SQL Server'
+};
 
 const DATA_FORMAT_STYLES: { [key: string]: { bg: string, tag: string } } = {
     mysql: { bg: 'bg-green-500', tag: 'bg-slate-600' },
@@ -62,7 +71,7 @@ const ConnectionCard = ({ connection, isSelected, status, onSelect, onTest }: { 
                 </div>
 
                 <div className={`text-xs font-semibold text-white px-3 py-1.5 rounded-md ${styles.tag}`}>
-                    <p>{connection.dataFormat}</p>
+                    <p>{dataFormatLabels[connection.dataFormat]}</p>
                     {/* Placeholder for version */}
                     {/* <p className="text-center font-bold text-base">8.0</p> */}
                 </div>

@@ -6,8 +6,12 @@ import { Connection, ConnectionDTO, ConnectionTestResult, mapConnection, mapFron
 import { mapMetadataResponse, MetadataResponse, TableMetadata } from "../types/Metadata";
 import { data } from "react-router-dom";
 import { MigrationConfig } from "../types/MigrationConfig";
+import { a } from "framer-motion/dist/types.d-B_QPEvFK";
 
 interface ApiClient extends AxiosInstance {
+    runJob: (definitionId: string) => Promise<void>;
+    testConnectionById: (connectionId: string) => Promise<ConnectionTestResult>;
+    deleteJobDefinition: (definitionId: string) => Promise<void>;
     createJobDefinition: (config: MigrationConfig) => Promise<JobDefinition>;
     getMetadata: (connectionId: string) => Promise<{ [key: string]: TableMetadata; }>;
     deleteConnection: (connectionId: string) => Promise<void>;
@@ -111,6 +115,18 @@ apiClient.testConnection = async (dataFormat: string, connStr: string): Promise<
     }
 };
 
+apiClient.testConnectionById = async (connectionId: string): Promise<ConnectionTestResult> => {
+    try {
+        const response = await apiClient.post<ConnectionTestResult>(`/connections/${connectionId}/test`);
+        return response.data;
+    } catch (error: any) {
+        if (error.response && error.response.status === 400) {
+            return error.response.data;
+        }
+        throw error;
+    }
+};
+
 apiClient.createConnection = async (connection: Connection): Promise<Connection> => {
     const response = await apiClient.post<ConnectionDTO>('/connections', {
         name: connection.name,
@@ -159,6 +175,14 @@ apiClient.createJobDefinition = async (config: MigrationConfig): Promise<JobDefi
         destination_connection_id: config.connections.dest.id
     });
     return mapJobDefinition(response.data);
+};
+
+apiClient.deleteJobDefinition = async (definitionId: string): Promise<void> => {
+    await apiClient.delete(`/jobs/${definitionId}`);
+};
+
+apiClient.runJob = async (definitionId: string): Promise<void> => {
+    await apiClient.post(`/jobs/${definitionId}/run`);
 };
 
 export default apiClient;

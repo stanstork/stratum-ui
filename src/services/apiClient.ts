@@ -5,7 +5,7 @@ import { emptyExecutionStat, ExecutionStat, mapExecutionStat } from "../types/Ex
 import { Connection, ConnectionDTO, ConnectionTestResult, mapConnection, mapFrontendDataFormatToBackend } from "../types/Connection";
 import { mapMetadataResponse, MetadataResponse, TableMetadata } from "../types/Metadata";
 import { data } from "react-router-dom";
-import { MigrationConfig } from "../types/MigrationConfig";
+import { getMigrationDTO, MigrationConfig } from "../types/MigrationConfig";
 import { a } from "framer-motion/dist/types.d-B_QPEvFK";
 
 interface ApiClient extends AxiosInstance {
@@ -169,7 +169,7 @@ apiClient.createJobDefinition = async (config: MigrationConfig): Promise<JobDefi
         name: config.name,
         description: config.description,
         ast: {
-            migration: config.migration
+            migration: getMigrationDTO(config),
         },
         source_connection_id: config.connections.source.id,
         destination_connection_id: config.connections.dest.id

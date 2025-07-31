@@ -1,5 +1,6 @@
 import { exitCode } from "process";
 import { Connection, emptyConnection, StatusType } from "./Connection";
+import exp from "constants";
 
 // Root config
 export interface MigrationConfig {
@@ -32,6 +33,11 @@ export interface Migration {
     migrateItems: MigrateItem[];
 }
 
+export interface MigrationDTO {
+    settings: MigrationSettingsDTO;
+    migrate_items: MigrateItemDTO[];
+}
+
 export interface MigrationSettings {
     batchSize: number;
     csvHeader: boolean;
@@ -45,6 +51,19 @@ export interface MigrationSettings {
     createMissingColumns: boolean;
 }
 
+export interface MigrationSettingsDTO {
+    batch_size: number;
+    csv_header: boolean;
+    copy_columns: string;
+    infer_schema: boolean;
+    csv_delimiter: string;
+    csv_id_column: string | null;
+    cascade_schema: boolean;
+    ignore_constraints: boolean;
+    create_missing_tables: boolean;
+    create_missing_columns: boolean;
+}
+
 export interface MigrateItem {
     id: Date; // Unique identifier for the migration item
     map: MapStep;
@@ -52,6 +71,16 @@ export interface MigrateItem {
     filter: Filter;
     source: DataSource;
     settings: MigrationSettings;
+    destination: DataSource;
+}
+
+export interface MigrateItemDTO {
+    id: string; // ISO date string
+    map: MapStep;
+    load: LoadStep;
+    filter: Filter;
+    source: DataSource;
+    settings: MigrationSettingsDTO;
     destination: DataSource;
 }
 
@@ -210,5 +239,39 @@ export function getConnectionInfo(connection: Connection): ConnectionInfo {
         status: connection.status,
         dataFormat: connection.dataFormat,
         description: `${connection.dataFormat} - ${connection.host}:${connection.port}`
+    };
+}
+
+export function getMigrationItemDTO(item: MigrateItem): MigrateItemDTO {
+    return {
+        id: item.id.toISOString(),
+        map: item.map,
+        load: item.load,
+        filter: item.filter,
+        source: item.source,
+        settings: getSettingsDTO(item.settings),
+        destination: item.destination
+    };
+}
+
+export function getMigrationDTO(config: MigrationConfig): MigrationDTO {
+    return {
+        settings: getSettingsDTO(config.migration.settings),
+        migrate_items: config.migration.migrateItems.map(getMigrationItemDTO)
+    };
+}
+
+export function getSettingsDTO(settings: MigrationSettings): MigrationSettingsDTO {
+    return {
+        batch_size: settings.batchSize,
+        csv_header: settings.csvHeader,
+        copy_columns: settings.copyColumns,
+        infer_schema: settings.inferSchema,
+        csv_delimiter: settings.csvDelimiter,
+        csv_id_column: settings.csvIdColumn,
+        cascade_schema: settings.cascadeSchema,
+        ignore_constraints: settings.ignoreConstraints,
+        create_missing_tables: settings.createMissingTables,
+        create_missing_columns: settings.createMissingColumns
     };
 }

@@ -1,6 +1,4 @@
-import { exitCode } from "process";
 import { Connection, emptyConnection, StatusType } from "./Connection";
-import exp from "constants";
 
 // Root config
 export interface MigrationConfig {
@@ -100,7 +98,17 @@ export interface LoadStep {
     entities: string[];
 }
 
+export interface LoadStepDTO {
+    matches: JoinConditionDTO[];
+    entities: string[];
+}
+
 export interface JoinCondition {
+    left: Expression;
+    right: Expression;
+}
+
+export interface JoinConditionDTO {
     left: Expression;
     right: Expression;
 }
@@ -122,7 +130,8 @@ export type Expression =
     | LiteralExpr
     | ArithmeticExpr
     | FunctionCallExpr
-    | ConditionExpr;
+    | ConditionExpr
+    | IdentifierExpr;
 
 // Lookup
 export interface LookupExpr {
@@ -164,6 +173,10 @@ export interface ConditionExpr {
         left: Expression;
         right: Expression;
     };
+}
+
+export interface IdentifierExpr {
+    Identifier: string;
 }
 
 export function emptyMigrationConfig(): MigrationConfig {
@@ -246,7 +259,7 @@ export function getMigrationItemDTO(item: MigrateItem): MigrateItemDTO {
     return {
         id: item.id.toISOString(),
         map: item.map,
-        load: item.load,
+        load: getLoadStepDTO(item.load),
         filter: item.filter,
         source: item.source,
         settings: getSettingsDTO(item.settings),
@@ -255,10 +268,10 @@ export function getMigrationItemDTO(item: MigrateItem): MigrateItemDTO {
 }
 
 export function getMigrationDTO(config: MigrationConfig): MigrationDTO {
-    return {
+    return convertMigrationConfig({
         settings: getSettingsDTO(config.migration.settings),
         migrate_items: config.migration.migrateItems.map(getMigrationItemDTO)
-    };
+    });
 }
 
 export function getSettingsDTO(settings: MigrationSettings): MigrationSettingsDTO {
@@ -274,4 +287,59 @@ export function getSettingsDTO(settings: MigrationSettings): MigrationSettingsDT
         create_missing_tables: settings.createMissingTables,
         create_missing_columns: settings.createMissingColumns
     };
+}
+
+export function getLoadStepDTO(step: LoadStep): LoadStepDTO {
+    return {
+        matches: step.matches.map(match => ({
+            left: match.right,
+            right: match.left
+        })),
+        entities: step.entities
+    };
+}
+
+function convertMigrationConfig(config: MigrationDTO): MigrationDTO {
+    // Deep clone the config to avoid modifying the original object
+    const newConfig = JSON.parse(JSON.stringify(config));
+
+    for (const item of newConfig.migrate_items) {
+        // Determine the primary source entity name for the current item
+        const sourceEntityName = item.source.names[0];
+
+        // If a source entity is defined, process its mappings
+        if (sourceEntityName) {
+            for (const mapping of item.map.mappings) {
+                // Recursively transform the source expression for each mapping
+                mapping.source = transformExpression(mapping.source, sourceEntityName);
+            }
+        }
+    }
+
+    return newConfig;
+}
+
+function transformExpression(expression: Expression, sourceEntityName: string): Expression | IdentifierExpr {
+    if ('Lookup' in expression) {
+        // If the lookup's entity matches the item's source, convert to Identifier
+        if (expression.Lookup.entity === sourceEntityName) {
+            return { Identifier: expression.Lookup.key! };
+        }
+    }
+
+    if ('Arithmetic' in expression) {
+        // Recursively transform nested expressions in an arithmetic operation
+        expression.Arithmetic.left = transformExpression(expression.Arithmetic.left, sourceEntityName);
+        expression.Arithmetic.right = transformExpression(expression.Arithmetic.right, sourceEntityName);
+    }
+
+    if ('FunctionCall' in expression) {
+        // Recursively transform all argument expressions in a function call
+        expression.FunctionCall[1] = expression.FunctionCall[1].map(arg =>
+            transformExpression(arg, sourceEntityName)
+        );
+    }
+
+    // Return the expression (either transformed or unchanged)
+    return expression;
 }

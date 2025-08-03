@@ -9,6 +9,8 @@ import ConnectionsPage from './pages/Connections';
 import ConnectionWizard from './components/ConnectionWizard';
 import MigrationDefinitionsList from './pages/MigrationDefinitionsList';
 import MigrationWizard from './pages/MigrationWizard';
+import { MigrationRunDetails } from './pages/MigrationRunDetails';
+import MigrationRunsList from './pages/MigrationRunsList';
 
 interface AppContextProps {
     page: string;
@@ -101,6 +103,22 @@ const InnerApp: React.FC = () => {
                                         onBack={() => goTo('dashboard')}
                                         setView={navigate}
                                     />
+                                }
+                            />
+                            <Route
+                                path="executions/:runId"
+                                element={
+                                    <PrivateRoute>
+                                        <MigrationRunDetails />
+                                    </PrivateRoute>
+                                }
+                            />
+                            <Route
+                                path="executions"
+                                element={
+                                    <PrivateRoute>
+                                        <MigrationRunsList />
+                                    </PrivateRoute>
                                 }
                             />
                         </Route>

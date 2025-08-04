@@ -9,7 +9,7 @@ import ConnectionsPage from './pages/Connections';
 import ConnectionWizard from './components/ConnectionWizard';
 import MigrationDefinitionsList from './pages/MigrationDefinitionsList';
 import MigrationWizard from './pages/MigrationWizard';
-import { MigrationRunDetails } from './pages/MigrationRunDetails';
+import MigrationRunDetails from './pages/MigrationRunDetails';
 import MigrationRunsList from './pages/MigrationRunsList';
 
 interface AppContextProps {

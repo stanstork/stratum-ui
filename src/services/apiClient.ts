@@ -9,6 +9,8 @@ import { getMigrationDTO, MigrationConfig } from "../types/MigrationConfig";
 import { a } from "framer-motion/dist/types.d-B_QPEvFK";
 
 interface ApiClient extends AxiosInstance {
+    getJobDefinition: (definitionId: string) => Promise<JobDefinition>;
+    getJobExecution: (executionId: string) => Promise<JobExecution>;
     runJob: (definitionId: string) => Promise<void>;
     testConnectionById: (connectionId: string) => Promise<ConnectionTestResult>;
     deleteJobDefinition: (definitionId: string) => Promise<void>;
@@ -183,6 +185,16 @@ apiClient.deleteJobDefinition = async (definitionId: string): Promise<void> => {
 
 apiClient.runJob = async (definitionId: string): Promise<void> => {
     await apiClient.post(`/jobs/${definitionId}/run`);
+};
+
+apiClient.getJobExecution = async (executionId: string): Promise<JobExecution> => {
+    const response = await apiClient.get<JobExecutionDTO>(`/jobs/executions/${executionId}`);
+    return mapJobExecution(response.data);
+};
+
+apiClient.getJobDefinition = async (definitionId: string): Promise<JobDefinition> => {
+    const response = await apiClient.get<JobDefinitionDTO>(`/jobs/${definitionId}`);
+    return mapJobDefinition(response.data);
 };
 
 export default apiClient;

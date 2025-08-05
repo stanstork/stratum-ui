@@ -20,6 +20,9 @@ export interface ConnectionInfo {
     id: string;
     name: string;
     status: StatusType;
+    host: string;
+    port: number;
+    user: string;
     database: string;
     dataFormat: string;
     description: string;
@@ -238,6 +241,9 @@ export function emptyConnectionInfo(): ConnectionInfo {
         id: '',
         name: '',
         status: 'untested', // Default status
+        host: '',
+        port: 0,
+        user: '',
         database: '',
         dataFormat: '',
         description: ''
@@ -249,6 +255,9 @@ export function getConnectionInfo(connection: Connection): ConnectionInfo {
         id: connection.id,
         name: connection.name,
         database: connection.dbName,
+        host: connection.host,
+        port: connection.port,
+        user: connection.username,
         status: connection.status,
         dataFormat: connection.dataFormat,
         description: `${connection.dataFormat} - ${connection.host}:${connection.port}`
@@ -342,4 +351,27 @@ function transformExpression(expression: Expression, sourceEntityName: string): 
 
     // Return the expression (either transformed or unchanged)
     return expression;
+}
+
+export function getMigrationItem(dto: MigrateItemDTO): MigrateItem {
+    return {
+        id: new Date(dto.id),
+        map: dto.map,
+        load: dto.load,
+        filter: dto.filter,
+        source: dto.source,
+        settings: {
+            batchSize: dto.settings.batch_size,
+            csvHeader: dto.settings.csv_header,
+            copyColumns: dto.settings.copy_columns,
+            inferSchema: dto.settings.infer_schema,
+            csvDelimiter: dto.settings.csv_delimiter,
+            csvIdColumn: dto.settings.csv_id_column,
+            cascadeSchema: dto.settings.cascade_schema,
+            ignoreConstraints: dto.settings.ignore_constraints,
+            createMissingTables: dto.settings.create_missing_tables,
+            createMissingColumns: dto.settings.create_missing_columns
+        },
+        destination: dto.destination
+    };
 }

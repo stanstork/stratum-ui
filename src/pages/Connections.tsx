@@ -6,7 +6,7 @@ import { Plus, RefreshCw, Pencil, Trash2, X, AlertTriangle, Zap, Server, Databas
 import { DatabaseIcon, Spinner } from "../components/common/Helper";
 import { Dialog, Transition } from '@headlessui/react';
 
-const dataFormatLabels: { [key: string]: string } = {
+export const dataFormatLabels: { [key: string]: string } = {
     mysql: 'MySQL',
     pg: 'PostgreSQL',
     snowflake: 'Snowflake',

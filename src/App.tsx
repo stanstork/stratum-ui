@@ -11,6 +11,7 @@ import MigrationDefinitionsList from './pages/MigrationDefinitionsList';
 import MigrationWizard from './pages/MigrationWizard';
 import MigrationRunDetails from './pages/MigrationRunDetails';
 import MigrationRunsList from './pages/MigrationRunsList';
+import MigrationDetailsPage from './pages/MIgrationDefinitionDetails';
 
 interface AppContextProps {
     page: string;
@@ -95,6 +96,14 @@ const InnerApp: React.FC = () => {
                             <Route
                                 path="definitions"
                                 element={<MigrationDefinitionsList />}
+                            />
+                            <Route
+                                path="definitions/:definitionId"
+                                element={
+                                    <PrivateRoute>
+                                        <MigrationDetailsPage />
+                                    </PrivateRoute>
+                                }
                             />
                             <Route
                                 path="wizard"

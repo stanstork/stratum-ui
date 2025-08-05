@@ -10,17 +10,16 @@ import {
     Filter,
     Settings,
     ArrowRight,
-    XCircle,
-    ArrowRightIcon,
-    DatabaseIcon,
     ChevronRight,
     Server,
     User,
     ArrowLeft,
-    Download,
+    FileText,
+    GitBranch,
+    DatabaseIcon,
 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
-import apiClient from '../services/apiClient';
+// import apiClient from '../services/apiClient'; // Mocking for standalone
 import {
     MigrationConfig,
     Expression,
@@ -30,16 +29,14 @@ import {
     MigrateItem,
     ArithmeticExpr,
     FunctionCallExpr,
-    Mapping,
     JoinCondition,
-    Migration,
     IdentifierExpr,
     MigrateItemDTO,
     getMigrationItem,
-} from '../types/MigrationConfig';
+} from '../types/MigrationConfig'; // Assuming types are in this path
 import { AnimatePresence, motion } from 'framer-motion';
 import { dataFormatLabels } from './Connections';
-import { StatusBadge } from '../components/common/Helper';
+import apiClient from '../services/apiClient';
 
 const isLookup = (expr: Expression): expr is LookupExpr => !!(expr as LookupExpr)?.Lookup;
 const isLiteral = (expr: Expression): expr is LiteralExpr => !!(expr as LiteralExpr)?.Literal;
@@ -117,7 +114,7 @@ const ConnectionSummary: React.FC<{ config: MigrationConfig }> = ({ config }) =>
 
         {/* Arrow */}
         <div className="flex-shrink-0 flex items-center justify-center py-2 md:py-0">
-            <ArrowRight size={32} className="text-slate-400 dark:text-slate-500 transform md:rotate-0 rotate-90" />
+            <ArrowRight size={24} className="text-indigo-500 dark:text-indigo-400" />
         </div>
 
         {/* Destination Card */}
@@ -303,11 +300,99 @@ const SettingsSummary: React.FC<{ settings: MigrateItem['settings'] }> = ({ sett
     );
 };
 
+const DataLineageFlow: React.FC<{ migrateItem: MigrateItem }> = ({ migrateItem }) => {
+    const sourceTable = migrateItem.source.names[0];
+    const destTable = migrateItem.destination.names[0];
+    const joins = migrateItem.load.matches;
+
+    const allJoinTables = new Set<string>();
+    joins.forEach(j => {
+        const leftTable = renderExpression(j.left)?.split('.')[0];
+        const rightTable = renderExpression(j.right)?.split('.')[0];
+        if (leftTable && leftTable !== sourceTable) allJoinTables.add(leftTable);
+        if (rightTable && rightTable !== sourceTable) allJoinTables.add(rightTable);
+    });
+
+    const joinTables = Array.from(allJoinTables);
+
+    const Node = ({ name, type }: { name: string, type: 'source' | 'join' | 'dest' }) => {
+        const baseClasses = "flex items-center gap-3 p-4 rounded-lg border-2 shadow-md w-64";
+        const typeClasses = {
+            source: "bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-700",
+            join: "bg-yellow-50 dark:bg-yellow-900/30 border-yellow-200 dark:border-yellow-700",
+            dest: "bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-700"
+        };
+        const iconClasses = {
+            source: "text-green-600 dark:text-green-400",
+            join: "text-yellow-600 dark:text-yellow-400",
+            dest: "text-blue-600 dark:text-blue-400"
+        };
+        const textClasses = {
+            source: "text-green-800 dark:text-green-200",
+            join: "text-yellow-800 dark:text-yellow-200",
+            dest: "text-blue-800 dark:text-blue-200"
+        }
+
+        return (
+            <div className={`${baseClasses} ${typeClasses[type]}`}>
+                <Table size={20} className={iconClasses[type]} />
+                <div className="flex flex-col">
+                    <span className="text-xs uppercase font-semibold text-slate-500 dark:text-slate-400">{type} table</span>
+                    <span className={`font-mono font-bold text-lg ${textClasses[type]}`}>{name}</span>
+                </div>
+            </div>
+        );
+    }
+
+    const Arrow = () => <div className="flex items-center justify-center mx-8"><ArrowRight size={32} className="text-slate-400 dark:text-slate-500" /></div>;
+
+    return (
+        <div className="bg-white dark:bg-slate-800/50 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700/60 p-6 overflow-x-auto">
+            <div className="flex items-center justify-center min-w-max p-8">
+                {/* Source Column */}
+                <div className="flex flex-col items-center gap-4">
+                    <Node name={sourceTable} type="source" />
+                    {joinTables.length > 0 && joinTables.map(table => (
+                        <Node key={table} name={table} type="join" />
+                    ))}
+                </div>
+
+                {/* Arrow & Join Logic */}
+                <div className="flex flex-col items-center justify-center mx-8">
+                    <div className="flex items-center justify-center p-4 bg-indigo-100 dark:bg-indigo-500/20 rounded-full text-indigo-500 dark:text-indigo-300 border-2 border-indigo-200 dark:border-indigo-500/50 mb-2">
+                        <GitMerge size={28} />
+                    </div>
+                    <span className="text-sm font-semibold text-indigo-600 dark:text-indigo-300">JOIN LOGIC</span>
+                    <svg width="100" height={joinTables.length > 0 ? (joinTables.length * 100) : 100} className="my-4">
+                        {/* Main line */}
+                        <line x1="50" y1="0" x2="50" y2={joinTables.length > 0 ? (joinTables.length * 100) : 100} stroke="rgb(165 180 252)" strokeWidth="3" />
+                        {/* Arrow head */}
+                        <polygon points="45,95 55,95 50,100" fill="rgb(165 180 252)" transform={`translate(0, ${joinTables.length > 0 ? (joinTables.length * 100) - 100 : 0})`} />
+                        {/* Lines from nodes */}
+                        <line x1="0" y1="35" x2="50" y2="35" stroke="rgb(165 180 252)" strokeWidth="2" strokeDasharray="4 4" />
+                        {joinTables.map((_, i) => (
+                            <line key={i} x1="0" y1={120 + i * 88} x2="50" y2={120 + i * 88} stroke="rgb(165 180 252)" strokeWidth="2" strokeDasharray="4 4" />
+                        ))}
+                    </svg>
+                </div>
+
+
+                {/* Destination Column */}
+                <div className="flex flex-col items-center gap-4">
+                    <Node name={destTable} type="dest" />
+                </div>
+            </div>
+        </div>
+    );
+};
+
+
 const MigrationDetailsPage = () => {
     const { definitionId } = useParams<{ definitionId: string }>();
     const navigate = useNavigate();
     const [config, setConfig] = useState<MigrationConfig | null>(null);
     const [loading, setLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState<'config' | 'lineage'>('config');
 
     useEffect(() => {
         const fetchDefinition = async () => {
@@ -319,7 +404,6 @@ const MigrationDetailsPage = () => {
             try {
                 const data = await apiClient.getJobDefinition(definitionId);
                 const migrationItem = JSON.parse(data.ast)['migration']['migrate_items'][0] as MigrateItemDTO;
-
 
                 const migrationConfig: MigrationConfig = {
                     name: data.name,
@@ -386,61 +470,95 @@ const MigrationDetailsPage = () => {
 
     const migrateItem = config.migration.migrateItems[0];
 
+    const TabButton = ({ tabName, currentTab, setTab, icon, children }: { tabName: 'config' | 'lineage', currentTab: string, setTab: (tab: 'config' | 'lineage') => void, icon: React.ReactNode, children: React.ReactNode }) => (
+        <button
+            onClick={() => setTab(tabName)}
+            className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-md transition-colors ${currentTab === tabName ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300' : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700'}`}
+        >
+            {icon}
+            {children}
+        </button>
+    );
+
     return (
-        <div>
+        <div className="p-4 sm:p-6 lg:p-8 bg-white dark:bg-slate-800/60 rounded-xl shadow-lg min-h-screen">
             <div className="max-w-7xl mx-auto">
-                <header className="flex flex-wrap gap-4 justify-between items-center mb-6 bg-white dark:bg-slate-800/50 p-6 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm">
+                <header className="flex flex-wrap gap-4 justify-between items-center mb-6 border-b border-slate-200 dark:border-slate-700 pb-4">
                     <div className="flex items-center gap-4">
-                        <button onClick={() => navigate('/definitions')} className="p-2 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700">
+                        <button onClick={() => navigate ? navigate('/definitions') : alert('Navigate back')} className="p-2 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700">
                             <ArrowLeft size={20} />
                         </button>
                         <div>
                             <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">{config.name}</h1>
-                            <div className="flex items-center gap-4 text-sm text-slate-500 dark:text-slate-400 mt-1">
-                                <p className="text-slate-600 dark:text-slate-400 mt-2 max-w-2xl">{config.description}</p>
-                            </div>
+                            <p className="text-sm text-slate-600 dark:text-slate-400 mt-1 max-w-2xl">{config.description}</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
                         <button className="inline-flex items-center justify-center gap-2 h-10 px-4 bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-sm font-semibold rounded-lg shadow-sm border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600/80 transition-all" aria-label="Edit"><Pencil size={18} /></button>
-                        <button className="inline-flex items-center gap-2 h-10 px-6 bg-indigo-600 text-white text-sm font-bold rounded-lg dark:hover:bg-indigo-500 transition-all"><Play size={16} /> Run Migration</button>
+                        <button className="inline-flex items-center gap-2 h-10 px-6 bg-indigo-600 text-white text-sm font-bold rounded-lg shadow-md hover:bg-indigo-700 dark:hover:bg-indigo-500 transition-all"><Play size={16} /> Run Migration</button>
                     </div>
                 </header>
-                <main className="space-y-6">
-                    <CollapsibleSectionCard title="Connections" icon={<Database size={20} />}>
-                        <ConnectionSummary config={config} />
-                    </CollapsibleSectionCard>
-                    {migrateItem && (
-                        <>
-                            <CollapsibleSectionCard title="Table Mapping" icon={<Table size={20} />}>
-                                <TableMappingSummary migrateItem={migrateItem} />
-                            </CollapsibleSectionCard>
 
-                            {migrateItem.load.matches.length > 0 && (
-                                <CollapsibleSectionCard title="Table Joins" icon={<GitMerge size={20} />}>
-                                    <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
-                                        {migrateItem.load.matches.map((join, i) => (
-                                            <JoinSummary key={i} join={join} />
-                                        ))}
-                                    </div>
-                                </CollapsibleSectionCard>
+                <div className="mb-6">
+                    <div className="flex items-center gap-2 p-1 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                        <TabButton tabName="config" currentTab={activeTab} setTab={setActiveTab} icon={<FileText size={16} />}>Configuration</TabButton>
+                        <TabButton tabName="lineage" currentTab={activeTab} setTab={setActiveTab} icon={<GitBranch size={16} />}>Data Lineage</TabButton>
+                    </div>
+                </div>
+
+                <main>
+                    <AnimatePresence mode="wait">
+                        <motion.div
+                            key={activeTab}
+                            initial={{ y: 10, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            exit={{ y: -10, opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                        >
+                            {activeTab === 'config' && (
+                                <div className="space-y-6">
+                                    <CollapsibleSectionCard title="Connections" icon={<Database size={20} />}>
+                                        <ConnectionSummary config={config} />
+                                    </CollapsibleSectionCard>
+                                    {migrateItem && (
+                                        <>
+                                            <CollapsibleSectionCard title="Table Mapping" icon={<Table size={20} />}>
+                                                <TableMappingSummary migrateItem={migrateItem} />
+                                            </CollapsibleSectionCard>
+
+                                            {migrateItem.load.matches.length > 0 && (
+                                                <CollapsibleSectionCard title="Table Joins" icon={<GitMerge size={20} />}>
+                                                    <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+                                                        {migrateItem.load.matches.map((join, i) => (
+                                                            <JoinSummary key={i} join={join} />
+                                                        ))}
+                                                    </div>
+                                                </CollapsibleSectionCard>
+                                            )}
+
+                                            <CollapsibleSectionCard title="Column Mappings" icon={<ArrowRightLeft size={20} />}>
+                                                <ColumnMappingDisplay migrateItem={migrateItem} />
+                                            </CollapsibleSectionCard>
+
+                                            {migrateItem.filter.expression && (
+                                                <CollapsibleSectionCard title="Data Filters" icon={<Filter size={20} />}>
+                                                    <FilterSummary expression={migrateItem.filter.expression} />
+                                                </CollapsibleSectionCard>
+                                            )}
+
+                                            <CollapsibleSectionCard title="Migration Settings" icon={<Settings size={20} />}>
+                                                <SettingsSummary settings={migrateItem.settings} />
+                                            </CollapsibleSectionCard>
+                                        </>
+                                    )}
+                                </div>
                             )}
 
-                            <CollapsibleSectionCard title="Column Mappings" icon={<ArrowRightLeft size={20} />}>
-                                <ColumnMappingDisplay migrateItem={migrateItem} />
-                            </CollapsibleSectionCard>
-
-                            {migrateItem.filter.expression && (
-                                <CollapsibleSectionCard title="Data Filters" icon={<Filter size={20} />}>
-                                    <FilterSummary expression={migrateItem.filter.expression} />
-                                </CollapsibleSectionCard>
+                            {activeTab === 'lineage' && migrateItem && (
+                                <DataLineageFlow migrateItem={migrateItem} />
                             )}
-
-                            <CollapsibleSectionCard title="Migration Settings" icon={<Settings size={20} />}>
-                                <SettingsSummary settings={migrateItem.settings} />
-                            </CollapsibleSectionCard>
-                        </>
-                    )}
+                        </motion.div>
+                    </AnimatePresence>
                 </main>
             </div>
         </div>

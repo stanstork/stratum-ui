@@ -2,9 +2,8 @@ import React, { createContext, useContext, useState, useEffect, JSX } from 'reac
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import LoginPage from './pages/Login';
-import Dashboard from './pages/Dashboard';
+// import Dashboard from './pages/Dashboard';
 import { ThemeProvider } from './context/ThemeContext';
-import Header from './components/Header';
 import ConnectionsPage from './pages/Connections';
 import ConnectionWizard from './components/ConnectionWizard';
 import MigrationDefinitionsList from './pages/MigrationDefinitionsList';
@@ -12,6 +11,8 @@ import MigrationWizard from './pages/MigrationWizard';
 import MigrationRunDetails from './pages/MigrationRunDetails';
 import MigrationRunsList from './pages/MigrationRunsList';
 import MigrationDetailsPage from './pages/MIgrationDefinitionDetails';
+import Layout from './components/Layout';
+import Dashboard from './pages/v2/Dashboard';
 
 interface AppContextProps {
     page: string;
@@ -64,77 +65,70 @@ const InnerApp: React.FC = () => {
     }
 
     return (
-        <div className="h-screen bg-slate-100 dark:bg-slate-900 font-sans antialiased text-slate-700 dark:text-slate-200 flex flex-col">
-            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-indigo-50 via-white to-cyan-50 dark:from-slate-900 dark:to-indigo-900 -z-10"></div>
-            {user && pathname !== '/login' && <Header view={view} setView={navigate} isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} />}
-            <main className="flex-1 overflow-y-auto">
-                {/* Global content container with max-width and centering */}
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                    <Routes>
-                        <Route path="/login" element={<LoginPage />} />
-                        <Route path="/*">
-                            <Route index element={<Navigate to="dashboard" replace />} />
-                            <Route
-                                path="dashboard"
-                                element={
-                                    <PrivateRoute>
-                                        <>
-                                            <Dashboard setView={navigate} isDarkMode={isDarkMode} />
-                                        </>
-                                    </PrivateRoute>}
+        <Layout>
+            <Routes>
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/*">
+                    <Route index element={<Navigate to="dashboard" replace />} />
+                    <Route
+                        path="dashboard"
+                        element={
+                            <PrivateRoute>
+                                <>
+                                    <Dashboard />
+                                </>
+                            </PrivateRoute>}
+                    />
+                    <Route
+                        path="connections"
+                        element={<ConnectionsPage setView={navigate} />}
+                    />
+                    <Route
+                        path="connections/new"
+                        element={
+                            <ConnectionWizard onBack={() => goTo('connections')} />
+                        }
+                    />
+                    <Route
+                        path="definitions"
+                        element={<MigrationDefinitionsList />}
+                    />
+                    <Route
+                        path="definitions/:definitionId"
+                        element={
+                            <PrivateRoute>
+                                <MigrationDetailsPage />
+                            </PrivateRoute>
+                        }
+                    />
+                    <Route
+                        path="wizard"
+                        element={
+                            <MigrationWizard
+                                onBack={() => goTo('dashboard')}
+                                setView={navigate}
                             />
-                            <Route
-                                path="connections"
-                                element={<ConnectionsPage setView={navigate} />}
-                            />
-                            <Route
-                                path="connections/new"
-                                element={
-                                    <ConnectionWizard onBack={() => goTo('connections')} />
-                                }
-                            />
-                            <Route
-                                path="definitions"
-                                element={<MigrationDefinitionsList />}
-                            />
-                            <Route
-                                path="definitions/:definitionId"
-                                element={
-                                    <PrivateRoute>
-                                        <MigrationDetailsPage />
-                                    </PrivateRoute>
-                                }
-                            />
-                            <Route
-                                path="wizard"
-                                element={
-                                    <MigrationWizard
-                                        onBack={() => goTo('dashboard')}
-                                        setView={navigate}
-                                    />
-                                }
-                            />
-                            <Route
-                                path="executions/:runId"
-                                element={
-                                    <PrivateRoute>
-                                        <MigrationRunDetails />
-                                    </PrivateRoute>
-                                }
-                            />
-                            <Route
-                                path="executions"
-                                element={
-                                    <PrivateRoute>
-                                        <MigrationRunsList />
-                                    </PrivateRoute>
-                                }
-                            />
-                        </Route>
-                    </Routes>
-                </div>
-            </main>
-        </div>
+                        }
+                    />
+                    <Route
+                        path="executions/:runId"
+                        element={
+                            <PrivateRoute>
+                                <MigrationRunDetails />
+                            </PrivateRoute>
+                        }
+                    />
+                    <Route
+                        path="executions"
+                        element={
+                            <PrivateRoute>
+                                <MigrationRunsList />
+                            </PrivateRoute>
+                        }
+                    />
+                </Route>
+            </Routes>
+        </Layout>
     );
 };
 

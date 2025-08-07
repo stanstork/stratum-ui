@@ -1,12 +1,15 @@
 import { useEffect, useState, Fragment } from "react";
-import apiClient from "../services/apiClient";
-import { JobDefinition } from "../types/JobDefinition";
 import { motion } from "framer-motion";
-import { Plus, ArrowRight, RefreshCw, Pencil, Trash2, X, AlertTriangle, Play, Calendar, Info, InfoIcon } from "lucide-react";
+import { Plus, ArrowRight, RefreshCw, Pencil, Trash2, X, AlertTriangle, Play, Calendar, Info, InfoIcon, Eye, Edit, FileText, BarChart3, CheckCircle, XCircle, Activity, Clock, Database } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { DatabaseIcon } from "../components/common/Helper";
 import { Dialog, Transition } from '@headlessui/react';
-
+import { JobDefinition } from "../../types/JobDefinition";
+import apiClient from "../../services/apiClient";
+import { getConnectionIcon } from "../../components/common/Helper";
+import { Link } from "react-router-dom";
+import { Button } from "../../components/common/v2/Button";
+import { Card, CardContent } from "../../components/common/v2/Card";
+import { formatDistanceToNow } from "date-fns";
 
 const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, definitionName }: { isOpen: boolean, onClose: () => void, onConfirm: () => void, definitionName: string | undefined }) => {
     return (
@@ -144,72 +147,141 @@ const DefinitionCard = ({ def, onDelete, onRun }: { def: JobDefinition, onDelete
     };
 
     return (
-        <div
-            className="bg-white dark:bg-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700/60 shadow-lg hover:shadow-xl transition-all duration-300 flex flex-col justify-between cursor-pointer"
-            onClick={() => navigate(`/definitions/${def.id}`)}
-        >
-            <div>
-                {/* Top Section */}
-                <h3 className="font-bold text-xl text-slate-900 dark:text-slate-50 truncate">{def.name}</h3>
-                <p className="text-slate-500 dark:text-slate-400 mt-1 mb-5 text-sm">{def.description || "No description."}</p>
+        <div className="space-y-4">
+            <Card
+                key={def.id}
+                className="border-0 shadow-[0_1px_3px_rgba(0,0,0,0.1)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.3)] rounded-[12px] transition-all duration-200 hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_4px_12px_rgba(0,0,0,0.4)] bg-white dark:bg-slate-800"
+            >
+                <CardContent className="p-6">
+                    {/* Main content section */}
+                    <div className="flex items-center space-x-4 mb-4">
+                        <div className="flex-shrink-0">
+                            <div className="h-10 w-10 rounded-lg flex items-center justify-center bg-blue-100 dark:bg-blue-900/30">
+                                <FileText className="text-blue-600 dark:text-blue-400" />
+                            </div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <div className="flex items-center space-x-3 mb-1">
+                                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+                                    {def.name}
+                                </h3>
+                                <span className="text-sm text-slate-500 dark:text-slate-400">
+                                    Updated {def.updatedAt
+                                        ? formatDistanceToNow(new Date(def.updatedAt), { addSuffix: true })
+                                        : "unknown"
+                                    }
+                                </span>
+                            </div>
+                            <p className="text-sm text-slate-600 dark:text-slate-400">
+                                {def.description || "No description provided"}
+                            </p>
+                        </div>
+                    </div>
 
-                {/* Connections */}
-                <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-                    <DatabaseIcon type={def.sourceConnection?.dataFormat} className="w-4 h-4 text-slate-400" />
-                    <span className="font-medium truncate">{def.sourceConnection?.name}</span>
-                    <ArrowRight size={16} className="text-slate-400 flex-shrink-0" />
-                    <DatabaseIcon type={def.destinationConnection?.dataFormat} className="w-4 h-4 text-slate-400" />
-                    <span className="font-medium truncate">{def.destinationConnection?.name}</span>
-                </div>
+                    {/* Stats Section */}
+                    <div className="bg-slate-50 dark:bg-slate-900/50 rounded-xl p-4 my-6">
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-6 my-6 text-center">
+                            <div>
+                                <div className="flex items-center justify-center w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg mx-auto mb-2">
+                                    <BarChart3 className="text-blue-600 dark:text-blue-400" size={16} />
+                                </div>
+                                <p className="text-sm font-bold text-slate-900 dark:text-white">3</p>
+                                <p className="text-xs font-medium text-slate-500 dark:text-slate-400 tracking-wider">Total Runs</p>
+                            </div>
+                            <div>
+                                <div className="flex items-center justify-center w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-lg mx-auto mb-2">
+                                    <CheckCircle className="text-green-600 dark:text-green-400" size={16} />
+                                </div>
+                                <p className="text-sm font-semibold text-slate-900 dark:text-white capitalize">Succeeded</p>
+                                <p className="text-xs font-medium text-slate-500 dark:text-slate-400 tracking-wider">Last Run</p>
+                            </div>
+                            <div>
+                                <div className="flex items-center justify-center w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg mx-auto mb-2">
+                                    <Database className="text-purple-600 dark:text-purple-400" size={16} />
+                                </div>
+                                <p className="text-sm font-bold text-slate-900 dark:text-white">1.2 GB</p>
+                                <p className="text-xs font-medium text-slate-500 dark:text-slate-400 tracking-wider">Processed</p>
+                            </div>
+                            <div>
+                                <div className="flex items-center justify-center w-10 h-10 bg-orange-100 dark:bg-orange-900/30 rounded-lg mx-auto mb-2">
+                                    <Clock className="text-orange-600 dark:text-orange-400" size={16} />
+                                </div>
+                                <p className="text-sm font-semibold text-slate-900 dark:text-white">3m 14s</p>
+                                <p className="text-xs font-medium text-slate-500 dark:text-slate-400 tracking-wider">Avg Duration</p>
+                            </div>
+                        </div>
+                    </div>
 
-                {/* Last Modified */}
-                <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mt-2">
-                    <Calendar size={14} />
-                    <span>Created: {new Date(def.createdAt).toLocaleDateString()}</span>
-                </div>
-            </div>
+                    {/* Border separator */}
+                    <div className="border-t border-slate-200 dark:border-slate-700 pt-4">
+                        <div className="flex items-center justify-between">
+                            {/* Connection Flow */}
+                            <div className="flex items-center space-x-3">
+                                <div className="flex items-center space-x-2 px-3 py-1.5 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
+                                    {getConnectionIcon(def.sourceConnection.dataFormat)}
+                                    <span className="text-sm font-medium text-slate-900 dark:text-white">
+                                        {def.sourceConnection.name}
+                                    </span>
+                                </div>
+                                <div className="flex items-center px-2 text-slate-400">
+                                    <span className="text-lg">→</span>
+                                </div>
+                                <div className="flex items-center space-x-2 px-3 py-1.5 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
+                                    {getConnectionIcon(def.destinationConnection.dataFormat)}
+                                    <span className="text-sm font-medium text-slate-900 dark:text-white">
+                                        {def.destinationConnection.name}
+                                    </span>
+                                </div>
+                            </div>
 
-            {/* Footer Section */}
-            <div className="mt-6 flex justify-between items-center">
-                <div className="flex items-center gap-2 text-sm font-medium text-green-600 dark:text-green-400">
-                    <span className="h-2.5 w-2.5 rounded-full bg-green-500"></span>
-                    <span>Active</span>
-                </div>
-                <div className="flex items-center gap-2">
-                    <button
-                        onClick={(e) => handleActionClick(e, () => navigate(`/wizard/${def.id}`))}
-                        className="p-2 text-slate-500 hover:bg-slate-200 dark:text-slate-300 dark:hover:bg-slate-700 rounded-lg transition-colors"
-                        aria-label="Edit definition"
-                    >
-                        <Pencil size={18} />
-                    </button>
-                    <button
-                        onClick={(e) => handleActionClick(e, () => onRun(def.id))}
-                        className="p-2 text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors"
-                        aria-label="Run migration"
-                    >
-                        <Play size={18} />
-                    </button>
-                    <button
-                        onClick={(e) => handleActionClick(e, () => onDelete(def.id))}
-                        className="p-2 text-red-500 hover:bg-red-100 dark:text-red-400 dark:hover:bg-red-900/40 rounded-lg transition-colors"
-                        aria-label="Delete definition"
-                    >
-                        <Trash2 size={18} />
-                    </button>
-                </div>
-            </div>
-        </div>
+                            {/* Action buttons section */}
+                            <div className="flex items-center space-x-1">
+                                <Link to={`/definitions/${def.id}`}>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-9 w-9 p-0 text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700/50"
+                                        onClick={(e) => handleActionClick(e, () => navigate(`/definitions/${def.id}`))}>
+                                        < Eye size={16} />
+                                    </Button>
+                                </Link>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-9 w-9 p-0 text-blue-600 hover:bg-blue-100 dark:text-blue-400 dark:hover:bg-blue-900/40"
+                                    onClick={(e) => handleActionClick(e, () => onRun(def.id))}>
+                                    <Play size={16} />
+                                </Button>
+                                <Link to={`/wizard/${def.id}`}>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-9 w-9 p-0 text-slate-500 hover:bg-slate-200 dark:text-slate-300 dark:hover:bg-slate-700/50"
+                                        onClick={(e) => handleActionClick(e, () => navigate(`/wizard/${def.id}`))}>
+                                        <Edit size={16} />
+                                    </Button>
+                                </Link>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-9 w-9 p-0 text-red-500 hover:bg-red-100 dark:text-red-400 dark:hover:bg-red-900/40"
+                                    onClick={(e) => handleActionClick(e, () => onDelete(def.id))}>
+                                    <Trash2 size={16} />
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+        </div >
     );
 };
-
 
 const MigrationDefinitionsList = () => {
     const [definitions, setDefinitions] = useState<JobDefinition[]>([]);
     const [loading, setLoading] = useState(true);
     const [definitionToDelete, setDefinitionToDelete] = useState<JobDefinition | null>(null);
     const [definitionToRun, setDefinitionToRun] = useState<JobDefinition | null>(null);
-    const navigate = useNavigate();
 
     useEffect(() => {
         setLoading(true);
@@ -298,35 +370,35 @@ const MigrationDefinitionsList = () => {
                 definitionName={definitionToRun?.name}
             />
             <div className="space-y-8">
-                <div className="flex justify-between items-center">
-                    <h1 className="text-4xl font-bold text-slate-800 dark:text-slate-100">Migration Definitions</h1>
-                    <button onClick={() => navigate("/wizard")} className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200">
-                        <Plus size={18} /> Create Definition
-                    </button>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <h1 className="text-[32px] font-bold leading-tight text-slate-900 dark:text-white">
+                            Migration Definitions
+                        </h1>
+                        <p className="mt-3 text-slate-700 dark:text-slate-300">
+                            Create and manage reusable migration templates
+                        </p>
+                    </div>
+                    <div className="mt-4 sm:mt-0">
+                        <Link to="/wizard">
+                            <Button className="flex items-center space-x-2" variant="primary">
+                                <Plus size={16} />
+                                <span>New Definition</span>
+                            </Button>
+                        </Link>
+                    </div>
                 </div>
 
-                {loading ? (
-                    <div className="flex justify-center py-20">
-                        <RefreshCw className="animate-spin text-indigo-500" size={32} />
-                    </div>
-                ) : (
-                    <motion.div
-                        layout
-                        variants={{ visible: { transition: { staggerChildren: 0.07 } }, hidden: {} }}
-                        initial="hidden"
-                        animate="visible"
-                        className="grid grid-cols-1 md:grid-cols-2 gap-8"
-                    >
-                        {definitions.length > 0 ? (
-                            definitions.map((def) => <DefinitionCard key={def.id} def={def} onDelete={openDeleteModal} onRun={openRunModal} />)
-                        ) : (
-                            <div className="col-span-full text-center py-16 text-slate-500 dark:text-slate-400">
-                                <p className="font-semibold text-lg">No definitions found.</p>
-                                <p className="mt-2">Click "Create Definition" to get started.</p>
-                            </div>
-                        )}
-                    </motion.div>
-                )}
+                <div className="space-y-4">
+                    {definitions.length > 0 ? (
+                        definitions.map((def) => <DefinitionCard key={def.id} def={def} onDelete={openDeleteModal} onRun={openRunModal} />)
+                    ) : (
+                        <div className="col-span-full text-center py-16 text-slate-500 dark:text-slate-400">
+                            <p className="font-semibold text-lg">No definitions found.</p>
+                            <p className="mt-2">Click "Create Definition" to get started.</p>
+                        </div>
+                    )}
+                </div>
             </div>
         </>
     );

@@ -35,7 +35,7 @@ export default function Sidebar() {
         <div className="w-64 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 flex flex-col" data-testid="sidebar">
             {/* Logo */}
             <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
-                <Link to="/" className="flex items-center space-x-3" data-testid="sidebar-logo"> {/* Corrected: 'to' prop */}
+                <Link to="/" className="flex items-center space-x-3" data-testid="sidebar-logo">
                     <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
                         <Database className="text-white" size={16} />
                     </div>
@@ -53,11 +53,10 @@ export default function Sidebar() {
                         <div className="space-y-1">
                             {section.items.map((item) => {
                                 const Icon = item.icon;
-                                // Corrected: Check against location.pathname
                                 const isActive = location.pathname === item.href || (item.href === "/dashboard" && location.pathname === "/");
 
                                 return (
-                                    <Link key={item.name} to={item.href}> {/* Corrected: 'to' prop */}
+                                    <Link key={item.name} to={item.href}>
                                         <Button
                                             variant="ghost"
                                             className={cn(

@@ -6,7 +6,7 @@ import LoginPage from './pages/Login';
 import { ThemeProvider } from './context/ThemeContext';
 import ConnectionsPage from './pages/Connections';
 import ConnectionWizard from './components/ConnectionWizard';
-import MigrationDefinitionsList from './pages/MigrationDefinitionsList';
+import MigrationDefinitionsList from './pages/v2/MigrationDefinitionsList';
 import MigrationWizard from './pages/MigrationWizard';
 import MigrationRunDetails from './pages/MigrationRunDetails';
 import MigrationRunsList from './pages/MigrationRunsList';

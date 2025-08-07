@@ -11,6 +11,7 @@ import { Connection } from "../../types/Connection";
 import { Badge } from "../../components/common/v2/Badge";
 import { cn } from "../../utils/utils";
 import MigrationChart from "../../components/MigrationChart";
+import { getConnectionIcon } from "../../components/common/Helper";
 
 type ChartDataItem = { name: string; Succeeded: number; Failed: number; Running: number };
 type Stats = {
@@ -101,21 +102,6 @@ export default function Dashboard() {
                 return "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300";
             default:
                 return "bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300";
-        }
-    };
-
-    const getConnectionIcon = (type: string) => {
-        switch (type) {
-            case "mysql":
-                return <Database className="text-blue-600 dark:text-blue-400" size={16} />;
-            case "postgresql":
-            case "postgres":
-            case "pg":
-                return <Server className="text-purple-600 dark:text-purple-400" size={16} />;
-            case "s3":
-                return <Database className="text-orange-600 dark:text-orange-400" size={16} />;
-            default:
-                return <Database className="text-gray-600 dark:text-gray-400" size={16} />;
         }
     };
 

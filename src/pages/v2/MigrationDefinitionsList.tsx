@@ -1,6 +1,6 @@
 import { useEffect, useState, Fragment } from "react";
 import { motion } from "framer-motion";
-import { Plus, ArrowRight, RefreshCw, Pencil, Trash2, X, AlertTriangle, Play, Calendar, Info, InfoIcon, Eye, Edit, FileText, BarChart3, CheckCircle, XCircle, Activity, Clock, Database } from "lucide-react";
+import { Plus, ArrowRight, RefreshCw, Pencil, Trash2, X, AlertTriangle, Play, Calendar, Info, InfoIcon, Eye, Edit, FileText, BarChart3, CheckCircle, XCircle, Activity, Clock, Database, Search, Grid3X3, List } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Dialog, Transition } from '@headlessui/react';
 import { JobDefinition } from "../../types/JobDefinition";
@@ -10,6 +10,8 @@ import { Link } from "react-router-dom";
 import { Button } from "../../components/common/v2/Button";
 import { Card, CardContent } from "../../components/common/v2/Card";
 import { formatDistanceToNow } from "date-fns";
+import Input from "../../components/common/Input";
+import { cn } from "../../utils/utils";
 
 const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, definitionName }: { isOpen: boolean, onClose: () => void, onConfirm: () => void, definitionName: string | undefined }) => {
     return (
@@ -161,11 +163,11 @@ const DefinitionCard = ({ def, onDelete, onRun }: { def: JobDefinition, onDelete
                             </div>
                         </div>
                         <div className="flex-1 min-w-0">
-                            <div className="flex items-center space-x-3 mb-1">
-                                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+                            <div className="flex items-start justify-between mb-1">
+                                <h3 className="text-xl font-semibold text-slate-900 dark:text-white">
                                     {def.name}
                                 </h3>
-                                <span className="text-sm text-slate-500 dark:text-slate-400">
+                                <span className="text-sm text-gray-500 text-right ml-4">
                                     Updated {def.updatedAt
                                         ? formatDistanceToNow(new Date(def.updatedAt), { addSuffix: true })
                                         : "unknown"
@@ -179,35 +181,35 @@ const DefinitionCard = ({ def, onDelete, onRun }: { def: JobDefinition, onDelete
                     </div>
 
                     {/* Stats Section */}
-                    <div className="bg-slate-50 dark:bg-slate-900/50 rounded-xl p-4 my-6">
-                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-6 my-6 text-center">
+                    <div className="bg-slate-50 dark:bg-slate-900/50 rounded-xl p-4 my-4">
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-4 my-2 text-center">
                             <div>
-                                <div className="flex items-center justify-center w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg mx-auto mb-2">
+                                <div className="flex items-center justify-center w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg mx-auto mb-1">
                                     <BarChart3 className="text-blue-600 dark:text-blue-400" size={16} />
                                 </div>
-                                <p className="text-sm font-bold text-slate-900 dark:text-white">3</p>
-                                <p className="text-xs font-medium text-slate-500 dark:text-slate-400 tracking-wider">Total Runs</p>
+                                <p className="text-sm font-bold text-slate-900 dark:text-white py-2">3</p>
+                                <p className="text-xs font-medium text-slate-500 dark:text-slate-400 tracking-wider py-2">Total Runs</p>
                             </div>
                             <div>
-                                <div className="flex items-center justify-center w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-lg mx-auto mb-2">
+                                <div className="flex items-center justify-center w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-lg mx-auto mb-1">
                                     <CheckCircle className="text-green-600 dark:text-green-400" size={16} />
                                 </div>
-                                <p className="text-sm font-semibold text-slate-900 dark:text-white capitalize">Succeeded</p>
-                                <p className="text-xs font-medium text-slate-500 dark:text-slate-400 tracking-wider">Last Run</p>
+                                <p className="text-sm font-semibold text-slate-900 dark:text-white capitalize py-2">Succeeded</p>
+                                <p className="text-xs font-medium text-slate-500 dark:text-slate-400 tracking-wider py-2">Last Run</p>
                             </div>
                             <div>
-                                <div className="flex items-center justify-center w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg mx-auto mb-2">
+                                <div className="flex items-center justify-center w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg mx-auto mb-1">
                                     <Database className="text-purple-600 dark:text-purple-400" size={16} />
                                 </div>
-                                <p className="text-sm font-bold text-slate-900 dark:text-white">1.2 GB</p>
-                                <p className="text-xs font-medium text-slate-500 dark:text-slate-400 tracking-wider">Processed</p>
+                                <p className="text-sm font-bold text-slate-900 dark:text-white py-2">1.2 GB</p>
+                                <p className="text-xs font-medium text-slate-500 dark:text-slate-400 tracking-wider py-2">Processed</p>
                             </div>
                             <div>
-                                <div className="flex items-center justify-center w-10 h-10 bg-orange-100 dark:bg-orange-900/30 rounded-lg mx-auto mb-2">
+                                <div className="flex items-center justify-center w-10 h-10 bg-orange-100 dark:bg-orange-900/30 rounded-lg mx-auto mb-1">
                                     <Clock className="text-orange-600 dark:text-orange-400" size={16} />
                                 </div>
-                                <p className="text-sm font-semibold text-slate-900 dark:text-white">3m 14s</p>
-                                <p className="text-xs font-medium text-slate-500 dark:text-slate-400 tracking-wider">Avg Duration</p>
+                                <p className="text-sm font-semibold text-slate-900 dark:text-white py-2">3m 14s</p>
+                                <p className="text-xs font-medium text-slate-500 dark:text-slate-400 tracking-wider py-2">Avg Duration</p>
                             </div>
                         </div>
                     </div>
@@ -277,11 +279,84 @@ const DefinitionCard = ({ def, onDelete, onRun }: { def: JobDefinition, onDelete
     );
 };
 
+const DefinitionRow = ({ def, onDelete, onRun }: { def: JobDefinition, onDelete: (id: string) => void, onRun: (id: string) => void }) => {
+    // Placeholder data
+    const stats = {
+        status: "Active",
+        lastRun: "Completed",
+        totalRuns: 12,
+        dataProcessed: "2.3M records",
+        avgDuration: "4m 32s"
+    };
+
+    return (
+        <tr className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+            <td className="px-6 py-4 whitespace-nowrap">
+                <div className="flex items-center">
+                    <div className="flex-shrink-0 h-10 w-10 rounded-lg flex items-center justify-center bg-blue-100 dark:bg-blue-900/30">
+                        <FileText className="text-blue-600 dark:text-blue-400" size={20} />
+                    </div>
+                    <div className="ml-4">
+                        <div className="text-sm font-semibold text-slate-800 dark:text-slate-200">{def.name}</div>
+                        <div className="text-sm text-slate-500 dark:text-slate-400">{def.description || "No description"}</div>
+                    </div>
+                </div>
+            </td>
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">
+                <div className="flex items-center">
+                    <CheckCircle className="mr-1.5 h-4 w-4 text-green-500" />
+                    {stats.lastRun}
+                </div>
+            </td>
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{stats.totalRuns}</td>
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{stats.dataProcessed}</td>
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{stats.avgDuration}</td>
+            <td className="px-6 py-4 whitespace-nowrap text-left text-sm font-medium">
+                <div>
+                    <Button asChild variant="ghost" size="icon"><Link to={`/definitions/${def.id}`}><Eye size={18} /></Link></Button>
+                    <Button asChild variant="ghost" size="icon"><Link to={`/wizard/${def.id}`}><Edit size={18} /></Link></Button>
+                    <Button variant="ghost" size="icon" className="text-blue-600 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/40" onClick={() => onRun(def.id)}><Play size={18} /></Button>
+                    <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-500 dark:text-red-400 dark:hover:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40" onClick={() => onDelete(def.id)}><Trash2 size={18} /></Button>
+                </div>
+            </td>
+        </tr>
+    );
+};
+
+const DefinitionTable = ({ definitions, onDelete, onRun }: { definitions: JobDefinition[], onDelete: (id: string) => void, onRun: (id: string) => void }) => (
+    <Card className="bg-white dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm overflow-hidden relative">
+        <CardContent className="p-0">
+            <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+                    <thead className="bg-slate-50 dark:bg-slate-800">
+                        <tr>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-300 uppercase tracking-wider">Name</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-300 uppercase tracking-wider">Last Run</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-300 uppercase tracking-wider">Total Runs</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-300 uppercase tracking-wider">Data Processed</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-300 uppercase tracking-wider">Avg Duration</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-300 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+                        {definitions.map((def) => (
+                            <DefinitionRow key={def.id} def={def} onDelete={onDelete} onRun={onRun} />
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        </CardContent>
+    </Card>
+);
+
 const MigrationDefinitionsList = () => {
     const [definitions, setDefinitions] = useState<JobDefinition[]>([]);
     const [loading, setLoading] = useState(true);
     const [definitionToDelete, setDefinitionToDelete] = useState<JobDefinition | null>(null);
     const [definitionToRun, setDefinitionToRun] = useState<JobDefinition | null>(null);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [activeFilter, setActiveFilter] = useState("all");
+    const [viewMode, setViewMode] = useState<"list" | "table">("list");
 
     useEffect(() => {
         setLoading(true);
@@ -333,6 +408,15 @@ const MigrationDefinitionsList = () => {
             closeDeleteModal();
         }
     };
+
+    // Filter pills
+    const filterOptions = [
+        { value: "all", label: "All", count: definitions?.length || 0 },
+        // { value: "active", label: "Active", count: definitions?.filter(d => d.status === "active").length || 0 },
+        // { value: "inactive", label: "Inactive", count: definitions?.filter(d => d.status === "inactive").length || 0 },
+        // { value: "paused", label: "Paused", count: definitions?.filter(d => d.status === "paused").length || 0 },
+        // { value: "draft", label: "Draft", count: definitions?.filter(d => d.status === "draft").length || 0 }
+    ];
 
     if (loading) {
         return (
@@ -389,9 +473,38 @@ const MigrationDefinitionsList = () => {
                     </div>
                 </div>
 
+                {/* Search & Filter Bar */}
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                        <Input
+                            type="text"
+                            placeholder="Search definitions by name..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="pl-10 w-full md:w-80"
+                            data-testid="search-definitions"
+                        />
+                    </div>
+                    <div className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
+                        <button onClick={() => setViewMode("list")} className={cn("p-2 rounded-md transition-colors", viewMode === "list" ? "bg-white dark:bg-slate-700 text-blue-600 shadow-sm" : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white")} data-testid="view-toggle-list">
+                            <Grid3X3 size={16} />
+                        </button>
+                        <button onClick={() => setViewMode("table")} className={cn("p-2 rounded-md transition-colors", viewMode === "table" ? "bg-white dark:bg-slate-700 text-blue-600 shadow-sm" : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white")} data-testid="view-toggle-table">
+                            <List size={16} />
+                        </button>
+                    </div>
+                </div>
+
                 <div className="space-y-4">
                     {definitions.length > 0 ? (
-                        definitions.map((def) => <DefinitionCard key={def.id} def={def} onDelete={openDeleteModal} onRun={openRunModal} />)
+                        viewMode === "list" ? (
+                            definitions.map((def) => (
+                                <DefinitionCard key={def.id} def={def} onDelete={openDeleteModal} onRun={openRunModal} />
+                            ))
+                        ) : (
+                            <DefinitionTable definitions={definitions} onDelete={openDeleteModal} onRun={openRunModal} />
+                        )
                     ) : (
                         <div className="col-span-full text-center py-16 text-slate-500 dark:text-slate-400">
                             <p className="font-semibold text-lg">No definitions found.</p>

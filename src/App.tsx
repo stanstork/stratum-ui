@@ -9,7 +9,7 @@ import ConnectionWizard from './components/ConnectionWizard';
 import MigrationDefinitionsList from './pages/v2/MigrationDefinitionsList';
 import MigrationWizard from './pages/MigrationWizard';
 import MigrationRunDetails from './pages/MigrationRunDetails';
-import MigrationRunsList from './pages/MigrationRunsList';
+import MigrationRunsList from './pages/v2/MigrationRunsList';
 import MigrationDetailsPage from './pages/MIgrationDefinitionDetails';
 import Layout from './components/Layout';
 import Dashboard from './pages/v2/Dashboard';

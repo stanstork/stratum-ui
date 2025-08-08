@@ -8,6 +8,7 @@ interface InputProps {
     type?: string;
     disabled?: boolean;
     step?: string; // Optional for number inputs
+    id?: string;
 }
 
 const Input: React.FC<InputProps> = ({ value, onChange, placeholder, className = '', type = 'text', disabled = false, step = 'any' }) => (

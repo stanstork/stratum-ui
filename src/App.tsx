@@ -13,6 +13,7 @@ import MigrationRunsList from './pages/v2/MigrationRunsList';
 import MigrationDetailsPage from './pages/MIgrationDefinitionDetails';
 import Layout from './components/Layout';
 import Dashboard from './pages/v2/Dashboard';
+import AddConnection from './pages/v2/AddConnection';
 
 interface AppContextProps {
     page: string;
@@ -84,9 +85,9 @@ const InnerApp: React.FC = () => {
                         element={<ConnectionsPage setView={navigate} />}
                     />
                     <Route
-                        path="connections/new"
+                        path="connections/add"
                         element={
-                            <ConnectionWizard onBack={() => goTo('connections')} />
+                            <AddConnection />
                         }
                     />
                     <Route

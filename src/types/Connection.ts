@@ -69,7 +69,7 @@ export function emptyConnection(): Connection {
 export function createConnectionString(conn: Connection): string {
     if (conn.dataFormat === 'PostgreSQL') {
         return `postgresql://${conn.username}:${conn.password}@${conn.host}:${conn.port}/${conn.dbName}`;
-    } else if (conn.dataFormat === 'MySQL') {
+    } else if (conn.dataFormat === 'mysql') {
         return `mysql://${conn.username}:${conn.password}@${conn.host}:${conn.port}/${conn.dbName}`;
     }
     return '';

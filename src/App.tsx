@@ -4,7 +4,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import LoginPage from './pages/Login';
 // import Dashboard from './pages/Dashboard';
 import { ThemeProvider } from './context/ThemeContext';
-import ConnectionsPage from './pages/Connections';
+import ConnectionsPage from './pages/v2/Connections';
 import ConnectionWizard from './components/ConnectionWizard';
 import MigrationDefinitionsList from './pages/v2/MigrationDefinitionsList';
 import MigrationWizard from './pages/MigrationWizard';

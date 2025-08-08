@@ -1,4 +1,4 @@
-import { useEffect, useState, Fragment } from "react";
+import { useEffect, useMemo, useState, Fragment } from "react";
 import { motion } from "framer-motion";
 import {
     Plus,
@@ -24,9 +24,13 @@ import apiClient from "../../services/apiClient";
 import { getConnectionIcon } from "../../components/common/Helper";
 import { Button } from "../../components/common/v2/Button";
 import { Card, CardContent } from "../../components/common/v2/Card";
+import { Badge } from "../../components/common/v2/Badge";
 import { formatDistanceToNow } from "date-fns";
 import Input from "../../components/common/Input";
 import { cn } from "../../utils/utils";
+
+type SortKey = "name";
+type SortDir = "asc" | "desc";
 
 const DeleteConfirmationModal = ({
     isOpen,
@@ -42,29 +46,13 @@ const DeleteConfirmationModal = ({
     return (
         <Transition appear show={isOpen} as={Fragment}>
             <Dialog as="div" className="relative z-50" onClose={onClose}>
-                <Transition.Child
-                    as={Fragment}
-                    enter="ease-out duration-300"
-                    enterFrom="opacity-0"
-                    enterTo="opacity-100"
-                    leave="ease-in duration-200"
-                    leaveFrom="opacity-100"
-                    leaveTo="opacity-0"
-                >
+                <Transition.Child as={Fragment} enter="ease-out duration-300" enterFrom="opacity-0" enterTo="opacity-100" leave="ease-in duration-200" leaveFrom="opacity-100" leaveTo="opacity-0">
                     <div className="fixed inset-0 bg-black/60" />
                 </Transition.Child>
 
                 <div className="fixed inset-0 overflow-y-auto">
                     <div className="flex min-h-full items-center justify-center p-4 text-center">
-                        <Transition.Child
-                            as={Fragment}
-                            enter="ease-out duration-300"
-                            enterFrom="opacity-0 scale-95"
-                            enterTo="opacity-100 scale-100"
-                            leave="ease-in duration-200"
-                            leaveFrom="opacity-100 scale-100"
-                            leaveTo="opacity-0 scale-95"
-                        >
+                        <Transition.Child as={Fragment} enter="ease-out duration-300" enterFrom="opacity-0 scale-95" enterTo="opacity-100 scale-100" leave="ease-in duration-200" leaveFrom="opacity-100 scale-100" leaveTo="opacity-0 scale-95">
                             <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white dark:bg-slate-800 p-6 text-left align-middle shadow-xl transition-all">
                                 <Dialog.Title className="text-lg font-bold leading-6 text-slate-900 dark:text-slate-50 flex items-center">
                                     <AlertTriangle className="text-red-500 mr-2" />
@@ -72,25 +60,15 @@ const DeleteConfirmationModal = ({
                                 </Dialog.Title>
                                 <div className="mt-4">
                                     <p className="text-sm text-slate-600 dark:text-slate-400">
-                                        Are you sure you want to delete the definition
-                                        {" "}
-                                        <span className="font-semibold text-slate-900 dark:text-slate-100">
-                                            {definitionName}
-                                        </span>
-                                        ? This action cannot be undone.
+                                        Are you sure you want to delete the definition {" "}
+                                        <span className="font-semibold text-slate-900 dark:text-slate-100">{definitionName}</span>? This action cannot be undone.
                                     </p>
                                 </div>
                                 <div className="mt-6 flex justify-end gap-2">
-                                    <button
-                                        className="inline-flex justify-center rounded-md bg-slate-100 dark:bg-slate-700 px-4 py-2 text-sm font-medium text-slate-900 dark:text-slate-50 hover:bg-slate-200 dark:hover:bg-slate-600"
-                                        onClick={onClose}
-                                    >
+                                    <button className="inline-flex justify-center rounded-md bg-slate-100 dark:bg-slate-700 px-4 py-2 text-sm font-medium text-slate-900 dark:text-slate-50 hover:bg-slate-200 dark:hover:bg-slate-600" onClick={onClose}>
                                         Cancel
                                     </button>
-                                    <button
-                                        className="inline-flex justify-center rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
-                                        onClick={onConfirm}
-                                    >
+                                    <button className="inline-flex justify-center rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700" onClick={onConfirm}>
                                         Delete
                                     </button>
                                 </div>
@@ -117,29 +95,13 @@ const RunConfirmationModal = ({
     return (
         <Transition appear show={isOpen} as={Fragment}>
             <Dialog as="div" className="relative z-50" onClose={onClose}>
-                <Transition.Child
-                    as={Fragment}
-                    enter="ease-out duration-300"
-                    enterFrom="opacity-0"
-                    enterTo="opacity-100"
-                    leave="ease-in duration-200"
-                    leaveFrom="opacity-100"
-                    leaveTo="opacity-0"
-                >
+                <Transition.Child as={Fragment} enter="ease-out duration-300" enterFrom="opacity-0" enterTo="opacity-100" leave="ease-in duration-200" leaveFrom="opacity-100" leaveTo="opacity-0">
                     <div className="fixed inset-0 bg-black/60" />
                 </Transition.Child>
 
                 <div className="fixed inset-0 overflow-y-auto">
                     <div className="flex min-h-full items-center justify-center p-4 text-center">
-                        <Transition.Child
-                            as={Fragment}
-                            enter="ease-out duration-300"
-                            enterFrom="opacity-0 scale-95"
-                            enterTo="opacity-100 scale-100"
-                            leave="ease-in duration-200"
-                            leaveFrom="opacity-100 scale-100"
-                            leaveTo="opacity-0 scale-95"
-                        >
+                        <Transition.Child as={Fragment} enter="ease-out duration-300" enterFrom="opacity-0 scale-95" enterTo="opacity-100 scale-100" leave="ease-in duration-200" leaveFrom="opacity-100 scale-100" leaveTo="opacity-0 scale-95">
                             <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white dark:bg-slate-800 p-6 text-left align-middle shadow-xl transition-all">
                                 <Dialog.Title className="text-lg font-bold leading-6 text-slate-900 dark:text-slate-50 flex items-center">
                                     <InfoIcon className="text-blue-500 mr-2" />
@@ -147,25 +109,15 @@ const RunConfirmationModal = ({
                                 </Dialog.Title>
                                 <div className="mt-4">
                                     <p className="text-sm text-slate-600 dark:text-slate-400">
-                                        Are you sure you want to run the migration
-                                        {" "}
-                                        <span className="font-semibold text-slate-900 dark:text-slate-100">
-                                            {definitionName}
-                                        </span>
-                                        ?
+                                        Are you sure you want to run the migration {" "}
+                                        <span className="font-semibold text-slate-900 dark:text-slate-100">{definitionName}</span>?
                                     </p>
                                 </div>
                                 <div className="mt-6 flex justify-end gap-2">
-                                    <button
-                                        className="inline-flex justify-center rounded-md bg-slate-100 dark:bg-slate-700 px-4 py-2 text-sm font-medium text-slate-900 dark:text-slate-50 hover:bg-slate-200 dark:hover:bg-slate-600"
-                                        onClick={onClose}
-                                    >
+                                    <button className="inline-flex justify-center rounded-md bg-slate-100 dark:bg-slate-700 px-4 py-2 text-sm font-medium text-slate-900 dark:text-slate-50 hover:bg-slate-200 dark:hover:bg-slate-600" onClick={onClose}>
                                         Cancel
                                     </button>
-                                    <button
-                                        className="inline-flex justify-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
-                                        onClick={onConfirm}
-                                    >
+                                    <button className="inline-flex justify-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700" onClick={onConfirm}>
                                         Run
                                     </button>
                                 </div>
@@ -194,9 +146,7 @@ const DefinitionCard = ({
         action();
     };
 
-    const updatedLabel = def.updatedAt
-        ? `Updated ${formatDistanceToNow(new Date(def.updatedAt), { addSuffix: true })}`
-        : "Unknown";
+    const updatedLabel = def.updatedAt ? `Updated ${formatDistanceToNow(new Date(def.updatedAt), { addSuffix: true })}` : "Unknown";
 
     const Stat = ({
         icon: Icon,
@@ -221,15 +171,7 @@ const DefinitionCard = ({
     );
 
     return (
-        <motion.div
-            layout
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            whileHover={{ y: -2 }}
-            transition={{ duration: 0.2 }}
-            onClick={() => navigate(`/definitions/${def.id}`)}
-            className="cursor-pointer"
-        >
+        <motion.div layout initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} whileHover={{ y: -2 }} transition={{ duration: 0.2 }} onClick={() => navigate(`/definitions/${def.id}`)} className="cursor-pointer">
             <Card className="bg-white dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm overflow-hidden relative hover:shadow-[0_8px_24px_rgba(0,0,0,0.12)] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.45)] transition-all">
                 <CardContent className="p-6">
                     {/* Header */}
@@ -242,15 +184,11 @@ const DefinitionCard = ({
                                 <h3 className="text-lg font-semibold text-slate-900 dark:text-white truncate group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors">
                                     {def.name}
                                 </h3>
-                                <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2">
-                                    {def.description || "No description provided"}
-                                </p>
+                                <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2">{def.description || "No description provided"}</p>
                             </div>
                         </div>
 
-                        <span className="shrink-0 text-xs text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-full">
-                            {updatedLabel}
-                        </span>
+                        <span className="shrink-0 text-xs text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-full">{updatedLabel}</span>
                     </div>
 
                     {/* Stats */}
@@ -342,8 +280,8 @@ const DefinitionRow = ({ def, onDelete, onRun }: { def: JobDefinition; onDelete:
     };
 
     return (
-        <tr className="odd:bg-white even:bg-slate-50/40 dark:odd:bg-slate-800 dark:even:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors group">
-            <td className="px-6 py-4 whitespace-nowrap">
+        <tr className="hover:bg-slate-100 dark:hover:bg-slate-800/40 transition-colors group">
+            <td className="px-4 py-3 whitespace-nowrap">
                 <div className="flex items-center">
                     <div className="flex-shrink-0 h-10 w-10 rounded-lg flex items-center justify-center bg-blue-100 dark:bg-blue-900/30">
                         <FileText className="text-blue-600 dark:text-blue-400" size={20} />
@@ -354,16 +292,20 @@ const DefinitionRow = ({ def, onDelete, onRun }: { def: JobDefinition; onDelete:
                     </div>
                 </div>
             </td>
-            <td className="px-6 py-4 whitespace-nowrap">
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300">
-                    <CheckCircle className="mr-1.5 h-3 w-3" />
-                    {stats.lastRun}
-                </span>
+            <td className="px-4 py-3 whitespace-nowrap">
+                <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300">
+                        <CheckCircle className="mr-1.5 h-3 w-3" /> {stats.lastRun}
+                    </span>
+                </div>
             </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">{stats.totalRuns}</td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">{stats.dataProcessed}</td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">{stats.avgDuration}</td>
-            <td className="px-6 py-4 whitespace-nowrap text-left text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+            <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">{stats.totalRuns}</td>
+            <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">{stats.dataProcessed}</td>
+            <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">{stats.avgDuration}</td>
+            <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">
+                {def.createdAt ? new Date(def.createdAt).toLocaleDateString() : "Unknown"}
+            </td>
+            <td className="px-4 py-3 whitespace-nowrap text-left text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">
                 <div className="flex gap-1">
                     <Button asChild variant="ghost" size="icon" title="View">
                         <Link to={`/definitions/${def.id}`}>
@@ -387,30 +329,66 @@ const DefinitionRow = ({ def, onDelete, onRun }: { def: JobDefinition; onDelete:
     );
 };
 
-const DefinitionTable = ({ definitions, onDelete, onRun }: { definitions: JobDefinition[]; onDelete: (id: string) => void; onRun: (id: string) => void }) => (
-    <Card className="bg-white dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm overflow-hidden relative">
-        <CardContent className="p-0">
-            <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
-                    <thead className="sticky top-0 z-10 backdrop-blur bg-slate-50 dark:bg-slate-800/70">
-                        <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-300 uppercase tracking-wider">Name</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-300 uppercase tracking-wider">Last Run</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-300 uppercase tracking-wider">Total Runs</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-300 uppercase tracking-wider">Data Processed</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-300 uppercase tracking-wider">Avg Duration</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-300 uppercase tracking-wider">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-                        {definitions.map((def) => (
-                            <DefinitionRow key={def.id} def={def} onDelete={onDelete} onRun={onRun} />
+const DefinitionTable = ({
+    definitions,
+    onDelete,
+    onRun,
+    sortKey,
+    sortDir,
+    onSort,
+}: {
+    definitions: JobDefinition[];
+    onDelete: (id: string) => void;
+    onRun: (id: string) => void;
+    sortKey: "name";
+    sortDir: "asc" | "desc";
+    onSort: (key: "name") => void;
+}) => (
+    <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700/60 bg-white dark:bg-slate-800/50">
+        <div className="overflow-x-auto">
+            <table className="min-w-full text-sm">
+                <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-300">
+                    <tr>
+                        {(
+                            [
+                                { key: "name", label: "Name" },
+                                { key: "last", label: "Last Run" },
+                                { key: "total", label: "Total Runs" },
+                                { key: "processed", label: "Data Processed" },
+                                { key: "avg", label: "Avg Duration" },
+                                { key: "created", label: "Created" },
+                                { key: "actions", label: "" },
+                            ] as const
+                        ).map((col) => (
+                            <th
+                                key={col.key}
+                                className={`text-left font-semibold px-4 py-3 whitespace-nowrap ${col.key === "name" ? "cursor-pointer select-none" : ""
+                                    }`}
+                                onClick={() => {
+                                    if (col.key !== "name") return;
+                                    onSort("name");
+                                }}
+                            >
+                                <div className="inline-flex items-center gap-1">
+                                    {col.label}
+                                    {col.key === "name" && (
+                                        <span aria-hidden className="text-xs">
+                                            {sortKey === "name" ? (sortDir === "asc" ? "▲" : "▼") : ""}
+                                        </span>
+                                    )}
+                                </div>
+                            </th>
                         ))}
-                    </tbody>
-                </table>
-            </div>
-        </CardContent>
-    </Card>
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200 dark:divide-slate-700/60">
+                    {definitions.map((def) => (
+                        <DefinitionRow key={def.id} def={def} onDelete={onDelete} onRun={onRun} />
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    </div>
 );
 
 const MigrationDefinitionsList = () => {
@@ -420,6 +398,8 @@ const MigrationDefinitionsList = () => {
     const [definitionToRun, setDefinitionToRun] = useState<JobDefinition | null>(null);
     const [searchTerm, setSearchTerm] = useState("");
     const [viewMode, setViewMode] = useState<"list" | "table">("list");
+    const [sortKey, setSortKey] = useState<SortKey>("name");
+    const [sortDir, setSortDir] = useState<SortDir>("asc");
 
     useEffect(() => {
         setLoading(true);
@@ -427,12 +407,11 @@ const MigrationDefinitionsList = () => {
             .getJobDefinitions()
             .then((data) => {
                 setDefinitions(data);
-                setLoading(false);
             })
             .catch((err) => {
                 console.error("Failed to load definitions", err);
-                setLoading(false);
-            });
+            })
+            .finally(() => setLoading(false));
     }, []);
 
     const openDeleteModal = (id: string) => {
@@ -460,9 +439,22 @@ const MigrationDefinitionsList = () => {
         }
     };
 
-    const filtered = definitions.filter((d) =>
-        d.name.toLowerCase().includes(searchTerm.toLowerCase())
+    const filtered = useMemo(
+        () => definitions.filter((d) => d.name.toLowerCase().includes(searchTerm.toLowerCase())),
+        [definitions, searchTerm]
     );
+
+    const sorted = useMemo(() => {
+        const arr = [...filtered];
+        arr.sort((a, b) => {
+            const va = a.name.toLowerCase();
+            const vb = b.name.toLowerCase();
+            if (va < vb) return sortDir === "asc" ? -1 : 1;
+            if (va > vb) return sortDir === "asc" ? 1 : -1;
+            return 0;
+        });
+        return arr;
+    }, [filtered, sortDir]);
 
     if (loading) {
         return (
@@ -477,12 +469,7 @@ const MigrationDefinitionsList = () => {
 
     return (
         <>
-            <DeleteConfirmationModal
-                isOpen={!!definitionToDelete}
-                onClose={closeDeleteModal}
-                onConfirm={handleDeleteDefinition}
-                definitionName={definitionToDelete?.name}
-            />
+            <DeleteConfirmationModal isOpen={!!definitionToDelete} onClose={closeDeleteModal} onConfirm={handleDeleteDefinition} definitionName={definitionToDelete?.name} />
 
             <RunConfirmationModal
                 isOpen={!!definitionToRun}
@@ -506,12 +493,8 @@ const MigrationDefinitionsList = () => {
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                        <h1 className="text-[32px] font-bold leading-tight text-slate-900 dark:text-white">
-                            Migration Definitions
-                        </h1>
-                        <p className="mt-3 text-slate-700 dark:text-slate-300">
-                            Create and manage reusable migration templates
-                        </p>
+                        <h1 className="text-[32px] font-bold leading-tight text-slate-900 dark:text-white">Migration Definitions</h1>
+                        <p className="mt-1 text-slate-700 dark:text-slate-300">Create and manage reusable migration templates</p>
                     </div>
                     <div className="mt-4 sm:mt-0">
                         <Link to="/wizard">
@@ -523,67 +506,71 @@ const MigrationDefinitionsList = () => {
                     </div>
                 </div>
 
-                {/* Search & View toggle */}
+                {/* Search & View toggle (unified with Runs page) */}
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                    <div className="relative flex-1">
+                    <div className="relative w-full md:w-80">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                         <Input
                             type="text"
                             placeholder="Search definitions by name..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-10 w-full md:w-80"
+                            className="pl-10 w-full"
                             data-testid="search-definitions"
                         />
+                        {searchTerm && (
+                            <button
+                                className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                                onClick={() => setSearchTerm("")}
+                                aria-label="Clear search"
+                            >
+                                ×
+                            </button>
+                        )}
                     </div>
 
-                    <div className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
+                    <div className="inline-flex rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
                         <button
                             onClick={() => setViewMode("list")}
                             className={cn(
-                                "p-2 rounded-md transition-colors",
-                                viewMode === "list"
-                                    ? "bg-white dark:bg-slate-700 text-blue-600 shadow-sm"
-                                    : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white"
+                                "flex items-center gap-2 px-3 py-1.5 text-sm font-medium transition-all",
+                                viewMode === "list" ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900" : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
                             )}
-                            data-testid="view-toggle-list"
+                            aria-pressed={viewMode === "list"}
                             title="Card view"
                         >
-                            <Grid3X3 size={16} />
+                            <Grid3X3 size={16} /> Cards
                         </button>
                         <button
                             onClick={() => setViewMode("table")}
                             className={cn(
-                                "p-2 rounded-md transition-colors",
-                                viewMode === "table"
-                                    ? "bg-white dark:bg-slate-700 text-blue-600 shadow-sm"
-                                    : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white"
+                                "flex items-center gap-2 px-3 py-1.5 text-sm font-medium transition-all",
+                                viewMode === "table" ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900" : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
                             )}
-                            data-testid="view-toggle-table"
+                            aria-pressed={viewMode === "table"}
                             title="Table view"
                         >
-                            <List size={16} />
+                            <List size={16} /> Table
                         </button>
                     </div>
                 </div>
 
                 {/* Content */}
                 <div className="space-y-4">
-                    {filtered.length > 0 ? (
+                    {sorted.length > 0 ? (
                         viewMode === "list" ? (
-                            filtered.map((def) => (
-                                <DefinitionCard
-                                    key={def.id}
-                                    def={def}
-                                    onDelete={openDeleteModal}
-                                    onRun={openRunModal}
-                                />
-                            ))
+                            sorted.map((def) => <DefinitionCard key={def.id} def={def} onDelete={openDeleteModal} onRun={openRunModal} />)
                         ) : (
                             <DefinitionTable
-                                definitions={filtered}
+                                definitions={sorted}
                                 onDelete={openDeleteModal}
                                 onRun={openRunModal}
+                                sortKey={sortKey}
+                                sortDir={sortDir}
+                                onSort={() => {
+                                    setSortKey("name");
+                                    setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+                                }}
                             />
                         )
                     ) : (

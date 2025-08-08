@@ -172,7 +172,7 @@ const ConnectionCard = ({
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div className="text-sm flex items-start justify-between gap-4">
                         <div>
                             <span className="text-slate-500 dark:text-slate-400">Type</span>
                             <p className="text-slate-900 dark:text-white font-medium">

@@ -232,9 +232,9 @@ const Step6_Filters: React.FC<Step6_FiltersProps> = ({ config, migrateItem, meta
                     {/* Section Intro */}
                     <div className="flex justify-between items-center">
                         <div>
-                            <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Filters (WHERE Clause)</h2>
-                            <p className="text-slate-500 dark:text-slate-400 mt-1">
-                                Filter the data to be migrated based on specific conditions.
+                            <h2 className="text-xl font-semibold text-slate-900 dark:text-white">Filters (WHERE)</h2>
+                            <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">
+                                Limit which rows are migrated by adding conditions and groups.
                             </p>
                         </div>
                     </div>

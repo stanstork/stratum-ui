@@ -248,15 +248,15 @@ export default function AddConnection() {
                             key={cat.id}
                             onClick={() => handleCategoryChange(cat.id)}
                             className={`group text-left p-4 rounded-xl border transition-all ${selectedCategory === cat.id
-                                    ? "border-slate-900 dark:border-white bg-gradient-to-br from-slate-50 to-white dark:from-slate-800/60"
-                                    : "border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                                ? "border-slate-900 dark:border-white bg-gradient-to-br from-slate-50 to-white dark:from-slate-800/60"
+                                : "border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/60"
                                 }`}
                         >
                             <div className="flex items-center gap-3">
                                 <div
                                     className={`h-10 w-10 rounded-xl flex items-center justify-center ring-1 ${selectedCategory === cat.id
-                                            ? "ring-slate-900 dark:ring-white bg-slate-900 text-white dark:bg-white dark:text-slate-900"
-                                            : "ring-slate-200 dark:ring-slate-700 bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                                        ? "ring-slate-900 dark:ring-white bg-slate-900 text-white dark:bg-white dark:text-slate-900"
+                                        : "ring-slate-200 dark:ring-slate-700 bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
                                         }`}
                                 >
                                     {cat.icon}
@@ -278,7 +278,7 @@ export default function AddConnection() {
                                 <div className="flex items-center gap-3">
                                     <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center">{t.icon}</div>
                                     <div>
-                                        <div className="font-medium">{t.label}</div>
+                                        <div className="font-medium text-slate-900 dark:text-white">{t.label}</div>
                                         <div className="text-xs text-slate-500 dark:text-slate-400">Port {t.defaultPort}</div>
                                     </div>
                                 </div>
@@ -432,8 +432,8 @@ export default function AddConnection() {
                                         onClick={() => canGoTo(index) && setCurrentStep(index)}
                                         disabled={!canGoTo(index)}
                                         className={`flex items-center justify-center w-8 h-8 rounded-full transition-all text-sm font-medium ${step.completed || index === currentStep
-                                                ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900"
-                                                : "bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400"
+                                            ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900"
+                                            : "bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400"
                                             } ${canGoTo(index) ? "hover:scale-105" : "cursor-not-allowed"}`}
                                     >
                                         {step.completed && index !== currentStep ? <CheckCircle size={14} /> : <span>{index + 1}</span>}

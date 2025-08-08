@@ -16,8 +16,8 @@ const SettingsPanel: React.FC<{ title: string; description: string; icon: React.
         <div className="flex items-start gap-4 mb-6">
             <div className="text-slate-500 dark:text-slate-400 mt-1">{icon}</div>
             <div>
-                <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100">{title}</h3>
-                <p className="text-slate-500 dark:text-slate-400 mt-1">{description}</p>
+                <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">{title}</h3>
+                <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm">{description}</p>
             </div>
         </div>
         <div className="space-y-2">
@@ -68,19 +68,17 @@ const Step7_Settings = ({ config, setConfig, migrateItem }: Step7SettingsProps) 
     return (
         <>
             {/* Section Intro */}
-            <div className="flex justify-between items-center">
-                <div>
-                    <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Migration Settings</h2>
-                    <p className="text-slate-500 dark:text-slate-400 mt-1">
-                        Specify advanced options for the migration process.
-                    </p>
-                </div>
+            <div>
+                <h2 className="text-xl font-semibold text-slate-900 dark:text-white">Migration Settings</h2>
+                <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">
+                    Specify advanced options for the migration process.
+                </p>
             </div>
 
             {/* Body */}
             <div className="pt-8 border-slate-200 dark:border-slate-700/60">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <SettingsPanel title="Schema Options" description="Control how schema differences are handled during migration." icon={<Settings size={24} />}>
+                    <SettingsPanel title="Schema Options" description="Control how schema differences are handled during migration." icon={<Settings size={18} />}>
                         <LabeledControl label="Infer Schema" description="Infer schema with all relations." tooltip="Automatically infers the schema of the source table and all related tables (including recursive relations), generating foreign key relationships where detected.">
                             <ToggleSwitch enabled={settings.inferSchema} setEnabled={(val) => updateSetting('inferSchema', val)} />
                         </LabeledControl>
@@ -98,7 +96,7 @@ const Step7_Settings = ({ config, setConfig, migrateItem }: Step7SettingsProps) 
                         </LabeledControl>
                     </SettingsPanel>
 
-                    <SettingsPanel title="Data Options" description="Configure how data is processed and transferred." icon={<Database size={24} />}>
+                    <SettingsPanel title="Data Options" description="Configure how data is processed and transferred." icon={<Database size={18} />}>
                         <div>
                             <div className="flex items-center gap-2 mb-1">
                                 <label className="block font-medium text-slate-800 dark:text-slate-100">Copy Columns</label>

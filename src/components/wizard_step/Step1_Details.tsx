@@ -1,76 +1,74 @@
 import { FileText } from "lucide-react";
 import { MigrationConfig } from "../../types/MigrationConfig";
 import Input from "../common/Input";
+import { Label } from "../common/v2/Label";
 
 type Step1DetailsProps = {
-    config: MigrationConfig
+    config: MigrationConfig;
     setConfig: (config: MigrationConfig) => void;
 };
 
-const Step1_Details = ({ config, setConfig }: Step1DetailsProps) => {
+export default function Step1_Details({ config, setConfig }: Step1DetailsProps) {
+    const nameId = "migration-name";
+    const descId = "migration-description";
+    const nameEmpty = !config.name?.trim();
+
     return (
         <div className="space-y-8">
-            <div className="flex items-center gap-4">
+            {/* Section header */}
+            <div className="flex items-start gap-3">
+                <FileText size={18} className="mt-0.5 text-slate-500 dark:text-slate-400" />
                 <div>
-                    <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Migration Details</h2>
-                    <p className="text-slate-500 dark:text-slate-400 mt-1">
-                        Provide basic information about your migration project. This helps organize and track your configurations.
+                    <h2 className="text-xl font-semibold text-slate-900 dark:text-white">Migration details</h2>
+                    <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">
+                        Give your migration a clear name and short description.
                     </p>
                 </div>
             </div>
 
-            {/* Section for Migration Name */}
-            <div className="border border-slate-200 dark:border-slate-700 rounded-xl p-6 space-y-4">
-                <div className="flex items-center gap-3">
-                    <FileText size={18} className="text-slate-500 dark:text-slate-400" />
-                    <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
-                        Migration Name <span className="text-red-500">*</span>
-                    </h3>
-                </div>
-                <div>
-                    <label htmlFor="migration-name" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Name</label>
+            {/* Fields */}
+            <div className="grid gap-6">
+                {/* Name */}
+                <div className="space-y-2">
+                    <div className="flex items-baseline justify-between">
+                        <Label htmlFor={nameId} className="text-sm font-medium">
+                            Name <span className="text-rose-500">*</span>
+                        </Label>
+                        <span className="text-xs text-slate-500 dark:text-slate-400">Required</span>
+                    </div>
                     <Input
+                        id={nameId}
                         value={config.name}
-                        onChange={e => setConfig({ ...config, name: e.target.value })}
-                        placeholder="e.g., Production_OrdersDB_Migration"
+                        onChange={(e) => setConfig({ ...config, name: e.target.value })}
+                        placeholder="e.g., Orders DB → Warehouse (nightly)"
                         className="w-full"
+                        aria-invalid={nameEmpty}
+                        aria-describedby={nameEmpty ? `${nameId}-help` : undefined}
                     />
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
-                        Choose a descriptive name to identify this migration project.
+                    <p
+                        id={`${nameId}-help`}
+                        className={`text-xs ${nameEmpty ? "text-rose-600 dark:text-rose-300" : "text-slate-500 dark:text-slate-400"}`}
+                    >
+                        {nameEmpty ? "Name is required to continue." : "Use a short, descriptive label."}
                     </p>
                 </div>
-            </div>
 
-            {/* Section for Description */}
-            <div className="border border-slate-200 dark:border-slate-700 rounded-xl p-6 space-y-4">
-                <div className="flex items-center gap-3">
-                    <FileText size={18} className="text-slate-500 dark:text-slate-400" />
-                    <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Description</h3>
-                </div>
-                <div>
-                    <label htmlFor="migration-description" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Project Description</label>
+                {/* Description */}
+                <div className="space-y-2">
+                    <Label htmlFor={descId} className="text-sm font-medium">
+                        Description
+                    </Label>
                     <textarea
-                        id="migration-description"
+                        id={descId}
                         value={config.description}
-                        onChange={e => setConfig({ ...config, description: e.target.value })}
-                        placeholder="Describe the purpose, scope, and any important details about this migration..."
-                        className="w-full bg-white/80 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-600 rounded-lg py-2.5 px-3 text-slate-700 dark:text-slate-200 leading-tight focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-500 min-h-[120px]"
+                        onChange={(e) => setConfig({ ...config, description: e.target.value })}
+                        placeholder="Purpose, scope, and any important context for this migration…"
+                        className="w-full bg-white/80 dark:bg-slate-800/80 border-2 border-slate-200 dark:border-slate-700 rounded-lg py-2.5 px-3 text-slate-700 dark:text-slate-200 leading-tight focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-500 min-h-[120px]"
                         rows={4}
                     />
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
-                        Provide context about what you're migrating and why.
-                    </p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Optional, but helpful for teammates.</p>
                 </div>
             </div>
-            {/* Validation Message */}
-            {!config.name && (
-                <div className="flex items-center justify-center gap-2 p-3 bg-amber-100/80 dark:bg-amber-500/20 text-amber-800 dark:text-amber-200 rounded-lg text-sm">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-                    <span>Migration name is required to proceed</span>
-                </div>
-            )}
         </div>
     );
-};
-
-export default Step1_Details;
+}

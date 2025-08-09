@@ -16,7 +16,7 @@ export const buttonVariants = cva(
                     "bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red-500",
                 outline:
                     // Matches table chrome/borders used in Runs/Definitions
-                    "border border-slate-200 dark:border-slate-700 bg-transparent text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60",
+                    "border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60",
                 secondary:
                     // Neutral filled button used in subdued contexts
                     "bg-slate-100 text-slate-900 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700",

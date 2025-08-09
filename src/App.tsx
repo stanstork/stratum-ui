@@ -7,7 +7,7 @@ import { ThemeProvider } from './context/ThemeContext';
 import ConnectionsPage from './pages/v2/Connections';
 import MigrationDefinitionsList from './pages/v2/MigrationDefinitionsList';
 import MigrationWizard from './pages/v2/MigrationWizard';
-import MigrationRunDetails from './pages/MigrationRunDetails';
+import MigrationRunDetails from './pages/v2/MigrationRunDetails';
 import MigrationRunsList from './pages/v2/MigrationRunsList';
 import MigrationDetailsPage from './pages/v2/MIgrationDefinitionDetails';
 import Layout from './components/Layout';

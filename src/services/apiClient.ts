@@ -9,6 +9,8 @@ import { getMigrationDTO, MigrationConfig } from "../types/MigrationConfig";
 import { a } from "framer-motion/dist/types.d-B_QPEvFK";
 
 interface ApiClient extends AxiosInstance {
+    getConnectionById: (connectionId: string) => Promise<Connection | null>;
+    updateJobDefinition: (definitionId: string, config: MigrationConfig) => Promise<JobDefinition>;
     getJobDefinition: (definitionId: string) => Promise<JobDefinition>;
     getJobExecution: (executionId: string) => Promise<JobExecution>;
     runJob: (definitionId: string) => Promise<void>;
@@ -195,6 +197,24 @@ apiClient.getJobExecution = async (executionId: string): Promise<JobExecution> =
 apiClient.getJobDefinition = async (definitionId: string): Promise<JobDefinition> => {
     const response = await apiClient.get<JobDefinitionDTO>(`/jobs/${definitionId}`);
     return mapJobDefinition(response.data);
+};
+
+apiClient.updateJobDefinition = async (definitionId: string, config: MigrationConfig): Promise<JobDefinition> => {
+    const response = await apiClient.put<JobDefinitionDTO>(`/jobs/${definitionId}`, {
+        name: config.name,
+        description: config.description,
+        ast: {
+            migration: getMigrationDTO(config),
+        },
+        source_connection_id: config.connections.source.id,
+        destination_connection_id: config.connections.dest.id
+    });
+    return mapJobDefinition(response.data);
+};
+
+apiClient.getConnectionById = async (connectionId: string): Promise<Connection | null> => {
+    const response = await apiClient.get<ConnectionDTO>(`/connections/${connectionId}`);
+    return mapConnection(response.data);
 };
 
 export default apiClient;

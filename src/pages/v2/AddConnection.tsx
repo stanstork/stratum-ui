@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import {
     ArrowLeft,
     ArrowRight,
@@ -157,6 +157,41 @@ export default function AddConnection() {
     const categoriesById = useMemo(() => Object.fromEntries(connectionCategories.map((c) => [c.id, c])), []);
     const currentCategory = categoriesById[selectedCategory];
 
+    // --- Edit mode detection ---
+    const [searchParams] = useSearchParams();
+    const editId = searchParams.get("edit")?.trim() || null;
+    const isEditing = useMemo(() => !!editId, [editId]);
+    const [isConnLoading, setIsConnLoading] = useState(false);
+
+    // When editing, fetch existing connection and prefill
+    useEffect(() => {
+        const fetchExisting = async (id: string) => {
+            setIsConnLoading(true);
+            try {
+                const existing = await apiClient.getConnectionById(id);
+                if (existing) {
+                    setFormData(existing);
+                    // derive category by matching dataFormat
+                    const cat = connectionCategories.find(cat => cat.types.some(t => t.value === existing.dataFormat));
+                    if (cat) setSelectedCategory(cat.id as ConnectionCategory["id"]);
+                    // Pre-mark test status based on saved status
+                    setTestStatus(existing.status as StatusType);
+                    setTestSucceeded(existing.status === 'valid');
+                    // Jump to details step for clarity when editing
+                    setCurrentStep(1);
+                } else {
+                    console.warn("No connection returned for edit id:", id);
+                }
+            } catch (e) {
+                console.error('Failed to load connection for editing:', e);
+            } finally {
+                setIsConnLoading(false);
+            }
+        };
+        if (isEditing && editId) fetchExisting(editId);
+    }, [isEditing, editId]);
+
+
     // Steps
     const steps: WizardStep[] = [
         { id: "select-type", title: "Select Type", description: "Choose your connection type", icon: <DbIcon size={20} />, completed: !!formData.dataFormat && !!selectedCategory },
@@ -194,8 +229,13 @@ export default function AddConnection() {
             updatedAt: new Date().toISOString(),
         };
         try {
-            await apiClient.createConnection(payload);
-            alert("Connection saved successfully!");
+            if (isEditing && editId) {
+                await apiClient.updateConnection({ ...payload, id: editId });
+                alert('Connection updated successfully!');
+            } else {
+                await apiClient.createConnection({ ...payload, id: '' });
+                alert('Connection saved successfully!');
+            }
         } catch (error) {
             console.error("Failed to save connection:", error);
             alert("Failed to save connection. Please try again.");
@@ -406,7 +446,18 @@ export default function AddConnection() {
     );
 
     return (
-        <div className="space-y-6" data-testid="add-connection-page">
+        <div className="space-y-6">
+            {isConnLoading && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/60 dark:bg-slate-900/50 backdrop-blur-sm">
+                    <div className="px-4 py-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow">
+                        <div className="flex items-center gap-2 text-slate-700 dark:text-slate-200">
+                            <div className="w-2 h-2 rounded-full animate-ping bg-blue-500" />
+                            Loading connection...
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Header */}
             <div className="flex items-center gap-4">
                 <Link to="/connections">
@@ -416,8 +467,8 @@ export default function AddConnection() {
                     </Button>
                 </Link>
                 <div>
-                    <h1 className="text-[32px] font-bold leading-tight text-slate-900 dark:text-white">Add Connection</h1>
-                    <p className="text-slate-700 dark:text-slate-300">Create a new connection in {steps.length} simple steps</p>
+                    <h1 className="text-[32px] font-bold leading-tight text-slate-900 dark:text-white">{isEditing ? 'Edit Connection' : 'Add Connection'}</h1>
+                    <p className="text-slate-700 dark:text-slate-300">{isEditing ? 'Update your connection in 3 simple steps' : `Create a new connection in ${3} simple steps`}</p>
                 </div>
             </div>
 
@@ -478,7 +529,7 @@ export default function AddConnection() {
                             </Button>
                         ) : (
                             <Button type="submit" disabled={!steps[currentStep].completed} variant="primary">
-                                Create Connection
+                                {isEditing ? 'Update Connection' : 'Create Connection'}
                                 <CheckCircle size={16} className="ml-2" />
                             </Button>
                         )}

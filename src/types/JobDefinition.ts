@@ -1,4 +1,5 @@
 import { Connection, ConnectionDTO, mapConnection } from "./Connection";
+import { getConnectionInfo, getMigrationItem, MigrateItemDTO, MigrationConfig } from "./MigrationConfig";
 
 /**
  * Raw API response shape for a Job Definition
@@ -52,5 +53,33 @@ export function mapJobDefinition(dto: JobDefinitionDTO): JobDefinition {
         destinationConnection: mapConnection(dto.destination_connection),
         createdAt: new Date(dto.created_at),
         updatedAt: new Date(dto.updated_at)
+    };
+}
+
+export function getMigrationConfig(dto: JobDefinition): MigrationConfig {
+    const migrationItem = JSON.parse(dto.ast as string)['migration']['migrate_items'][0] as MigrateItemDTO;
+    return {
+        name: dto.name,
+        description: dto.description,
+        connections: {
+            source: getConnectionInfo(dto.sourceConnection),
+            dest: getConnectionInfo(dto.destinationConnection)
+        },
+        migration: {
+            settings: {
+                batchSize: migrationItem.settings.batch_size,
+                csvHeader: migrationItem.settings.csv_header,
+                copyColumns: migrationItem.settings.copy_columns,
+                inferSchema: migrationItem.settings.infer_schema,
+                csvDelimiter: migrationItem.settings.csv_delimiter,
+                csvIdColumn: migrationItem.settings.csv_id_column,
+                cascadeSchema: migrationItem.settings.cascade_schema,
+                ignoreConstraints: migrationItem.settings.ignore_constraints,
+                createMissingTables: migrationItem.settings.create_missing_tables,
+                createMissingColumns: migrationItem.settings.create_missing_columns
+            },
+            migrateItems: [getMigrationItem(migrationItem)],
+        },
+        creation_date: dto.createdAt.toISOString(),
     };
 }

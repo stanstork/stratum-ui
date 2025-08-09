@@ -84,7 +84,7 @@ const InnerApp: React.FC = () => {
                         element={<ConnectionsPage setView={navigate} />}
                     />
                     <Route
-                        path="connections/add"
+                        path="connections/wizard"
                         element={
                             <AddConnection />
                         }

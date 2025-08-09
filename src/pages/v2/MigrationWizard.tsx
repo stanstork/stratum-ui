@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
     ArrowRight,
     Check,
@@ -25,6 +25,8 @@ import Step7_Settings from "../../components/wizard_step/Step7_Settings";
 import Step8_Preview from "../../components/wizard_step/Step8_Preview";
 import { Card, CardContent } from "../../components/common/v2/Card";
 import { Button } from "../../components/common/v2/Button";
+import { useSearchParams } from "react-router-dom";
+import { getMigrationConfig } from "../../types/JobDefinition";
 
 // --------------------------------------------
 // Wizard metadata
@@ -56,6 +58,40 @@ export default function MigrationWizard({ setView, onBack }: MigrationWizardProp
     const [isMetadataLoading, setIsMetadataLoading] = useState(false);
     const [metadata, setMetadata] = useState<Record<string, TableMetadata> | null>(null);
     const [isSaving, setIsSaving] = useState(false);
+
+    // --- Edit mode detection ---
+    const [searchParams] = useSearchParams();
+    const editId = searchParams.get("edit")?.trim() || null;
+    const isEditing = useMemo(() => !!editId, [editId]);
+    const [isConfigLoading, setIsConfigLoading] = useState(false);
+
+    // Load existing config when ?edit=... is present
+    useEffect(() => {
+        const fetchExisting = async (id: string) => {
+            setIsConfigLoading(true);
+            try {
+                const existing = await apiClient.getJobDefinition(id);
+                const config = getMigrationConfig(existing);
+
+                if (existing) {
+                    setConfig((prev) => ({
+                        // Keep a safe baseline, then overlay fetched config
+                        ...emptyMigrationConfig(),
+                        ...config,
+                    }));
+                } else {
+                    console.warn("No config returned for edit id:", id);
+                }
+            } catch (e) {
+                console.error("Failed to load config for editing:", e);
+            } finally {
+                setIsConfigLoading(false);
+            }
+        };
+
+        if (editId) fetchExisting(editId);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [editId]);
 
     // Fetch metadata when source connection changes
     useEffect(() => {
@@ -119,7 +155,11 @@ export default function MigrationWizard({ setView, onBack }: MigrationWizardProp
     const handleSave = async () => {
         setIsSaving(true);
         try {
-            await apiClient.createJobDefinition(config);
+            if (isEditing && editId) {
+                await apiClient.updateJobDefinition(editId, config);
+            } else {
+                await apiClient.createJobDefinition(config);
+            }
             setView("definitions");
         } finally {
             setIsSaving(false);
@@ -155,24 +195,30 @@ export default function MigrationWizard({ setView, onBack }: MigrationWizardProp
 
     return (
         <div className="space-y-6">
+            {isConfigLoading && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center rounded-xl backdrop-blur-sm bg-white/40 dark:bg-slate-900/30">
+                    <div className="flex items-center gap-3 text-slate-700 dark:text-slate-200">
+                        <Loader className="animate-spin" size={18} /> Loading configuration...
+                    </div>
+                </div>
+            )}
             {/* Header */}
             <div className="flex items-start justify-between gap-3">
                 <div>
                     <h1 className="text-[32px] font-bold leading-tight text-slate-900 dark:text-white">
-                        New Migration Configuration
+                        {isEditing ? "Edit Migration Configuration" : "New Migration Configuration"}
                     </h1>
                     <p className="text-slate-700 dark:text-slate-300">
                         {config.connections.source.name
                             ? `From ${config.connections.source.name} to ${config.connections.dest.name || "..."}`
-                            : "Configure your data transfer job."}
+                            : isEditing
+                                ? "Loaded existing configuration."
+                                : "Configure your data transfer job."}
                     </p>
                 </div>
                 <div className="flex gap-2">
                     <Button variant="outline" type="button" onClick={onBack}>Cancel</Button>
-                    <Button variant="outline" type="button" onClick={handleSave} disabled={isSaving}>
-                        {isSaving && <Loader size={16} className="animate-spin mr-2" />}
-                        Save Draft
-                    </Button>
+                    {!isEditing && <Button variant="outline">Save Draft</Button>}
                 </div>
             </div>
 
@@ -243,7 +289,7 @@ export default function MigrationWizard({ setView, onBack }: MigrationWizardProp
                         ) : (
                             <Button type="button" onClick={handleSave} disabled={isSaving} variant="primary">
                                 {isSaving && <Loader size={16} className="animate-spin mr-2" />}
-                                {isSaving ? "Saving..." : "Confirm & Save"}
+                                {isSaving ? (isEditing ? "Updating..." : "Saving...") : isEditing ? "Update" : "Confirm & Save"}
                             </Button>
                         )}
                     </div>

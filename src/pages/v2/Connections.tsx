@@ -190,13 +190,13 @@ const ConnectionCard = ({
                 </CardContent>
                 <CardFooter className="px-6 py-4 border-t border-slate-200 dark:border-slate-700">
                     <div className="flex gap-2 w-full">
-                        <Button variant="ghost" className="flex-1" onClick={(e) => handleActionClick(e as any, () => onTest(connection.id))} data-testid={`button-test-connection-${connection.id}`}>
+                        <Button variant="ghost" className="flex-1" onClick={(e) => handleActionClick(e as any, () => onTest(connection.id))}>
                             <Zap size={16} /> <span className="ml-2">Test</span>
                         </Button>
-                        <Button variant="ghost" className="flex-1" onClick={(e) => handleActionClick(e as any, () => onEdit(connection.id))} data-testid={`button-configure-connection-${connection.id}`}>
+                        <Button variant="ghost" className="flex-1" onClick={(e) => handleActionClick(e as any, () => onEdit(connection.id))}>
                             <Settings size={16} /> <span className="ml-2">Configure</span>
                         </Button>
-                        <Button variant="ghost" className="flex-1" onClick={(e) => handleActionClick(e as any, () => onDelete(connection.id))} data-testid={`button-delete-connection-${connection.id}`}>
+                        <Button variant="ghost" className="flex-1" onClick={(e) => handleActionClick(e as any, () => onDelete(connection.id))}>
                             <Trash size={16} /> <span className="ml-2">Delete</span>
                         </Button>
                     </div>
@@ -302,7 +302,7 @@ export default function ConnectionsPage({ setView }: ConnectionsPageProps) {
         }
     };
 
-    const handleEditConnection = (id: string) => setView(`connections/edit/${id}`);
+    const handleEditConnection = (id: string) => setView(`connections/wizard?edit=${id}`);
 
     const handleTestConnection = async (id: string) => {
         setConnections((prev) => prev.map((c) => (c.id === id ? { ...c, status: "testing" } : c)));
@@ -407,7 +407,7 @@ export default function ConnectionsPage({ setView }: ConnectionsPageProps) {
                         <p className="mt-1 text-slate-700 dark:text-slate-300">Manage your database and data source connections</p>
                     </div>
                     <div className="flex items-center gap-3">
-                        <Link to="/connections/add">
+                        <Link to="/connections/wizard">
                             <Button className="flex items-center space-x-2" variant="primary">
                                 <Plus size={16} />
                                 <span>Add Connection</span>

@@ -28,7 +28,7 @@ import { useEffect, useState } from "react";
 import { ArithmeticExpr, ConditionExpr, Expression, FunctionCallExpr, getMigrationItem, IdentifierExpr, LiteralExpr, LookupExpr, MigrateItemDTO, MigrationConfig } from "../../types/MigrationConfig";
 import apiClient from "../../services/apiClient";
 import { Button } from "../../components/common/v2/Button";
-import { JobDefinition } from "../../types/JobDefinition";
+import { getMigrationConfig, JobDefinition } from "../../types/JobDefinition";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/common/v2/Card";
 import { Badge } from "../../components/common/v2/Badge";
 import { cn } from "../../utils/utils";
@@ -189,52 +189,7 @@ export default function DefinitionDetails() {
             setLoading(true);
             try {
                 const data = await apiClient.getJobDefinition(definitionId);
-                const migrationItem = JSON.parse(data.ast)['migration']['migrate_items'][0] as MigrateItemDTO;
-
-                const migrationConfig: MigrationConfig = {
-                    name: data.name,
-                    description: data.description,
-                    migration: {
-                        settings: {
-                            batchSize: migrationItem.settings.batch_size,
-                            csvHeader: migrationItem.settings.csv_header,
-                            copyColumns: migrationItem.settings.copy_columns,
-                            inferSchema: migrationItem.settings.infer_schema,
-                            csvDelimiter: migrationItem.settings.csv_delimiter,
-                            csvIdColumn: migrationItem.settings.csv_id_column,
-                            cascadeSchema: migrationItem.settings.cascade_schema,
-                            ignoreConstraints: migrationItem.settings.ignore_constraints,
-                            createMissingTables: migrationItem.settings.create_missing_tables,
-                            createMissingColumns: migrationItem.settings.create_missing_columns
-                        },
-                        migrateItems: [getMigrationItem(migrationItem)],
-                    },
-                    connections: {
-                        source: {
-                            id: data.sourceConnection.id,
-                            name: data.sourceConnection.name,
-                            dataFormat: data.sourceConnection.dataFormat,
-                            database: data.sourceConnection.dbName,
-                            status: data.sourceConnection.status,
-                            host: data.sourceConnection.host,
-                            port: data.sourceConnection.port,
-                            user: data.sourceConnection.username,
-                            description: `${data.sourceConnection.dataFormat} - ${data.sourceConnection.host}:${data.sourceConnection.port}`
-                        },
-                        dest: {
-                            id: data.destinationConnection.id,
-                            name: data.destinationConnection.name,
-                            dataFormat: data.destinationConnection.dataFormat,
-                            database: data.destinationConnection.dbName,
-                            status: data.destinationConnection.status,
-                            host: data.destinationConnection.host,
-                            port: data.destinationConnection.port,
-                            user: data.destinationConnection.username,
-                            description: `${data.destinationConnection.dataFormat} - ${data.destinationConnection.host}:${data.destinationConnection.port}`
-                        }
-                    },
-                    creation_date: data.createdAt instanceof Date ? data.createdAt.toISOString() : new Date(data.createdAt).toISOString(),
-                };
+                const migrationConfig = getMigrationConfig(data);
                 setConfig(migrationConfig);
                 setDefinition(data);
             } catch (error) {
@@ -698,7 +653,7 @@ export default function DefinitionDetails() {
                                 <div className="flex items-center gap-2">
                                     <Badge
                                         variant="outline"
-                                        className="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800"
+                                        className="bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800"
                                     >
                                         {config?.migration.migrateItems[0].source.names[0]}
                                     </Badge>

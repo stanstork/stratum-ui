@@ -1,4 +1,4 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { useState, useMemo, useRef, useEffect } from "react";
 import {
     ArrowLeft,
@@ -18,7 +18,14 @@ import {
     Zap,
     Search,
     ArrowDown,
-    FileCode
+    FileCode,
+    Webhook,
+    Server,
+    Container,
+    CheckCircle2,
+    Loader,
+    ArrowRight,
+    Timer
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { JobExecution } from "../../types/JobExecution";
@@ -31,6 +38,7 @@ import { cn } from "../../utils/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/common/v2/Card";
 import { Progress } from "../../components/common/v2/Progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/common/v2/Tabs";
+import { motion } from "framer-motion";
 
 interface ExecutionMetrics {
     recordsProcessed: number;
@@ -147,12 +155,35 @@ const LogPanel = ({ logs }: { logs?: string }) => {
     );
 };
 
+const StatusBadge = ({ status }: { status: string }) => {
+    const baseClasses = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold";
+    switch (status) {
+        case 'succeeded': return <div className={`${baseClasses} bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300`}><CheckCircle2 size={14} /><span>{status}</span></div>;
+        case 'failed': return <div className={`${baseClasses} bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300`}><XCircle size={14} /><span>{status}</span></div>;
+        case 'running': return <div className={`${baseClasses} bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300`}><Loader size={14} className="animate-spin" /><span>Running</span></div>;
+        case 'pending': return <div className={`${baseClasses} bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-300`}><Clock size={14} /><span>{status}</span></div>;
+        default: return <div className={`${baseClasses} bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300`}><Clock size={14} /><span>{status}</span></div>;
+    }
+};
+
+const ConnectionIcon = ({ type, className }: { type: string | undefined, className?: string }) => {
+    const iconType = type?.toLowerCase() || '';
+    switch (iconType) {
+        case 'mysql': case 'postgresql': case 'pg': return <Database className={className} />;
+        case 'csv': case 'json': case 'file': return <FileText className={className} />;
+        case 'api': return <Webhook className={className} />;
+        case 'nosql': case 'mongodb': return <Container className={className} />;
+        default: return <Server className={className} />;
+    }
+};
+
 export default function ExecutionDetails() {
     const { runId } = useParams<{ runId: string }>();
     const [execution, setExecution] = useState<JobExecution | null>(null);
     const [definition, setDefinition] = useState<JobDefinition | null>(null);
     const [migrationConfig, setMigrationConfig] = useState<MigrateItem | null>(null);
     const [loading, setLoading] = useState(true);
+    const navigate = useNavigate();
 
     useEffect(() => {
         if (!runId) {
@@ -222,6 +253,14 @@ export default function ExecutionDetails() {
             default:
                 return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400";
         }
+    };
+
+    const formatDuration = (start?: Date, end?: Date) => {
+        if (!start || !end) return 'N/A';
+        const diff = end.getTime() - start.getTime();
+        const minutes = Math.floor(diff / 60000);
+        const seconds = ((diff % 60000) / 1000).toFixed(0);
+        return `${minutes}m ${seconds}s`;
     };
 
     if (loading) {
@@ -357,15 +396,15 @@ export default function ExecutionDetails() {
 
                 <Card className="bg-white dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm overflow-hidden relative hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_4px_12px_rgba(0,0,0,0.4)] hover:-translate-y-0.5 hover:scale-[1.005] duration-200 transition-all">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Tables</CardTitle>
-                        <FileText className="h-4 w-4 text-slate-600 dark:text-slate-400" />
+                        <CardTitle className="text-sm font-medium">Duration</CardTitle>
+                        <Timer className="h-4 w-4 text-slate-600 dark:text-slate-400" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold text-slate-900 dark:text-white">
-                            {mockMetrics.tablesProcessed} / {mockMetrics.tablesTotal}
+                            {formatDuration(execution?.runStartedAt, execution?.runCompletedAt)}
                         </div>
                         <p className="text-xs text-slate-600 dark:text-slate-400">
-                            Tables completed
+                            Time taken for this run
                         </p>
                     </CardContent>
                 </Card>

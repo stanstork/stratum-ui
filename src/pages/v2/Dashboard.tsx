@@ -4,7 +4,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
 import { ExecutionStat } from "../../types/ExecutionStat";
 import apiClient from "../../services/apiClient";
-import { CheckCircle, Clock, Database, Plug, Plus, Server, TrendingUp, XCircle } from "lucide-react";
+import { CheckCircle, Clock, Database, DatabaseIcon, FileText, Plug, Plus, Server, TrendingUp, XCircle } from "lucide-react";
 import { Button } from "../../components/common/v2/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/common/v2/Card";
 import { Connection } from "../../types/Connection";
@@ -170,7 +170,7 @@ export default function Dashboard() {
                                 </p>
                             </div>
                             <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
-                                <Database className="text-blue-600 dark:text-blue-400" />
+                                <FileText className="text-blue-700 dark:text-blue-300" />
                             </div>
                         </div>
                     </CardContent>
@@ -202,7 +202,7 @@ export default function Dashboard() {
                                 </p>
                             </div>
                             <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
-                                <Server className="text-purple-600 dark:text-purple-400" />
+                                <DatabaseIcon className="text-purple-600 dark:text-purple-400" />
                             </div>
                         </div>
                     </CardContent>

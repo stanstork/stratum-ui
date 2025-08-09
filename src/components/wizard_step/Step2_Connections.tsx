@@ -5,7 +5,7 @@ import { Button } from "../common/v2/Button";
 import { Card, CardContent } from "../common/v2/Card";
 import Input from "../common/Input";
 import { Link } from "react-router-dom";
-import { DatabaseIcon } from "../common/Helper";
+import { DatabaseIcon, getConnectionIcon } from "../common/Helper";
 import { emptyMigrationConfig, getConnectionInfo, MigrationConfig } from "../../types/MigrationConfig";
 import { Connection, emptyConnection, StatusType } from "../../types/Connection";
 
@@ -43,8 +43,7 @@ function ConnectionTile({
     return (
         <div className="relative">
             {/* status pill */}
-            <span className={`absolute right-3 top-3 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs ${pill.cls}`}>
-                <pill.Icon size={12} className={conn.status === "testing" ? "animate-spin" : ""} />
+            <span className={`absolute right-3 top-3 z-10 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs ${pill.cls}`}>                <pill.Icon size={12} />
                 {pill.text}
             </span>
 
@@ -54,19 +53,13 @@ function ConnectionTile({
                 aria-pressed={selected}
                 className={`group relative text-left p-4 rounded-xl border transition-all w-full
           ${selected
-                        ? "border-slate-900 dark:border-white bg-gradient-to-br from-slate-50 to-white dark:from-slate-800/60"
+                        ? "border-blue-500 bg-blue-50 dark:border-blue-600/60 dark:bg-blue-600/20"
                         : "border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/60"
                     }`}
             >
                 <div className="flex items-start gap-3">
-                    <div
-                        className={`h-10 w-10 rounded-xl flex items-center justify-center ring-1
-              ${selected
-                                ? "ring-slate-900 dark:ring-white bg-slate-900 text-white dark:bg-white dark:text-slate-900"
-                                : "ring-slate-200 dark:ring-slate-700 bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
-                            }`}
-                    >
-                        <DatabaseIcon type={conn.dataFormat} className="w-5 h-5" />
+                    <div className="h-10 w-10 flex items-center justify-center">
+                        {getConnectionIcon(conn.dataFormat, 24)}
                     </div>
 
                     <div className="min-w-0 flex-1">
@@ -78,28 +71,12 @@ function ConnectionTile({
                                     {conn.port ? `:${conn.port}` : ""}
                                 </div>
                             </div>
-
-                            {onTest && (
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    className="opacity-0 group-hover:opacity-100 transition-opacity"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        onTest();
-                                    }}
-                                >
-                                    <RefreshCw size={14} />
-                                    Test
-                                </Button>
-                            )}
                         </div>
                     </div>
                 </div>
 
                 {/* active ring */}
-                <span className={`pointer-events-none absolute inset-0 rounded-xl ring-0 ${selected ? "ring-2 ring-slate-900/20 dark:ring-white/20" : ""}`} />
+                <span className={`pointer-events-none absolute inset-0 rounded-xl ring-0 ${selected ? "ring-2 ring-blue-500/20 dark:ring-blue-600/20" : ""}`} />
             </button>
         </div>
     );
@@ -229,50 +206,46 @@ export default function Step2_Connections({ config, setConfig }: Step2Connection
             {/* Source / Destination */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Source */}
-                <Card className="bg-white dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm overflow-hidden">
-                    <CardContent className="p-6">
-                        <div className="flex items-center gap-2 mb-4">
-                            <DatabaseIcon type="mysql" className="w-5 h-5 text-emerald-500" />
-                            <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300">Source</h3>
-                        </div>
 
-                        <div className="grid grid-cols-1 gap-3">
-                            {filtered.map((conn) => (
-                                <ConnectionTile
-                                    key={`src-${conn.id}`}
-                                    conn={conn}
-                                    selected={config.connections.source.id === conn.id}
-                                    onSelect={() => setSource(conn.id)}
-                                    onTest={() => testConn(conn)}
-                                />
-                            ))}
-                            {filtered.length === 0 && <p className="text-sm text-slate-500 dark:text-slate-400">No connections match your search.</p>}
-                        </div>
-                    </CardContent>
-                </Card>
+                <div>
+                    <div className="flex items-center gap-2 mb-4">
+                        <DatabaseIcon type="mysql" className="w-5 h-5 text-emerald-500" />
+                        <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300">Source</h3>
+                    </div>
 
+                    <div className="grid grid-cols-1 gap-3">
+                        {filtered.map((conn) => (
+                            <ConnectionTile
+                                key={`src-${conn.id}`}
+                                conn={conn}
+                                selected={config.connections.source.id === conn.id}
+                                onSelect={() => setSource(conn.id)}
+                                onTest={() => testConn(conn)}
+                            />
+                        ))}
+                        {filtered.length === 0 && <p className="text-sm text-slate-500 dark:text-slate-400">No connections match your search.</p>}
+                    </div>
+                </div>
                 {/* Destination */}
-                <Card className={`bg-white dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm overflow-hidden ${sourceSelected ? "" : "opacity-50 pointer-events-none select-none"}`}>
-                    <CardContent className="p-6">
-                        <div className="flex items-center gap-2 mb-4">
-                            <DatabaseIcon type="pg" className="w-5 h-5 text-sky-500" />
-                            <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300">Destination</h3>
-                        </div>
+                <div>
+                    <div className="flex items-center gap-2 mb-4">
+                        <DatabaseIcon type="pg" className="w-5 h-5 text-sky-500" />
+                        <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300">Destination</h3>
+                    </div>
 
-                        <div className="grid grid-cols-1 gap-3">
-                            {destinationOptions.map((conn) => (
-                                <ConnectionTile
-                                    key={`dst-${conn.id}`}
-                                    conn={conn}
-                                    selected={config.connections.dest.id === conn.id}
-                                    onSelect={() => setDestination(conn.id)}
-                                    onTest={() => testConn(conn)}
-                                />
-                            ))}
-                            {destinationOptions.length === 0 && <p className="text-sm text-slate-500 dark:text-slate-400">No connections available for destination.</p>}
-                        </div>
-                    </CardContent>
-                </Card>
+                    <div className="grid grid-cols-1 gap-3">
+                        {destinationOptions.map((conn) => (
+                            <ConnectionTile
+                                key={`dst-${conn.id}`}
+                                conn={conn}
+                                selected={config.connections.dest.id === conn.id}
+                                onSelect={() => setDestination(conn.id)}
+                                onTest={() => testConn(conn)}
+                            />
+                        ))}
+                        {destinationOptions.length === 0 && <p className="text-sm text-slate-500 dark:text-slate-400">No connections available for destination.</p>}
+                    </div>
+                </div>
             </div>
 
             {/* Summary */}
@@ -282,24 +255,29 @@ export default function Step2_Connections({ config, setConfig }: Step2Connection
                     <div className="rounded-xl border border-slate-200 dark:border-slate-700/60 bg-white/60 dark:bg-slate-800/50 px-5 py-4 flex items-center justify-between gap-4 flex-wrap">
                         <div className="flex items-center gap-4 flex-wrap">
                             <div className="flex items-center gap-2 min-w-0">
-                                <DatabaseIcon type={config.connections.source.dataFormat} className="w-5 h-5 text-slate-500" />
+                                {getConnectionIcon(config.connections.source.dataFormat)}
                                 <span className="truncate font-semibold text-slate-900 dark:text-white">{config.connections.source.name}</span>
                             </div>
                             <ArrowRight size={18} className="text-slate-400 dark:text-slate-500" />
                             <div className="flex items-center gap-2 min-w-0">
-                                <DatabaseIcon type={config.connections.dest.dataFormat} className="w-5 h-5 text-slate-500" />
+                                {getConnectionIcon(config.connections.dest.dataFormat)}
                                 <span className="truncate font-semibold text-slate-900 dark:text-white">{config.connections.dest.name}</span>
                             </div>
                         </div>
                         {/* overall status */}
-                        <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium bg-slate-200 text-slate-700 dark:bg-slate-800/60 dark:text-slate-300">
+                        <span
+                            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium
+                                ${config.connections.source.status === "valid" && config.connections.dest.status === "valid"
+                                    ? "border border-emerald-400 bg-emerald-50 dark:bg-emerald-900/30"
+                                    : ""}`}
+                        >
                             {config.connections.source.status === "valid" && config.connections.dest.status === "valid" ? (
                                 <>
-                                    <CheckCircle2 size={16} className="text-emerald-500" /> Connections Verified
+                                    <CheckCircle2 size={16} className="text-emerald-500" /> <span className="text-emerald-700 dark:text-emerald-300">Connections Verified</span>
                                 </>
                             ) : (
                                 <>
-                                    <AlertCircle size={16} /> Verification Recommended
+                                    <AlertCircle size={16} /> <span className="text-slate-700 dark:text-slate-300">Verification Recommended</span>
                                 </>
                             )}
                         </span>

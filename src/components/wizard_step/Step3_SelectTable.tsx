@@ -9,6 +9,7 @@ import {
     ChevronDown,
     Database,
     ArrowRight,
+    Table,
 } from "lucide-react";
 import { TableMetadata } from "../../types/Metadata";
 import Input from "../common/Input";
@@ -212,32 +213,19 @@ const Step3_SelectTable: React.FC<Step3_SelectTableProps> = ({
 
                                     return (
                                         <button
-                                            type="button"
                                             key={table.name}
                                             onClick={() => handleTableSelect(table.name)}
-                                            className={`w-full text-left px-3 py-2.5 rounded-lg transition-colors flex items-center gap-3 ${selected
-                                                    ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900"
-                                                    : "hover:bg-slate-100 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-200"
+                                            className={`w-full text-left px-3 py-2.5 rounded-lg transition-colors flex items-center gap-3 ${migrateItem.source.names?.[0] === table.name
+                                                ? 'bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-300'
+                                                : 'hover:bg-slate-100 dark:hover:bg-slate-700/50 text-slate-600 dark:text-slate-300'
                                                 }`}
                                         >
-                                            <div
-                                                className={`p-2 rounded-md ${selected
-                                                        ? "bg-slate-800/20 dark:bg-slate-200/20"
-                                                        : "bg-slate-200/80 dark:bg-slate-700/60"
-                                                    }`}
-                                            >
-                                                <TableIcon size={16} />
+                                            <div className={`p-2 rounded-md ${migrateItem.source.names?.[0] === table.name ? 'bg-blue-200/80 dark:bg-blue-500/30' : 'bg-slate-200/80 dark:bg-slate-700/60'}`}>
+                                                <Table size={16} />
                                             </div>
-                                            <div className="min-w-0">
-                                                <p
-                                                    className={`font-semibold text-sm truncate ${selected
-                                                            ? "text-white dark:text-slate-900"
-                                                            : "text-slate-800 dark:text-slate-100"
-                                                        }`}
-                                                >
-                                                    {table.name}
-                                                </p>
-                                                <div className="flex items-center gap-3 text-xs text-inherit/80 mt-1">
+                                            <div>
+                                                <p className={`font-semibold text-sm ${migrateItem.source.names?.[0] === table.name ? 'text-blue-800 dark:text-blue-200' : 'text-slate-700 dark:text-slate-200'}`}>{table.name}</p>
+                                                <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400 mt-1">
                                                     <span className="flex items-center gap-1">
                                                         <Key size={12} />
                                                         {columnCount} columns
@@ -268,7 +256,7 @@ const Step3_SelectTable: React.FC<Step3_SelectTableProps> = ({
                                 {/* Source schema */}
                                 <div className="p-5 rounded-lg bg-white dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80">
                                     <div className="flex items-center gap-3 mb-6">
-                                        <div className="bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 p-3 rounded-lg">
+                                        <div className="bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-300 p-3 rounded-lg">
                                             <Database size={20} />
                                         </div>
                                         <div>
@@ -323,8 +311,8 @@ const Step3_SelectTable: React.FC<Step3_SelectTableProps> = ({
                                                             <Link2
                                                                 size={12}
                                                                 className={`flex-shrink-0 ${rel.type === "outgoing"
-                                                                        ? "text-sky-500"
-                                                                        : "text-amber-500"
+                                                                    ? "text-sky-500"
+                                                                    : "text-amber-500"
                                                                     }`}
                                                             />
                                                             <span>

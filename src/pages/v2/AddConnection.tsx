@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import {
     ArrowLeft,
     ArrowRight,
+    Check,
     CheckCircle,
     Cloud,
     Database as DbIcon,
@@ -248,7 +249,7 @@ export default function AddConnection() {
                             key={cat.id}
                             onClick={() => handleCategoryChange(cat.id)}
                             className={`group text-left p-4 rounded-xl border transition-all ${selectedCategory === cat.id
-                                ? "border-slate-900 dark:border-white bg-gradient-to-br from-slate-50 to-white dark:from-slate-800/60"
+                                ? "border-blue-500 bg-blue-50 dark:border-blue-600/60 dark:bg-blue-600/20"
                                 : "border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/60"
                                 }`}
                         >
@@ -436,7 +437,7 @@ export default function AddConnection() {
                                             : "bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400"
                                             } ${canGoTo(index) ? "hover:scale-105" : "cursor-not-allowed"}`}
                                     >
-                                        {step.completed && index !== currentStep ? <CheckCircle size={14} /> : <span>{index + 1}</span>}
+                                        {step.completed && index !== currentStep ? <Check size={14} /> : <span>{index + 1}</span>}
                                     </button>
                                     <div className="ml-3">
                                         <div className={`text-sm font-medium ${step.completed || index === currentStep ? "text-slate-900 dark:text-white" : "text-slate-500 dark:text-slate-400"
@@ -461,7 +462,7 @@ export default function AddConnection() {
                 {currentStep === 2 && renderTestSaveStep()}
 
                 {/* Nav */}
-                <div className="flex justify-between mt-6 pt-6 border-t border-slate-200 dark:border-slate-700">
+                <div className="flex justify-between">
                     <Button type="button" variant="outline" onClick={() => setCurrentStep((s) => Math.max(0, s - 1))} disabled={currentStep === 0} data-testid="button-previous">
                         <ArrowLeft size={16} />
                         <span className="ml-2">Previous</span>
@@ -476,7 +477,7 @@ export default function AddConnection() {
                                 <ArrowRight size={16} className="ml-2" />
                             </Button>
                         ) : (
-                            <Button type="submit" disabled={!steps[currentStep].completed} data-testid="button-create-connection">
+                            <Button type="submit" disabled={!steps[currentStep].completed} variant="primary">
                                 Create Connection
                                 <CheckCircle size={16} className="ml-2" />
                             </Button>

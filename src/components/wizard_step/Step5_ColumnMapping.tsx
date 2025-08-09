@@ -124,7 +124,7 @@ const FunctionArgumentEditor: React.FC<{
                 type="button"
                 onClick={toggleMode}
                 title={isArgLookup ? "Switch to Literal Value" : "Switch to Column Lookup"}
-                className="p-2 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors rounded-md flex-shrink-0"
+                className="p-2 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors rounded-md flex-shrink-0"
             >
                 {isArgLookup ? <Pilcrow size={16} /> : <AtSign size={16} />}
             </button>
@@ -265,7 +265,7 @@ const MappingRow: React.FC<MappingRowProps> = ({
                                     key={option.value}
                                     onClick={() => onSetSourceMode(index, option.value as SourceMode)}
                                     className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${mode === option.value
-                                        ? "bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 shadow-sm"
+                                        ? "bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-300 shadow-sm"
                                         : "bg-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
                                         }`}
                                 >

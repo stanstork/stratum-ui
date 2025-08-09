@@ -77,17 +77,17 @@ export const DatabaseIcon = ({ type, className }: { type: string | null, classNa
     }
 };
 
-export const getConnectionIcon = (type: string) => {
+export const getConnectionIcon = (type: string, size?: number) => {
     switch (type) {
         case "mysql":
-            return <Database className="text-blue-600 dark:text-blue-400" size={16} />;
+            return <Database className="text-orange-500 dark:text-orange-400" size={size || 16} />;
         case "postgresql":
         case "postgres":
         case "pg":
-            return <Server className="text-purple-600 dark:text-purple-400" size={16} />;
+            return <Database className="text-blue-500 dark:text-blue-400" size={size || 16} />;
         case "s3":
-            return <Database className="text-orange-600 dark:text-orange-400" size={16} />;
+            return <Database className="text-orange-600 dark:text-orange-400" size={size || 16} />;
         default:
-            return <Database className="text-gray-600 dark:text-gray-400" size={16} />;
+            return <Database className="text-gray-600 dark:text-gray-400" size={size || 16} />;
     }
 };

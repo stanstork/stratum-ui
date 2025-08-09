@@ -14,6 +14,7 @@ import {
     Grid3X3,
     List as ListIcon,
     Eye,
+    Trash,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { Link } from "react-router-dom";
@@ -133,8 +134,8 @@ const ConnectionCard = ({
                 <CardHeader className="p-6 pb-4">
                     <div className="flex items-start justify-between">
                         <div className="flex items-center space-x-3">
-                            <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-blue-100 to-blue-200 dark:from-blue-900/40 dark:to-blue-800/30 ring-1 ring-blue-200/60 dark:ring-blue-800/40 flex items-center justify-center">
-                                {getConnectionIcon(connection.dataFormat) || (
+                            <div className="w-12 h-12 rounded-xl ring-blue-200/60 dark:ring-blue-800/40 flex items-center justify-center">
+                                {getConnectionIcon(connection.dataFormat, 28) || (
                                     <DatabaseIconLucide className="h-6 w-6 text-blue-700 dark:text-blue-300" />
                                 )}
                             </div>
@@ -194,6 +195,9 @@ const ConnectionCard = ({
                         </Button>
                         <Button variant="ghost" className="flex-1" onClick={(e) => handleActionClick(e as any, () => onEdit(connection.id))} data-testid={`button-configure-connection-${connection.id}`}>
                             <Settings size={16} /> <span className="ml-2">Configure</span>
+                        </Button>
+                        <Button variant="ghost" className="flex-1" onClick={(e) => handleActionClick(e as any, () => onDelete(connection.id))} data-testid={`button-delete-connection-${connection.id}`}>
+                            <Trash size={16} /> <span className="ml-2">Delete</span>
                         </Button>
                     </div>
                 </CardFooter>

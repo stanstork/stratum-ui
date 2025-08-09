@@ -193,8 +193,8 @@ export default function MigrationWizard({ setView, onBack }: MigrationWizardProp
                                             onClick={() => goToStep(step.num)}
                                             disabled={disabled}
                                             className={`flex items-center justify-center w-8 h-8 rounded-full transition-all text-sm font-medium ${completed || active
-                                                    ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900"
-                                                    : "bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400"
+                                                ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900"
+                                                : "bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400"
                                                 } ${disabled ? "cursor-not-allowed" : "hover:scale-105"}`}
                                         >
                                             {completed && !active ? <Check size={14} /> : <span>{step.num}</span>}
@@ -225,17 +225,19 @@ export default function MigrationWizard({ setView, onBack }: MigrationWizardProp
             </Card>
 
             {/* Body + Footer */}
-            <div className="rounded-xl border border-slate-200 dark:border-slate-700/60 bg-white/60 dark:bg-slate-800/50 shadow-sm overflow-hidden">
-                <main className="p-5 sm:p-6">{renderStep()}</main>
+            <div>
+                <Card className="bg-white dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm overflow-hidden relative">
+                    <main className="p-5 sm:p-6">{renderStep()}</main>
+                </Card>
 
-                <div className="p-4 sm:p-5 bg-slate-50/60 dark:bg-slate-900/30 border-t border-slate-200 dark:border-slate-700/60">
+                <div className="bg-slate-50/60 dark:bg-slate-900/30 mt-4">
                     <div className="flex items-center justify-between">
                         <Button variant="outline" type="button" onClick={handlePrev} className={currentStep === 1 ? "invisible" : ""}>
                             Previous Step
                         </Button>
 
                         {currentStep < steps.length ? (
-                            <Button type="button" onClick={handleNext} disabled={isNextDisabled()}>
+                            <Button type="button" onClick={handleNext} disabled={isNextDisabled()} variant="primary">
                                 Next Step <ArrowRight size={16} className="ml-2" />
                             </Button>
                         ) : (

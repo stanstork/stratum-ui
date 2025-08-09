@@ -79,7 +79,7 @@ const JoinItem: React.FC<JoinItemProps> = ({
         <div className="p-5 rounded-lg bg-white dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80">
             <div className="flex justify-between items-start mb-4">
                 <div className="flex items-center gap-3">
-                    <div className="flex-shrink-0 bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 p-3 rounded-lg">
+                    <div className="flex-shrink-0 bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-300 p-3 rounded-lg">
                         <Link2 size={20} />
                     </div>
                     <div>
@@ -143,7 +143,7 @@ const JoinItem: React.FC<JoinItemProps> = ({
                 {joinTableSchema ? (
                     <div className="p-5 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-200/80 dark:border-slate-700/80">
                         <div className="flex items-center gap-3 mb-6">
-                            <div className="bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 p-3 rounded-lg">
+                            <div className="bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-300 p-3 rounded-lg">
                                 <Database size={20} />
                             </div>
                             <div>

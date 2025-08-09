@@ -1,9 +1,36 @@
 import React, { useState } from 'react';
-import { ArrowRight, CheckCircle, CheckCircle2, Edit, GitMerge, Loader, AlertTriangle, XCircle, Filter, Settings, Table, Database, ArrowRightLeft } from "lucide-react";
 import {
-    MigrationConfig, Expression, LookupExpr, LiteralExpr, ConditionExpr, MigrateItem, ArithmeticExpr, FunctionCallExpr, Mapping, JoinCondition
+    CheckCircle2,
+    Settings,
+    Table,
+    Database,
+    FileStackIcon,
+    ColumnsIcon,
+    Table2Icon,
+    BrickWallIcon,
+    ConstructionIcon,
+    TableConfigIcon,
+    Filter,
+    ArrowRightLeft,
+} from "lucide-react";
+import {
+    MigrationConfig, Expression, LookupExpr, LiteralExpr, ConditionExpr, MigrateItem, ArithmeticExpr, FunctionCallExpr
 } from "../../types/MigrationConfig";
 import apiClient from '../../services/apiClient';
+import { Card, CardContent, CardHeader, CardTitle } from '../common/v2/Card';
+import { getConnectionIcon } from '../common/Helper';
+import { dataFormatLabels } from '../../pages/Connections';
+import { fieldPill, getLookupParts, getStatusBadge, getStatusIndicator, highlightBooleanOps, isIdentifier, JoinIcon, opText, pillBase, statusText, tablePill } from '../../pages/v2/MIgrationDefinitionDetails';
+import { Badge } from '../common/v2/Badge';
+import { cn } from '../../utils/utils';
+
+// --- Tiny reusable section header ---
+const SectionHeader = ({ icon, title }: { icon: React.ReactNode; title: string }) => (
+    <div className="flex items-center gap-2 text-slate-800 dark:text-slate-100">
+        <span className="text-slate-600 dark:text-slate-400">{icon}</span>
+        <h3 className="text-lg font-semibold">{title}</h3>
+    </div>
+);
 
 // --- Type Guards & Helpers ---
 const isLookup = (expr: Expression): expr is LookupExpr => !!(expr as LookupExpr)?.Lookup;
@@ -37,148 +64,310 @@ const renderExpression = (expr?: Expression | null): string => {
     return 'Unknown Expression';
 };
 
-// --- Sub-Components for the New UI ---
-
-const SectionCard: React.FC<{ title: string; icon: React.ReactNode; children: React.ReactNode }> = ({ title, icon, children }) => (
-    <div className="bg-white dark:bg-slate-800/50 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700/60">
-        <div className="p-4 border-b border-slate-200 dark:border-slate-700/60 flex items-center gap-3">
-            <div className="text-indigo-500">{icon}</div>
-            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">{title}</h3>
-        </div>
-        <div className="p-4 md:p-6">{children}</div>
-    </div>
-);
-
 const ConnectionSummary: React.FC<{ config: MigrationConfig }> = ({ config }) => (
-    <div className="flex items-center justify-center gap-4 md:gap-8">
-        <div className="flex-1 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-200 dark:border-slate-700 space-y-2">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-slate-800/50 p-4">
+            <div className="space-y-4">
+                <div className="flex items-center space-x-3">
+                    {getConnectionIcon(config.connections.source?.dataFormat || "MySQL")}
+                    <div className="flex-1">
+                        <div className="flex items-center space-x-2">
+                            <h3 className="font-semibold text-slate-900 dark:text-white">{config.connections.source?.name || "mysql sakila"}</h3>
+                            <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs rounded font-medium">
+                                {dataFormatLabels[config.connections.source?.dataFormat || "MySQL"]}
+                            </span>
+                        </div>
+                        <div className="flex items-center space-x-1 mt-1">
+                            <div className={`w-2 h-2 ${getStatusIndicator(config.connections.source?.status || "unknown")}`}></div>
+                            <span className={`text-sm ${getStatusBadge(config.connections.source?.status || "unknown")}`}>{statusText(config.connections.source?.status || "unknown")}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="space-y-3">
+                    <div className="flex items-center space-x-3">
+                        <Database className="w-4 h-4 text-slate-400" />
+                        <span className="text-sm text-slate-500 dark:text-slate-400 min-w-[60px]">Host:</span>
+                        <span className="text-sm text-slate-900 dark:text-white font-mono">{config.connections.source?.host || "host.docker.internal"}</span>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                        <Database className="w-4 h-4 text-slate-400" />
+                        <span className="text-sm text-slate-500 dark:text-slate-400 min-w-[60px]">Database:</span>
+                        <span className="text-sm text-slate-900 dark:text-white font-mono">{config.connections.source?.database || "sakila"}</span>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                        <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                        <span className="text-sm text-slate-500 dark:text-slate-400 min-w-[60px]">User:</span>
+                        <span className="text-sm text-slate-900 dark:text-white font-mono">root</span>
+                    </div>
+                </div>
+            </div>
+        </Card>
+
+        <Card className="border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-slate-800/50 p-4">
+            <div className="space-y-4">
+                <div className="flex items-center space-x-3">
+                    {getConnectionIcon(config.connections.dest?.dataFormat || "MySQL")}
+                    <div className="flex-1">
+                        <div className="flex items-center space-x-2">
+                            <h3 className="font-semibold text-slate-900 dark:text-white">{config.connections.dest?.name || "mysql test db"}</h3>
+                            <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs rounded font-medium">
+                                {dataFormatLabels[config.connections.dest?.dataFormat || "MySQL"]}
+                            </span>
+                        </div>
+                        <div className="flex items-center space-x-1 mt-1">
+                            <div className={`w-2 h-2 ${getStatusIndicator(config.connections.dest?.status || "unknown")}`}></div>
+                            <span className={`text-sm ${getStatusBadge(config.connections.dest?.status || "unknown")}`}>{statusText(config.connections.dest?.status || "unknown")}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="space-y-3">
+                    <div className="flex items-center space-x-3">
+                        <Database className="w-4 h-4 text-slate-400" />
+                        <span className="text-sm text-slate-500 dark:text-slate-400 min-w-[60px]">Host:</span>
+                        <span className="text-sm text-slate-900 dark:text-white font-mono">{config.connections.dest?.host || "mysql_db"}</span>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                        <Database className="w-4 h-4 text-slate-400" />
+                        <span className="text-sm text-slate-500 dark:text-slate-400 min-w-[60px]">Database:</span>
+                        <span className="text-sm text-slate-900 dark:text-white font-mono">{config.connections.dest?.database || "testdb"}</span>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                        <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                        <span className="text-sm text-slate-500 dark:text-slate-400 min-w-[60px]">User:</span>
+                        <span className="text-sm text-slate-900 dark:text-white font-mono">user</span>
+                    </div>
+                </div>
+            </div>
+        </Card>
+    </div>
+);
+
+const TableSourceSummary: React.FC<{ migrateItem: MigrateItem }> = ({ migrateItem }) => (
+    <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800/60">
+            <div className="bg-blue-50 dark:bg-blue-900/20 px-4 py-2 flex items-center gap-2 rounded-md border border-blue-100 dark:border-blue-800">
+                <Table className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                <span className="font-medium text-blue-700 dark:text-blue-300">
+                    {migrateItem.source?.names[0]}
+                </span>
+                <span className="text-xs text-slate-500 dark:text-slate-400 ml-auto">Primary Table</span>
+            </div>
             <div className="flex items-center gap-2">
-                <div className="w-6 h-6 flex items-center justify-center bg-green-100 dark:bg-green-900/50 rounded-md text-blue-600 dark:text-blue-300">
-                    <Database size={14} />
-                </div>
-                <p className="text-sm font-semibold text-green-800 dark:text-green-300">Source</p>
+                <Badge variant="outline" className="border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300">
+                    Filters: {migrateItem.filter.expression ? 1 : 0}
+                </Badge>
+                <Badge variant="outline" className="border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300">
+                    Joins: {migrateItem.load?.matches?.length ?? 0}
+                </Badge>
             </div>
-            <p className="text-sm"><span className="font-medium text-slate-600 dark:text-slate-300">Type:</span> {config.connections.source.dataFormat}</p>
-            <p className="text-sm"><span className="font-medium text-slate-600 dark:text-slate-300">Database:</span> {config.connections.source.database}</p>
         </div>
-        <ArrowRight size={24} className="text-slate-400 dark:text-slate-500 flex-shrink-0" />
-        <div className="flex-1 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700/50 space-y-2">
-            <div className="flex items-center gap-2">
-                <div className="w-6 h-6 flex items-center justify-center bg-blue-100 dark:bg-blue-900/50 rounded-md text-blue-600 dark:text-blue-300">
-                    <Database size={14} />
+
+        {/* Conditions header */}
+        <div className="px-4 md:px-5 pt-4">
+            <SectionHeader icon={<Filter size={18} />} title="Conditions" />
+        </div>
+
+        <div className="p-4 md:p-5 space-y-6">
+            {/* Filters */}
+            <section>
+                <div className="flex items-center justify-between mb-2">
+                    <h5 className="text-sm font-medium text-slate-700 dark:text-slate-300">Filters</h5>
                 </div>
-                <p className="text-sm font-semibold text-blue-800 dark:text-blue-300">Destination</p>
-            </div>
-            <p className="text-sm"><span className="font-medium text-slate-600 dark:text-slate-300">Type:</span> {config.connections.dest.dataFormat}</p>
-            <p className="text-sm"><span className="font-medium text-slate-600 dark:text-slate-300">Database:</span> {config.connections.dest.database}</p>
+
+                {migrateItem.filter.expression ? (
+                    <div className="relative rounded-lg bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700">
+                        <div className="absolute left-0 top-0 h-full w-1.5 bg-blue-500 rounded-l-lg" />
+                        <div className="pl-4 pr-3 py-3 md:pl-5">
+                            <div className="text-[11px] uppercase tracking-wide text-slate-500 dark:text-slate-400 mb-1">
+                                Where
+                            </div>
+                            <pre className="text-sm font-mono text-slate-900 dark:text-slate-100 whitespace-pre-wrap break-words">
+                                {highlightBooleanOps(renderExpression(migrateItem.filter.expression))}
+                            </pre>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="rounded-lg border border-dashed border-slate-200 dark:border-slate-700 p-4 text-sm text-slate-500 dark:text-slate-400">
+                        No filters defined.
+                    </div>
+                )}
+            </section>
+
+            {/* Joins */}
+            <section>
+                <h5 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Joins</h5>
+
+                {migrateItem.load?.matches?.length ? (
+                    <div className="space-y-2">
+                        {migrateItem.load.matches.map((join, idx) => {
+                            const L = getLookupParts(join.left);
+                            const R = getLookupParts(join.right);
+                            const leftField = L.isLookup ? (L.column || L.raw) : L.raw;
+                            const rightField = R.isLookup ? (R.column || R.raw) : R.raw;
+
+                            return (
+                                <div
+                                    key={idx}
+                                    className="flex items-center gap-2 flex-wrap rounded-lg px-3 py-2 border border-blue-100 dark:border-blue-900/40 bg-blue-50/60 dark:bg-blue-900/20"
+                                >
+                                    {/* table A */}
+                                    <span className={`${pillBase} ${tablePill}`} title={L.table || leftField}>
+                                        {L.table || leftField}
+                                    </span>
+
+                                    {/* join icon */}
+                                    <JoinIcon />
+
+                                    {/* table B */}
+                                    <span className={`${pillBase} ${tablePill}`} title={R.table || rightField}>
+                                        {R.table || rightField}
+                                    </span>
+
+                                    <span className={opText}>where</span>
+
+                                    {/* condition */}
+                                    <span className={`${pillBase} ${fieldPill}`} title={leftField}>
+                                        {leftField}
+                                    </span>
+                                    <span className="text-rose-500 dark:text-rose-400 font-semibold mx-1">=</span>
+                                    <span className={`${pillBase} ${fieldPill}`} title={rightField}>
+                                        {rightField}
+                                    </span>
+
+                                    {/* optional: join type tag */}
+                                    <span className="ml-auto text-[11px] px-1.5 py-0.5 rounded bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300">
+                                        INNER
+                                    </span>
+                                </div>
+                            );
+                        })}
+                    </div>
+                ) : (
+                    <div className="rounded-lg border border-dashed border-slate-200 dark:border-slate-700 p-4 text-sm text-slate-500 dark:text-slate-400">
+                        No joins configured.
+                    </div>
+                )}
+            </section>
         </div>
     </div>
 );
 
-const TableMappingSummary: React.FC<{ migrateItem: MigrateItem }> = ({ migrateItem }) => (
-    <div className="flex items-center justify-center gap-4 md:gap-8">
-        <div className="flex-1 flex items-center gap-3 p-4">
-            <Table size={20} className="text-green-500 flex-shrink-0" />
-            <div>
-                <p className="text-sm font-semibold text-green-500 dark:text-green-400">SOURCE TABLE</p>
-                <p className="font-mono text-base text-slate-800 dark:text-slate-200">{migrateItem.source.names[0]}</p>
-            </div>
-        </div>
-        <ArrowRight size={24} className="text-slate-400 dark:text-slate-500 flex-shrink-0" />
-        <div className="flex-1 flex items-center gap-3 p-4">
-            <Table size={20} className="text-blue-500 flex-shrink-0" />
-            <div>
-                <p className="text-sm font-semibold text-blue-500 dark:text-blue-400">DESTINATION TABLE</p>
-                <p className="font-mono text-base text-slate-800 dark:text-slate-200">{migrateItem.destination.names[0]}</p>
-            </div>
-        </div>
-    </div>
+const SettingsSummary: React.FC<{ settings: MigrateItem['settings'] }> = ({ settings }) => (
+    <Card className="bg-white dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm overflow-hidden relative">
+        <CardContent className="p-6 space-y-4">
+            {(() => {
+                const s = settings;
+                const rows =
+                    s
+                        ? [
+                            {
+                                key: "batchSize",
+                                label: "Batch Size",
+                                value: `${s.batchSize} rows`,
+                                desc:
+                                    "Number of records processed in each batch. Larger batches improve performance but use more memory.",
+                                icon: (
+                                    <FileStackIcon size={14} />
+                                ),
+                            },
+                            {
+                                key: "copyColumns",
+                                label: "Copy Columns",
+                                value: s.copyColumns === "All" ? "All" : "Mapped Only",
+                                desc: "Controls which columns are copied to the target system.",
+                                icon: (
+                                    <ColumnsIcon size={14} />
+                                ),
+                            },
+                            {
+                                key: "inferSchema",
+                                label: "Infer Schema",
+                                value: s.inferSchema,
+                                desc: "Automatically infer the database schema from the source data.",
+                                icon: (
+                                    <Table2Icon size={14} />
+                                ),
+                            },
+                            {
+                                key: "cascadeSchema",
+                                label: "Cascade Schema",
+                                value: s.cascadeSchema,
+                                desc: "Automatically create related tables in the target schema.",
+                                icon: (
+                                    <BrickWallIcon size={14} />
+                                ),
+                            },
+                            {
+                                key: "ignoreConstraints",
+                                label: "Ignore Constraints",
+                                value: s.ignoreConstraints,
+                                desc: "Ignore database constraints during migration.",
+                                icon: (
+                                    <ConstructionIcon size={14} />
+                                ),
+                            },
+                            {
+                                key: "createMissingTables",
+                                label: "Create Missing Tables",
+                                value: s.createMissingTables,
+                                desc: "Create tables in the target schema if they don't exist.",
+                                icon: (
+                                    <TableConfigIcon size={14} />
+                                ),
+                            },
+                        ]
+                        : [];
+
+                const BoolPill = ({ on }: { on: boolean }) => (
+                    <span
+                        className={cn(
+                            "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-medium border",
+                            on
+                                ? "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800"
+                                : "bg-slate-100 dark:bg-slate-900/50 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700"
+                        )}
+                    >
+                        <span className={cn("w-1.5 h-1.5 rounded-full", on ? "bg-green-500" : "bg-slate-500")} />
+                        {on ? "Enabled" : "Disabled"}
+                    </span>
+                );
+
+                return (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        {rows.map((r) => (
+                            <div
+                                key={r.key}
+                                className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4"
+                            >
+                                <dl className="space-y-1.5">
+                                    <dt className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white">
+                                        <span className="text-slate-500 dark:text-slate-400">{r.icon}</span>
+                                        {r.label}
+                                    </dt>
+                                    <dd className="text-base font-mono font-medium">
+                                        {typeof r.value === "boolean" ? (
+                                            <BoolPill on={r.value} />
+                                        ) : (
+                                            <span className="text-blue-700 dark:text-blue-300">{r.value}</span>
+                                        )}
+                                    </dd>
+                                    <dd className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">{r.desc}</dd>
+                                </dl>
+                            </div>
+                        ))}
+                    </div>
+                );
+            })()}
+        </CardContent>
+    </Card>
 );
-
-const ColumnMappingRow: React.FC<{ mapping: Mapping, status: 'ok' | 'warning' | 'error' }> = ({ mapping, status }) => {
-    const statusIcons = {
-        ok: <CheckCircle size={20} className="text-green-500" />,
-        warning: <AlertTriangle size={20} className="text-amber-500" />,
-        error: <XCircle size={20} className="text-red-500" />,
-    };
-
-    return (
-        <div className="flex items-center gap-4 py-3 border-b border-slate-100 dark:border-slate-700/50 last:border-b-0">
-            <div className="w-6 flex-shrink-0">{statusIcons[status]}</div>
-            <div className="flex-1">
-                <p className="text-xs text-slate-500 dark:text-slate-400">SOURCE</p>
-                <p className="font-mono text-sm text-slate-700 dark:text-slate-200">{renderExpression(mapping.source)}</p>
-                {/* <p className="text-xs text-slate-400">Type: String</p> */}
-            </div>
-            <ArrowRight size={20} className="text-slate-400" />
-            <div className="flex-1">
-                <p className="text-xs text-blue-600 dark:text-blue-400 font-semibold">DESTINATION</p>
-                <p className="font-mono text-sm text-slate-700 dark:text-slate-200">{mapping.target}</p>
-                {/* <p className="text-xs text-slate-400">Type: VARCHAR(255)</p> */}
-                {status === 'warning' && <p className="text-xs text-amber-600 dark:text-amber-400">Type Mismatch: INT</p>}
-                {status === 'error' && <p className="text-xs text-red-600 dark:text-red-400">Required Field</p>}
-            </div>
-        </div>
-    );
-};
-
-const JoinSummary: React.FC<{ join: JoinCondition }> = ({ join }) => (
-    <div className="bg-slate-50 dark:bg-slate-900/30 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
-        <div className="flex justify-between items-center text-center">
-            <div className="flex-1">
-                <p className="text-xs text-slate-500 dark:text-slate-400 uppercase font-semibold">SOURCE TABLE</p>
-                <p className="font-bold text-slate-800 dark:text-slate-100 mt-1 truncate">{renderExpression(join.left).split('.')[0]}</p>
-            </div>
-            <div className="flex-shrink-0 mx-4 text-center">
-                <div className="w-10 h-10 flex items-center justify-center bg-blue-100 dark:bg-blue-500/20 rounded-full text-blue-600 dark:text-blue-300">
-                    <GitMerge size={20} />
-                </div>
-                {/* <p className="text-xs font-semibold mt-1 text-slate-500 dark:text-slate-400">INNER JOIN</p> */}
-            </div>
-            <div className="flex-1">
-                <p className="text-xs text-slate-500 dark:text-slate-400 uppercase font-semibold">JOINED TABLE</p>
-                <p className="font-bold text-slate-800 dark:text-slate-100 mt-1 truncate">{renderExpression(join.right).split('.')[0]}</p>
-            </div>
-        </div>
-        <div className="mt-4 text-center">
-            <p className="text-xs text-slate-500 dark:text-slate-400 uppercase font-semibold">On Condition</p>
-            <div className="mt-2 inline-block bg-white dark:bg-slate-700 px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-600">
-                <code className="text-sm text-slate-700 dark:text-slate-200">{renderExpression(join.left)} = {renderExpression(join.right)}</code>
-            </div>
-        </div>
-    </div>
-);
-
-const FilterSummary: React.FC<{ expression: Expression | null }> = ({ expression }) => (
-    <div className="relative p-4 pl-6 bg-slate-50 dark:bg-slate-900/30 rounded-lg">
-        <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-400 rounded-l-lg"></div>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mb-2">The following WHERE clause will be applied:</p>
-        <code className="block text-sm text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 p-3 rounded-md overflow-x-auto">
-            {expression ? renderExpression(expression) : 'No filters defined.'}
-        </code>
-    </div>
-);
-
-const SettingsSummary: React.FC<{ settings: MigrateItem['settings'] }> = ({ settings }) => {
-    const settingItems = [
-        { label: "Batch Size", value: `${settings.batchSize} rows` },
-        { label: "Copy Columns", value: settings.copyColumns === 'All' ? "All" : "Mapped Only" },
-        { label: "Infer Schema", value: settings.inferSchema ? 'Enabled' : 'Disabled' },
-        { label: "Cascade Schema", value: settings.cascadeSchema ? 'Enabled' : 'Disabled' },
-        { label: "Ignore Constraints", value: settings.ignoreConstraints ? 'Enabled' : 'Disabled' },
-        { label: "Create Missing Tables", value: settings.createMissingTables ? 'Enabled' : 'Disabled' },
-    ];
-    return (
-        <div className="grid grid-cols-2 gap-4">
-            {settingItems.map(item => (
-                <div key={item.label}>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">{item.label}</p>
-                    <p className="font-semibold text-slate-700 dark:text-slate-200">{item.value}</p>
-                </div>
-            ))}
-        </div>
-    );
-};
 
 // --- Main Preview Component ---
 
@@ -192,6 +381,7 @@ const Step8_Preview: React.FC<Step8PreviewProps> = ({ config, onEditStep, setVie
     const [isSaving, setIsSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const migrateItem = config.migration.migrateItems[0];
+    const [mappingQuery, setMappingQuery] = useState("");
 
     const handleSave = async () => {
         setIsSaving(true);
@@ -217,64 +407,171 @@ const Step8_Preview: React.FC<Step8PreviewProps> = ({ config, onEditStep, setVie
     return (
         <div className="space-y-8">
             {/* Header Zone */}
-            <div className="p-6 text-center bg-white dark:bg-slate-800/50 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700/60">
-                <div className="mx-auto bg-green-100 dark:bg-green-500/20 text-green-600 dark:text-green-300 w-14 h-14 flex items-center justify-center rounded-full">
-                    <CheckCircle2 size={32} />
-                </div>
-                <h2 className="text-3xl font-bold text-slate-800 dark:text-slate-100 mt-4">Migration Summary</h2>
-                <p className="text-base text-slate-500 dark:text-slate-400 mt-2">
-                    Review your migration configuration before executing.
-                </p>
-                <div className="mt-6 max-w-2xl mx-auto">
-                    <div className="flex justify-between items-center mb-2">
-                        <h3 className="text-base font-semibold text-slate-700 dark:text-slate-200">Configuration Progress</h3>
-                        <span className="text-sm font-medium text-green-600 dark:text-green-400">{stepsCompleted}/{totalSteps} steps configured</span>
+            <div className="flex items-center justify-between bg-white dark:bg-slate-800/50 px-4 py-3 rounded-lg border border-slate-200 dark:border-slate-700/60 shadow-sm">
+                {/* Left: Icon + Title */}
+                <div className="flex items-center gap-3">
+                    <div className="bg-green-100 dark:bg-green-500/20 text-green-600 dark:text-green-300 w-10 h-10 flex items-center justify-center rounded-full">
+                        <CheckCircle2 size={20} />
                     </div>
-                    <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2.5">
-                        <div className="bg-green-500 h-2.5 rounded-full" style={{ width: `${progressPercentage}%` }}></div>
+                    <div>
+                        <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-100">Migration Summary</h2>
+                        <p className="text-sm text-slate-500 dark:text-slate-400">Review configuration before executing</p>
+                    </div>
+                </div>
+
+                {/* Right: Progress */}
+                <div className="flex items-center gap-3 w-64">
+                    <span className="text-sm text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                        {stepsCompleted}/{totalSteps} steps
+                    </span>
+                    <div className="flex-1 bg-slate-200 dark:bg-slate-700 rounded-full h-2">
+                        <div
+                            className="bg-green-500 h-2 rounded-full transition-all"
+                            style={{ width: `${progressPercentage}%` }}
+                        />
                     </div>
                 </div>
             </div>
 
-            <div className="space-y-6">
-                <SectionCard title="Connections" icon={<Database size={20} />}>
-                    <ConnectionSummary config={config} />
-                </SectionCard>
 
-                <SectionCard title="Table Mapping" icon={<Table size={20} />}>
-                    <TableMappingSummary migrateItem={migrateItem} />
-                </SectionCard>
+            <div className="space-y-8">
+                {/* Connections */}
+                <SectionHeader icon={<Database size={18} />} title="Connections" />
+                <ConnectionSummary config={config} />
 
-                <SectionCard title="Column Mappings" icon={<ArrowRightLeft size={20} />}>
-                    <div className="space-y-2">
-                        {migrateItem.map.mappings.map((mapping, i) => (
-                            <ColumnMappingRow key={i} mapping={mapping} status={'ok'} /> // Status is hardcoded for now
-                        ))}
-                        {migrateItem.map.mappings.length === 0 && <p className="text-center text-slate-500 py-4">No columns mapped.</p>}
-                    </div>
-                </SectionCard>
+                {/* Source Tables */}
+                <div>
+                    <SectionHeader icon={<Table size={18} />} title="Source Tables" />
+                </div>
+                <TableSourceSummary migrateItem={migrateItem} />
 
-                {migrateItem.load.matches.length > 0 && (
-                    <SectionCard title="Table Joins" icon={<GitMerge size={20} />}>
-                        <div className="space-y-4">
-                            {migrateItem.load.matches.map((join, i) => (
-                                <JoinSummary key={i} join={join} />
-                            ))}
+                {/* Column Mappings */}
+                <div>
+                    <SectionHeader icon={<ArrowRightLeft size={18} />} title="Column Mappings" />
+                </div>
+
+                <div className="space-y-6">
+                    <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 overflow-hidden">
+                        {/* Header */}
+                        <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800/60">
+                            <div className="flex items-center gap-2">
+                                <Badge
+                                    variant="outline"
+                                    className="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800"
+                                >
+                                    {config?.migration.migrateItems[0].source.names[0]}
+                                </Badge>
+                                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                                    Column Mappings
+                                </span>
+                                <span className="text-xs text-slate-500 dark:text-slate-400">
+                                    {(config?.migration.migrateItems[0].map?.mappings?.length ?? 0)} total
+                                </span>
+                            </div>
+
+                            {/* Search */}
+                            <div className="relative">
+                                <input
+                                    value={mappingQuery}
+                                    onChange={(e) => setMappingQuery(e.target.value)}
+                                    placeholder="Search columns…"
+                                    className="h-8 w-52 rounded-md bg-white/70 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 px-3 text-sm text-slate-700 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+                            </div>
                         </div>
-                    </SectionCard>
-                )}
 
-                {migrateItem.filter.expression && (
-                    <SectionCard title="Data Filters" icon={<Filter size={20} />}>
-                        <FilterSummary expression={migrateItem.filter.expression} />
-                    </SectionCard>
-                )}
+                        {/* Table */}
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm">
+                                <colgroup>
+                                    <col className="w-[45%]" />
+                                    <col className="w-[10%]" />
+                                    <col className="w-[45%]" />
+                                </colgroup>
 
-                <SectionCard title="Migration Settings" icon={<Settings size={20} />}>
-                    <SettingsSummary settings={migrateItem.settings} />
-                </SectionCard>
+                                <thead className="sticky top-0 z-[1] bg-gray-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
+                                    <tr>
+                                        <th className="px-4 py-3 text-left font-semibold text-slate-900 dark:text-white">
+                                            Source Column
+                                        </th>
+                                        <th className="px-4 py-3 text-center font-semibold text-slate-900 dark:text-white">
+                                            {/* arrow col */}
+                                        </th>
+                                        <th className="px-4 py-3 text-left font-semibold text-slate-900 dark:text-white">
+                                            Destination Column
+                                        </th>
+                                    </tr>
+                                </thead>
+
+                                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                                    {(Object.entries(config?.migration.migrateItems[0].map.mappings ?? [])
+                                        .filter(([_, m]) => {
+                                            const src = renderExpression(m.source).toLowerCase();
+                                            const dst = (m.target ?? "").toLowerCase();
+                                            const q = mappingQuery.trim().toLowerCase();
+                                            return !q || src.includes(q) || dst.includes(q);
+                                        }) as Array<[string, { source: Expression; target: string }]>).map(
+                                            ([key, m], idx) => (
+                                                <tr
+                                                    key={key ?? idx}
+                                                    className="hover:bg-blue-50/60 dark:hover:bg-blue-900/20 transition-colors"
+                                                >
+                                                    <td className="px-4 py-2.5">
+                                                        <div className="flex items-center gap-2">
+                                                            {/* tiny badge to hint if it's derived (function/arithmetic/condition) */}
+                                                            {!isLookup(m.source) && !isIdentifier(m.source) && !isLiteral(m.source) ? (
+                                                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/60">
+                                                                    Expr
+                                                                </span>
+                                                            ) : null}
+                                                            <span
+                                                                title={renderExpression(m.source)}
+                                                                className="font-mono text-slate-700 dark:text-slate-300 block truncate"
+                                                            >
+                                                                {renderExpression(m.source)}
+                                                            </span>
+                                                        </div>
+                                                    </td>
+
+                                                    <td className="px-4 py-2.5 text-center text-slate-400">→</td>
+
+                                                    <td className="px-4 py-2.5">
+                                                        <span
+                                                            title={m.target}
+                                                            className="font-mono font-medium text-slate-900 dark:text-white block truncate"
+                                                        >
+                                                            {m.target}
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            )
+                                        )}
+                                </tbody>
+                            </table>
+
+                            {/* Empty state on filter */}
+                            {mappingQuery &&
+                                (Object.entries(config?.migration.migrateItems[0].map.mappings ?? []).filter(([_, m]) => {
+                                    const src = renderExpression(m.source).toLowerCase();
+                                    const dst = (m.target ?? "").toLowerCase();
+                                    const q = mappingQuery.trim().toLowerCase();
+                                    return !q || src.includes(q) || dst.includes(q);
+                                }).length === 0) && (
+                                    <div className="px-4 py-6 text-sm text-slate-500 dark:text-slate-400">
+                                        No mappings match “{mappingQuery}”.
+                                    </div>
+                                )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Settings */}
+                <div>
+                    <SectionHeader icon={<Settings size={18} />} title="Settings" />
+                </div>
+                <SettingsSummary settings={migrateItem.settings} />
             </div>
-        </div>
+        </div >
     );
 };
 

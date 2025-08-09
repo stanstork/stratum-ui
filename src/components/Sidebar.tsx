@@ -60,7 +60,7 @@ export default function Sidebar() {
                                             className={cn(
                                                 "w-full justify-start px-3 py-2 h-10 text-sm font-medium transition-colors",
                                                 isActive
-                                                    ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-900/60 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-800"
+                                                    ? "bg-blue-50 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-800"
                                                     : "text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700/50"
                                             )}
                                             data-testid={`sidebar-nav-${item.name.toLowerCase()}`}

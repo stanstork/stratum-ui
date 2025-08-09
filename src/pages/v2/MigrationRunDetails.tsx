@@ -115,6 +115,16 @@ const LogPanel = ({ logs }: { logs?: string }) => {
         }
     };
 
+    const highlightSearch = (text: string) => {
+        if (!logSearch.trim()) return text;
+        const regex = new RegExp(`(${logSearch})`, 'gi');
+        return text.split(regex).map((part, i) =>
+            regex.test(part)
+                ? <mark key={i} className="bg-yellow-300 dark:bg-yellow-500/50 text-black dark:text-white">{part}</mark>
+                : part
+        );
+    };
+
     return (
         <div className="bg-white dark:bg-slate-800/50 p-6 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm h-[550px] flex flex-col">
             <div className="flex flex-wrap gap-4 justify-between items-center mb-4">
@@ -122,9 +132,9 @@ const LogPanel = ({ logs }: { logs?: string }) => {
                 <div className="flex items-center gap-2">
                     <div className="relative">
                         <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                        <input type="text" placeholder="Search logs..." value={logSearch} onChange={e => setLogSearch(e.target.value)} className="pl-9 pr-3 py-1.5 text-sm w-48 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                        <input type="text" placeholder="Search logs..." value={logSearch} onChange={e => setLogSearch(e.target.value)} className="pl-9 pr-3 py-1.5 text-sm w-48 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
                     </div>
-                    <select value={levelFilter} onChange={e => setLevelFilter(e.target.value)} className="px-3 py-1.5 text-sm border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    <select value={levelFilter} onChange={e => setLevelFilter(e.target.value)} className="px-3 py-1.5 text-sm border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none">
                         <option>All</option>
                         <option>INFO</option>
                         <option>SUCCESS</option>
@@ -140,7 +150,7 @@ const LogPanel = ({ logs }: { logs?: string }) => {
                             <div key={log.id} className="flex gap-4">
                                 <span className="text-slate-500">{log.timestamp}</span>
                                 <span className={`font-bold ${getLevelColor(log.level)}`}>{log.level ? `[${log.level}]` : ''}</span>
-                                <span>{log.message}</span>
+                                <span>{highlightSearch(log.message)}</span>
                             </div>
                         ))}
                     </pre>
@@ -153,28 +163,6 @@ const LogPanel = ({ logs }: { logs?: string }) => {
             </div>
         </div>
     );
-};
-
-const StatusBadge = ({ status }: { status: string }) => {
-    const baseClasses = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold";
-    switch (status) {
-        case 'succeeded': return <div className={`${baseClasses} bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300`}><CheckCircle2 size={14} /><span>{status}</span></div>;
-        case 'failed': return <div className={`${baseClasses} bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300`}><XCircle size={14} /><span>{status}</span></div>;
-        case 'running': return <div className={`${baseClasses} bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300`}><Loader size={14} className="animate-spin" /><span>Running</span></div>;
-        case 'pending': return <div className={`${baseClasses} bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-300`}><Clock size={14} /><span>{status}</span></div>;
-        default: return <div className={`${baseClasses} bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300`}><Clock size={14} /><span>{status}</span></div>;
-    }
-};
-
-const ConnectionIcon = ({ type, className }: { type: string | undefined, className?: string }) => {
-    const iconType = type?.toLowerCase() || '';
-    switch (iconType) {
-        case 'mysql': case 'postgresql': case 'pg': return <Database className={className} />;
-        case 'csv': case 'json': case 'file': return <FileText className={className} />;
-        case 'api': return <Webhook className={className} />;
-        case 'nosql': case 'mongodb': return <Container className={className} />;
-        default: return <Server className={className} />;
-    }
 };
 
 export default function ExecutionDetails() {

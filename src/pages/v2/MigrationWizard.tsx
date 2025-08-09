@@ -241,7 +241,7 @@ export default function MigrationWizard({ setView, onBack }: MigrationWizardProp
                                 Next Step <ArrowRight size={16} className="ml-2" />
                             </Button>
                         ) : (
-                            <Button type="button" onClick={handleSave} disabled={isSaving}>
+                            <Button type="button" onClick={handleSave} disabled={isSaving} variant="primary">
                                 {isSaving && <Loader size={16} className="animate-spin mr-2" />}
                                 {isSaving ? "Saving..." : "Confirm & Save"}
                             </Button>

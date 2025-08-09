@@ -37,12 +37,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/commo
 import { StatusType } from "../../types/Connection";
 import { dataFormatLabels } from "../Connections";
 
-const isLookup = (expr: Expression): expr is LookupExpr => !!(expr as LookupExpr)?.Lookup;
-const isLiteral = (expr: Expression): expr is LiteralExpr => !!(expr as LiteralExpr)?.Literal;
-const isFunctionCall = (expr: Expression): expr is FunctionCallExpr => Array.isArray((expr as FunctionCallExpr)?.FunctionCall);
-const isArithmetic = (expr: Expression): expr is ArithmeticExpr => !!(expr as ArithmeticExpr)?.Arithmetic;
-const isCondition = (expr: Expression): expr is ConditionExpr => !!(expr as ConditionExpr)?.Condition;
-const isIdentifier = (expr: Expression): expr is IdentifierExpr => typeof (expr as IdentifierExpr).Identifier === 'string';
+export const isLookup = (expr: Expression): expr is LookupExpr => !!(expr as LookupExpr)?.Lookup;
+export const isLiteral = (expr: Expression): expr is LiteralExpr => !!(expr as LiteralExpr)?.Literal;
+export const isFunctionCall = (expr: Expression): expr is FunctionCallExpr => Array.isArray((expr as FunctionCallExpr)?.FunctionCall);
+export const isArithmetic = (expr: Expression): expr is ArithmeticExpr => !!(expr as ArithmeticExpr)?.Arithmetic;
+export const isCondition = (expr: Expression): expr is ConditionExpr => !!(expr as ConditionExpr)?.Condition;
+export const isIdentifier = (expr: Expression): expr is IdentifierExpr => typeof (expr as IdentifierExpr).Identifier === 'string';
 
 const COMPARATOR_MAP: Record<string, string> = {
     'Equal': '=', 'NotEqual': '!=', 'GreaterThan': '>', 'GreaterThanOrEqual': '>=', 'LessThan': '<', 'LessThanOrEqual': '<='
@@ -71,7 +71,7 @@ const renderExpression = (expr?: Expression | null): string => {
     return 'Unknown Expression';
 };
 
-const statusText = (status: StatusType) => {
+export const statusText = (status: StatusType) => {
     switch (status) {
         case "valid":
             return "Valid";
@@ -86,7 +86,7 @@ const statusText = (status: StatusType) => {
     }
 };
 
-const getStatusBadge = (status: StatusType) => {
+export const getStatusBadge = (status: StatusType) => {
     switch (status) {
         case "valid":
             return "text-green-800 dark:text-green-300";
@@ -101,7 +101,7 @@ const getStatusBadge = (status: StatusType) => {
     }
 };
 
-const getStatusIndicator = (status: StatusType) => {
+export const getStatusIndicator = (status: StatusType) => {
     switch (status) {
         case "valid":
             return "bg-green-500 rounded-full";
@@ -116,7 +116,7 @@ const getStatusIndicator = (status: StatusType) => {
     }
 };
 
-const getLookupParts = (expr: Expression) => {
+export const getLookupParts = (expr: Expression) => {
     if (isLookup(expr)) {
         return {
             table: expr.Lookup.entity ?? "",
@@ -133,7 +133,7 @@ const getLookupParts = (expr: Expression) => {
     };
 };
 
-const JoinIcon = () => (
+export const JoinIcon = () => (
     <div className="w-10 h-10 rounded-lg flex items-center justify-center">
         <svg className="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
@@ -141,15 +141,15 @@ const JoinIcon = () => (
     </div>
 );
 
-const pillBase =
+export const pillBase =
     "px-2.5 py-1 rounded-md text-sm font-medium whitespace-nowrap";
-const tablePill =
+export const tablePill =
     "bg-blue-500 text-white dark:bg-blue-500/30";
-const fieldPill =
+export const fieldPill =
     "bg-slate-200 text-slate-800 dark:bg-slate-700 dark:text-slate-100";
-const opText = "text-slate-500 dark:text-slate-400 text-sm mx-1";
+export const opText = "text-slate-500 dark:text-slate-400 text-sm mx-1";
 
-const highlightBooleanOps = (text: string) => {
+export const highlightBooleanOps = (text: string) => {
     // split but keep the delimiters
     const parts = text.split(/(\bAND\b|\bOR\b)/gi);
     return parts.map((p, i) => {

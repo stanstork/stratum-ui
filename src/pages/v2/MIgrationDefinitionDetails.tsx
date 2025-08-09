@@ -27,7 +27,7 @@ import { Link, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { ArithmeticExpr, ConditionExpr, Expression, FunctionCallExpr, getMigrationItem, IdentifierExpr, LiteralExpr, LookupExpr, MigrateItemDTO, MigrationConfig } from "../../types/MigrationConfig";
 import apiClient from "../../services/apiClient";
-import Button from "../../components/common/Button";
+import { Button } from "../../components/common/v2/Button";
 import { JobDefinition } from "../../types/JobDefinition";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/common/v2/Card";
 import { Badge } from "../../components/common/v2/Badge";
@@ -115,6 +115,63 @@ const getStatusIndicator = (status: StatusType) => {
             return "bg-gray-500 rounded-full";
     }
 };
+
+const getLookupParts = (expr: Expression) => {
+    if (isLookup(expr)) {
+        return {
+            table: expr.Lookup.entity ?? "",
+            column: expr.Lookup.key ?? "",
+            raw: `${expr.Lookup.entity}.${expr.Lookup.key ?? "?"}`,
+            isLookup: true,
+        };
+    }
+    return {
+        table: "",
+        column: "",
+        raw: renderExpression(expr),
+        isLookup: false,
+    };
+};
+
+const JoinIcon = () => (
+    <div className="w-10 h-10 rounded-lg flex items-center justify-center">
+        <svg className="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+        </svg>
+    </div>
+);
+
+const pillBase =
+    "px-2.5 py-1 rounded-md text-sm font-medium whitespace-nowrap";
+const tablePill =
+    "bg-blue-500 text-white dark:bg-blue-500/30";
+const fieldPill =
+    "bg-slate-200 text-slate-800 dark:bg-slate-700 dark:text-slate-100";
+const opText = "text-slate-500 dark:text-slate-400 text-sm mx-1";
+
+const highlightBooleanOps = (text: string) => {
+    // split but keep the delimiters
+    const parts = text.split(/(\bAND\b|\bOR\b)/gi);
+    return parts.map((p, i) => {
+        const up = p.toUpperCase();
+        if (up === "AND") {
+            return (
+                <span key={i} className="text-fuchsia-600 dark:text-fuchsia-400 font-semibold">
+                    AND
+                </span>
+            );
+        }
+        if (up === "OR") {
+            return (
+                <span key={i} className="text-amber-600 dark:text-amber-400 font-semibold">
+                    OR
+                </span>
+            );
+        }
+        return <span key={i}>{p}</span>;
+    });
+};
+
 
 export default function DefinitionDetails() {
     const { definitionId } = useParams<{ definitionId: string }>();
@@ -252,7 +309,7 @@ export default function DefinitionDetails() {
             <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
                     <Link to="/definitions">
-                        <Button variant="ghost" data-testid="back-button">
+                        <Button variant="ghost">
                             <ArrowLeft size={16} className="mr-2" />
                             Back
                         </Button>
@@ -269,7 +326,7 @@ export default function DefinitionDetails() {
 
                 <div className="flex items-center space-x-3">
                     <Link to={`/wizard?edit=${definition.id}`}>
-                        <Button data-testid="edit-definition" className="bg-blue-600 hover:bg-blue-700 text-white font-semibold">
+                        <Button variant="primary">
                             <Edit size={16} className="mr-2" />
                             Edit Definition
                         </Button>
@@ -531,15 +588,13 @@ export default function DefinitionDetails() {
                     <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 overflow-hidden">
                         {/* Header */}
                         <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800/60">
-                            <div className="flex items-center gap-2">
-                                <div className="w-6 h-6 rounded-md bg-blue-600 flex items-center justify-center shadow-sm">
-                                    <Table className="w-3.5 h-3.5 text-white" />
-                                </div>
-                                <span className="font-semibold text-slate-900 dark:text-white">
+                            <div className="bg-blue-50 dark:bg-blue-900/20 px-4 py-2 flex items-center gap-2 rounded-md border border-blue-100 dark:border-blue-800">
+                                <Table className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                                <span className="font-medium text-blue-700 dark:text-blue-300">
                                     {config?.migration.migrateItems[0].source?.names[0]}
                                 </span>
+                                <span className="text-xs text-slate-500 dark:text-slate-400 ml-auto">Primary Table</span>
                             </div>
-
                             <div className="flex items-center gap-2">
                                 <Badge variant="outline" className="border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300">
                                     Filters: {config?.migration.migrateItems[0].filter.expression ? 1 : 0}
@@ -549,7 +604,6 @@ export default function DefinitionDetails() {
                                 </Badge>
                             </div>
                         </div>
-
                         <div className="p-4 md:p-5 space-y-6">
                             {/* Filters */}
                             <section>
@@ -565,7 +619,7 @@ export default function DefinitionDetails() {
                                                 Where
                                             </div>
                                             <pre className="text-sm font-mono text-slate-900 dark:text-slate-100 whitespace-pre-wrap break-words">
-                                                {renderExpression(config?.migration.migrateItems[0].filter.expression)}
+                                                {highlightBooleanOps(renderExpression(config.migration.migrateItems[0].filter.expression))}
                                             </pre>
                                         </div>
                                     </div>
@@ -581,24 +635,49 @@ export default function DefinitionDetails() {
                                 <h5 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Joins</h5>
 
                                 {config?.migration.migrateItems[0].load?.matches?.length ? (
-                                    <div className="grid sm:grid-cols-2 gap-2">
-                                        {config?.migration.migrateItems[0].load.matches.map((join, index) => (
-                                            <div
-                                                key={index}
-                                                className="flex items-center gap-2 rounded-lg bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700 px-3 py-2"
-                                            >
-                                                <Badge className="bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-0 text-[11px]">
-                                                    INNER
-                                                </Badge>
-                                                <span className="text-sm font-mono text-slate-700 dark:text-slate-300 truncate">
-                                                    {renderExpression(join.left)}
-                                                </span>
-                                                <span className="text-rose-500 dark:text-rose-400 font-semibold">=</span>
-                                                <span className="text-sm font-mono text-slate-700 dark:text-slate-300 truncate">
-                                                    {renderExpression(join.right)}
-                                                </span>
-                                            </div>
-                                        ))}
+                                    <div className="space-y-2">
+                                        {config.migration.migrateItems[0].load.matches.map((join, idx) => {
+                                            const L = getLookupParts(join.left);
+                                            const R = getLookupParts(join.right);
+                                            const leftField = L.isLookup ? (L.column || L.raw) : L.raw;
+                                            const rightField = R.isLookup ? (R.column || R.raw) : R.raw;
+
+                                            return (
+                                                <div
+                                                    key={idx}
+                                                    className="flex items-center gap-2 flex-wrap rounded-lg px-3 py-2 border border-blue-100 dark:border-blue-900/40 bg-blue-50/60 dark:bg-blue-900/20"
+                                                >
+                                                    {/* table A */}
+                                                    <span className={`${pillBase} ${tablePill}`} title={L.table || leftField}>
+                                                        {L.table || leftField}
+                                                    </span>
+
+                                                    {/* join icon */}
+                                                    <JoinIcon />
+
+                                                    {/* table B */}
+                                                    <span className={`${pillBase} ${tablePill}`} title={R.table || rightField}>
+                                                        {R.table || rightField}
+                                                    </span>
+
+                                                    <span className={opText}>where</span>
+
+                                                    {/* condition */}
+                                                    <span className={`${pillBase} ${fieldPill}`} title={leftField}>
+                                                        {leftField}
+                                                    </span>
+                                                    <span className="text-rose-500 dark:text-rose-400 font-semibold mx-1">=</span>
+                                                    <span className={`${pillBase} ${fieldPill}`} title={rightField}>
+                                                        {rightField}
+                                                    </span>
+
+                                                    {/* optional: join type tag (default INNER) */}
+                                                    <span className="ml-auto text-[11px] px-1.5 py-0.5 rounded bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300">
+                                                        INNER
+                                                    </span>
+                                                </div>
+                                            );
+                                        })}
                                     </div>
                                 ) : (
                                     <div className="rounded-lg border border-dashed border-slate-200 dark:border-slate-700 p-4 text-sm text-slate-500 dark:text-slate-400">
@@ -606,6 +685,7 @@ export default function DefinitionDetails() {
                                     </div>
                                 )}
                             </section>
+
                         </div>
                     </div>
                 </TabsContent>

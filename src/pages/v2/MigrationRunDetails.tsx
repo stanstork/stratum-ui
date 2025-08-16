@@ -206,15 +206,28 @@ export default function ExecutionDetails() {
     const scrollAreaRef = useRef<HTMLDivElement>(null);
     const logContainerRef = useRef<HTMLDivElement>(null);
 
+    const getBytesTransferredText = () => {
+        const bytes = execution?.bytesTransferred ?? 0;
+        if (bytes >= 1024 ** 3) {
+            return `${(bytes / 1024 ** 3).toFixed(2)} GB`;
+        } else if (bytes >= 1024 ** 2) {
+            return `${(bytes / 1024 ** 2).toFixed(2)} MB`;
+        } else if (bytes >= 1024) {
+            return `${(bytes / 1024).toFixed(2)} KB`;
+        } else {
+            return `${bytes} bytes`;
+        }
+    };
+
     const mockMetrics: ExecutionMetrics = {
-        recordsProcessed: 5095149,
+        recordsProcessed: execution?.recordsProcessed ?? 0,
         recordsTotal: 5095149,
         tablesProcessed: 2,
         tablesTotal: 2,
-        dataTransferred: "2.3 GB",
-        throughput: "2.8 MB/s",
+        dataTransferred: getBytesTransferredText(),
+        throughput: "N/A",
         errorCount: 0,
-        warningCount: 1
+        warningCount: 0
     };
 
     const getStatusIcon = (status: string) => {
@@ -357,13 +370,13 @@ export default function ExecutionDetails() {
                         <div className="text-2xl font-bold text-slate-900 dark:text-white">
                             {mockMetrics.recordsProcessed.toLocaleString()}
                         </div>
-                        <p className="text-xs text-slate-600 dark:text-slate-400">
-                            of {mockMetrics.recordsTotal.toLocaleString()} total
+                        {/* <p className="text-xs text-slate-600 dark:text-slate-400">
+                            of N/A total
                         </p>
                         <Progress
                             value={(mockMetrics.recordsProcessed / mockMetrics.recordsTotal) * 100}
                             className="mt-2"
-                        />
+                        /> */}
                     </CardContent>
                 </Card>
 
@@ -376,9 +389,9 @@ export default function ExecutionDetails() {
                         <div className="text-2xl font-bold text-slate-900 dark:text-white">
                             {mockMetrics.dataTransferred}
                         </div>
-                        <p className="text-xs text-slate-600 dark:text-slate-400">
+                        {/* <p className="text-xs text-slate-600 dark:text-slate-400">
                             Throughput: {mockMetrics.throughput}
-                        </p>
+                        </p> */}
                     </CardContent>
                 </Card>
 
@@ -391,9 +404,9 @@ export default function ExecutionDetails() {
                         <div className="text-2xl font-bold text-slate-900 dark:text-white">
                             {formatDuration(execution?.runStartedAt, execution?.runCompletedAt)}
                         </div>
-                        <p className="text-xs text-slate-600 dark:text-slate-400">
+                        {/* <p className="text-xs text-slate-600 dark:text-slate-400">
                             Time taken for this run
-                        </p>
+                        </p> */}
                     </CardContent>
                 </Card>
 
@@ -406,9 +419,9 @@ export default function ExecutionDetails() {
                         <div className="text-2xl font-bold text-slate-900 dark:text-white">
                             {mockMetrics.errorCount + mockMetrics.warningCount}
                         </div>
-                        <p className="text-xs text-slate-600 dark:text-slate-400">
+                        {/* <p className="text-xs text-slate-600 dark:text-slate-400">
                             {mockMetrics.errorCount} errors, {mockMetrics.warningCount} warnings
-                        </p>
+                        </p> */}
                     </CardContent>
                 </Card>
             </div>

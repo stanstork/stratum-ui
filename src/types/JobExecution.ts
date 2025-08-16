@@ -11,6 +11,8 @@ export interface JobExecutionDTO {
     run_completed_at: string | null;   // ISO timestamp or null
     error_message: string | null;
     logs: string | null;
+    records_processed: number | null;
+    bytes_transferred: number | null;
 }
 
 
@@ -27,6 +29,8 @@ export interface JobExecution {
     runCompletedAt?: Date;
     errorMessage?: string;
     logs?: string;
+    recordsProcessed?: number | null;
+    bytesTransferred?: number | null;
 }
 
 /**
@@ -43,5 +47,7 @@ export function mapJobExecution(dto: JobExecutionDTO): JobExecution {
         runCompletedAt: dto.run_completed_at ? new Date(dto.run_completed_at) : undefined,
         errorMessage: dto.error_message ?? undefined,
         logs: dto.logs ?? undefined,
+        recordsProcessed: dto.records_processed ?? undefined,
+        bytesTransferred: dto.bytes_transferred ?? undefined,
     };
 }

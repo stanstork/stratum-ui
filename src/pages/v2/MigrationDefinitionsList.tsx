@@ -16,6 +16,8 @@ import {
     Search,
     Grid3X3,
     List,
+    XCircle,
+    HelpCircle,
 } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { Dialog, Transition } from "@headlessui/react";
@@ -28,9 +30,104 @@ import { Badge } from "../../components/common/v2/Badge";
 import { formatDistanceToNow } from "date-fns";
 import Input from "../../components/common/Input";
 import { cn } from "../../utils/utils";
+import { JobDefinitionStat } from "../../types/ExecutionStat";
 
 type SortKey = "name";
 type SortDir = "asc" | "desc";
+
+const getStatusText = (def: JobDefinitionStat) => {
+    switch (def.lastRunStatus) {
+        case "succeeded":
+            return "Succeeded";
+        case "running":
+            return "In Progress";
+        case "failed":
+            return "Failed";
+        case "pending":
+            return "Pending";
+        default:
+            return "Unknown";
+    }
+};
+
+const getStatusIcon = (def: JobDefinitionStat) => {
+    switch (def.lastRunStatus) {
+        case "succeeded":
+            return CheckCircle;
+        case "running":
+            return Play;
+        case "failed":
+            return XCircle;
+        case "pending":
+            return Clock;
+        default:
+            return HelpCircle;
+    }
+};
+
+const getTableStatusIcon = (def: JobDefinitionStat) => {
+    switch (def.lastRunStatus) {
+        case "succeeded":
+            return <CheckCircle className="mr-1.5 h-3 w-3" />;
+        case "running":
+            return <Play className="mr-1.5 h-3 w-3" />;
+        case "failed":
+            return <XCircle className="mr-1.5 h-3 w-3" />;
+        case "pending":
+            return <Clock className="mr-1.5 h-3 w-3" />;
+        default:
+            return <HelpCircle className="mr-1.5 h-3 w-3" />;
+    }
+};
+
+const getStatusStyles = (def: JobDefinitionStat) => {
+    switch (def.lastRunStatus) {
+        case "succeeded":
+            return "ring-emerald-200 dark:ring-emerald-900 bg-emerald-50/80 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300";
+        case "running":
+            return "ring-blue-200 dark:ring-blue-900 bg-blue-50/80 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300";
+        case "failed":
+            return "ring-red-200 dark:ring-red-900 bg-red-50/80 dark:bg-red-900/30 text-red-700 dark:text-red-300";
+        case "pending":
+            return "ring-yellow-200 dark:ring-yellow-900 bg-yellow-50/80 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300";
+        default:
+            return "ring-gray-200 dark:ring-gray-900 bg-gray-50/80 dark:bg-gray-900/30 text-gray-700 dark:text-gray-300";
+    }
+};
+
+const getTableStatusStyles = (def: JobDefinitionStat) => {
+    switch (def.lastRunStatus) {
+        case "succeeded":
+            return "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300";
+        case "running":
+            return "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300";
+        case "failed":
+            return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300";
+        case "pending":
+            return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300";
+        default:
+            return "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300";
+    }
+};
+
+const formatDuration = (duration_sec: number) => {
+    const minutes = Math.floor(duration_sec / 60);
+    const seconds = Math.round(duration_sec % 60);
+    return `${minutes}m ${seconds}s`;
+};
+
+const getBytesTransferredText = (def: JobDefinitionStat) => {
+    const bytes = def.totalBytesTransferred ?? 0;
+    if (bytes >= 1024 ** 3) {
+        return `${(bytes / 1024 ** 3).toFixed(2)} GB`;
+    } else if (bytes >= 1024 ** 2) {
+        return `${(bytes / 1024 ** 2).toFixed(2)} MB`;
+    } else if (bytes >= 1024) {
+        return `${(bytes / 1024).toFixed(2)} KB`;
+    } else {
+        return `${bytes} bytes`;
+    }
+};
 
 const DeleteConfirmationModal = ({
     isOpen,
@@ -135,7 +232,7 @@ const DefinitionCard = ({
     onDelete,
     onRun,
 }: {
-    def: JobDefinition;
+    def: JobDefinitionStat;
     onDelete: (id: string) => void;
     onRun: (id: string) => void;
 }) => {
@@ -193,10 +290,10 @@ const DefinitionCard = ({
 
                     {/* Stats */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-6">
-                        <Stat icon={BarChart3} value="3" label="Total Runs" ring="ring-blue-200 dark:ring-blue-800 bg-blue-50/80 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300" />
-                        <Stat icon={CheckCircle} value="Succeeded" label="Last Run" ring="ring-emerald-200 dark:ring-emerald-900 bg-emerald-50/80 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300" />
-                        <Stat icon={Database} value="1.2 GB" label="Processed" ring="ring-purple-200 dark:ring-purple-900 bg-purple-50/80 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300" />
-                        <Stat icon={Clock} value="3m 14s" label="Avg Duration" ring="ring-amber-200 dark:ring-amber-900 bg-amber-50/80 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300" />
+                        <Stat icon={BarChart3} value={`${def.totalRuns}`} label="Total Runs" ring="ring-blue-200 dark:ring-blue-800 bg-blue-50/80 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300" />
+                        <Stat icon={getStatusIcon(def)} value={getStatusText(def)} label="Last Run" ring={getStatusStyles(def)} />
+                        <Stat icon={Database} value={getBytesTransferredText(def)} label="Processed" ring="ring-purple-200 dark:ring-purple-900 bg-purple-50/80 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300" />
+                        <Stat icon={Clock} value={formatDuration(def.avgDurationSeconds)} label="Avg Duration" ring="ring-amber-200 dark:ring-amber-900 bg-amber-50/80 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300" />
                     </div>
 
                     {/* Connections & Actions */}
@@ -271,12 +368,12 @@ const DefinitionCard = ({
     );
 };
 
-const DefinitionRow = ({ def, onDelete, onRun }: { def: JobDefinition; onDelete: (id: string) => void; onRun: (id: string) => void }) => {
+const DefinitionRow = ({ def, onDelete, onRun }: { def: JobDefinitionStat; onDelete: (id: string) => void; onRun: (id: string) => void }) => {
     const stats = {
-        lastRun: "Completed",
-        totalRuns: 12,
-        dataProcessed: "2.3M records",
-        avgDuration: "4m 32s",
+        lastRun: getStatusText(def),
+        totalRuns: def.totalRuns,
+        dataProcessed: getBytesTransferredText(def),
+        avgDuration: formatDuration(def.avgDurationSeconds),
     };
 
     return (
@@ -294,12 +391,12 @@ const DefinitionRow = ({ def, onDelete, onRun }: { def: JobDefinition; onDelete:
             </td>
             <td className="px-4 py-3 whitespace-nowrap">
                 <div className="flex items-center gap-2">
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300">
-                        <CheckCircle className="mr-1.5 h-3 w-3" /> {stats.lastRun}
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getTableStatusStyles(def)}`}>
+                        {getTableStatusIcon(def)} {stats.lastRun}
                     </span>
                 </div>
             </td>
-            <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">{stats.totalRuns}</td>
+            <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">{def.totalRuns}</td>
             <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">{stats.dataProcessed}</td>
             <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">{stats.avgDuration}</td>
             <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">
@@ -337,7 +434,7 @@ const DefinitionTable = ({
     sortDir,
     onSort,
 }: {
-    definitions: JobDefinition[];
+    definitions: JobDefinitionStat[];
     onDelete: (id: string) => void;
     onRun: (id: string) => void;
     sortKey: "name";
@@ -392,10 +489,10 @@ const DefinitionTable = ({
 );
 
 const MigrationDefinitionsList = () => {
-    const [definitions, setDefinitions] = useState<JobDefinition[]>([]);
+    const [definitions, setDefinitions] = useState<JobDefinitionStat[]>([]);
     const [loading, setLoading] = useState(true);
-    const [definitionToDelete, setDefinitionToDelete] = useState<JobDefinition | null>(null);
-    const [definitionToRun, setDefinitionToRun] = useState<JobDefinition | null>(null);
+    const [definitionToDelete, setDefinitionToDelete] = useState<JobDefinitionStat | null>(null);
+    const [definitionToRun, setDefinitionToRun] = useState<JobDefinitionStat | null>(null);
     const [searchTerm, setSearchTerm] = useState("");
     const [viewMode, setViewMode] = useState<"list" | "table">("list");
     const [sortKey, setSortKey] = useState<SortKey>("name");
@@ -404,7 +501,7 @@ const MigrationDefinitionsList = () => {
     useEffect(() => {
         setLoading(true);
         apiClient
-            .getJobDefinitions()
+            .listJobDefinitionsWithStats()
             .then((data) => {
                 setDefinitions(data);
             })

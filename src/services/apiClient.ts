@@ -1,7 +1,7 @@
 import axios, { AxiosInstance, AxiosRequestConfig } from "axios";
 import { JobDefinition, JobDefinitionDTO, mapJobDefinition } from "../types/JobDefinition";
 import { JobExecution, JobExecutionDTO, mapJobExecution } from "../types/JobExecution";
-import { emptyExecutionStat, ExecutionStat, mapExecutionStat } from "../types/ExecutionStat";
+import { emptyExecutionStat, ExecutionStat, JobDefinitionStat, JobDefinitionStatDTO, mapExecutionStat, mapJobDefinitionStat } from "../types/ExecutionStat";
 import { Connection, ConnectionDTO, ConnectionTestResult, mapConnection, mapFrontendDataFormatToBackend } from "../types/Connection";
 import { mapMetadataResponse, MetadataResponse, TableMetadata } from "../types/Metadata";
 import { data } from "react-router-dom";
@@ -26,6 +26,7 @@ interface ApiClient extends AxiosInstance {
     getJobExecutions: () => Promise<JobExecution[]>;
     getJobDefinitions: () => Promise<JobDefinition[]>;
     getExecutionStats: () => Promise<ExecutionStat>;
+    listJobDefinitionsWithStats: () => Promise<JobDefinitionStat[]>;
     login: (username: string, password: string) => Promise<string>;
     logout: () => void;
 }
@@ -215,6 +216,11 @@ apiClient.updateJobDefinition = async (definitionId: string, config: MigrationCo
 apiClient.getConnectionById = async (connectionId: string): Promise<Connection | null> => {
     const response = await apiClient.get<ConnectionDTO>(`/connections/${connectionId}`);
     return mapConnection(response.data);
+};
+
+apiClient.listJobDefinitionsWithStats = async (): Promise<JobDefinitionStat[]> => {
+    const response = await apiClient.get<JobDefinitionStatDTO[]>('/jobs/stats');
+    return response.data.map(mapJobDefinitionStat);
 };
 
 export default apiClient;

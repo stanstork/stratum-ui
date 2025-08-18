@@ -1,4 +1,5 @@
 import exp from "constants";
+import { Connection, ConnectionDTO, mapConnection } from "./Connection";
 
 export interface ExecutionStatDay {
     day: string;  // YYYY-MM-DD
@@ -55,5 +56,58 @@ export function emptyExecutionStat(): ExecutionStat {
         successRate: 0,
         totalDefinitions: 0,
         perDay: []
+    };
+}
+
+export interface JobDefinitionStatDTO {
+    id: string; // job definition ID
+    tenant_id: string; // tenant ID
+    name: string; // job definition name
+    description: string; // job definition description
+    source_connection_id: string; // source connection ID
+    destination_connection_id: string; // destination connection ID
+    source_connection: ConnectionDTO;
+    destination_connection: ConnectionDTO;
+    created_at: string; // creation timestamp
+    updated_at: string; // update timestamp
+    total_runs: number; // total number of job runs
+    last_run_status: string; // status of the last job run
+    total_bytes_transferred: number; // total bytes transferred
+    avg_duration_seconds: number; // average duration in seconds
+}
+
+export interface JobDefinitionStat {
+    id: string; // job definition ID
+    tenantId: string; // tenant ID
+    name: string; // job definition name
+    description: string; // job definition description
+    sourceConnectionId: string; // source connection ID
+    destinationConnectionId: string; // destination connection ID
+    sourceConnection: Connection;
+    destinationConnection: Connection;
+    createdAt: string; // creation timestamp
+    updatedAt: string; // update timestamp
+    totalRuns: number; // total number of job runs
+    lastRunStatus: string; // status of the last job run
+    totalBytesTransferred: number; // total bytes transferred
+    avgDurationSeconds: number; // average duration in seconds
+}
+
+export function mapJobDefinitionStat(dto: JobDefinitionStatDTO): JobDefinitionStat {
+    return {
+        id: dto.id,
+        tenantId: dto.tenant_id,
+        name: dto.name,
+        description: dto.description,
+        sourceConnectionId: dto.source_connection_id,
+        destinationConnectionId: dto.destination_connection_id,
+        sourceConnection: mapConnection(dto.source_connection),
+        destinationConnection: mapConnection(dto.destination_connection),
+        createdAt: dto.created_at,
+        updatedAt: dto.updated_at,
+        totalRuns: dto.total_runs,
+        lastRunStatus: dto.last_run_status,
+        totalBytesTransferred: dto.total_bytes_transferred,
+        avgDurationSeconds: dto.avg_duration_seconds
     };
 }

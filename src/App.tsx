@@ -64,6 +64,10 @@ const InnerApp: React.FC = () => {
         navigate(path, {});
     }
 
+    if (!user) {
+        return <LoginPage />;
+    }
+
     return (
         <Layout>
             <Routes>

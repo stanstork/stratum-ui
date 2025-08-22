@@ -469,19 +469,19 @@ export default function ExecutionDetails() {
                             <CardContent className="space-y-4">
                                 <div className="flex justify-between">
                                     <span className="text-sm text-slate-600 dark:text-slate-400">Average Throughput</span>
-                                    <span className="font-medium">{mockMetrics.throughput}</span>
+                                    <span className="font-medium">N/A</span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="text-sm text-slate-600 dark:text-slate-400">Total Data Transferred</span>
-                                    <span className="font-medium">{mockMetrics.dataTransferred}</span>
+                                    <span className="font-medium">N/A</span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="text-sm text-slate-600 dark:text-slate-400">Records per Second</span>
-                                    <span className="font-medium">4,937</span>
+                                    <span className="font-medium">N/A</span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="text-sm text-slate-600 dark:text-slate-400">Peak Memory Usage</span>
-                                    <span className="font-medium">1.2 GB</span>
+                                    <span className="font-medium">N/A</span>
                                 </div>
                             </CardContent>
                         </Card>

@@ -4,15 +4,15 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import LoginPage from './pages/Login';
 // import Dashboard from './pages/Dashboard';
 import { ThemeProvider } from './context/ThemeContext';
-import ConnectionsPage from './pages/v2/Connections';
-import MigrationDefinitionsList from './pages/v2/MigrationDefinitionsList';
-import MigrationWizard from './pages/v2/MigrationWizard';
-import MigrationRunDetails from './pages/v2/MigrationRunDetails';
-import MigrationRunsList from './pages/v2/MigrationRunsList';
-import MigrationDetailsPage from './pages/v2/MIgrationDefinitionDetails';
+import ConnectionsPage from './pages/Connections';
+import MigrationDefinitionsList from './pages/MigrationDefinitionsList';
+import MigrationWizard from './pages/MigrationWizard';
+import MigrationRunDetails from './pages/MigrationRunDetails';
+import MigrationRunsList from './pages/MigrationRunsList';
+import MigrationDetailsPage from './pages/MIgrationDefinitionDetails';
 import Layout from './components/Layout';
-import Dashboard from './pages/v2/Dashboard';
-import AddConnection from './pages/v2/AddConnection';
+import Dashboard from './pages/Dashboard';
+import AddConnection from './pages/AddConnection';
 
 interface AppContextProps {
     page: string;

@@ -13,14 +13,14 @@ import {
     Settings,
     Zap,
 } from "lucide-react";
-import { Connection, createConnectionString, StatusType } from "../../types/Connection";
-import apiClient from "../../services/apiClient";
-import Input from "../../components/common/Input";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/common/v2/Card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/common/v2/Select";
-import { Button } from "../../components/common/v2/Button";
-import { Badge } from "../../components/common/v2/Badge";
-import { Label } from "../../components/common/v2/Label";
+import { Connection, createConnectionString, StatusType } from "../types/Connection";
+import apiClient from "../services/apiClient";
+import Input from "../components/common/Input";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/common/v2/Card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/common/v2/Select";
+import { Button } from "../components/common/v2/Button";
+import { Badge } from "../components/common/v2/Badge";
+import { Label } from "../components/common/v2/Label";
 
 function Field({ label, htmlFor, hint, children }: { label: string; htmlFor?: string; hint?: string; children: React.ReactNode }) {
     return (

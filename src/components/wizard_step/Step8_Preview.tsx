@@ -20,7 +20,7 @@ import apiClient from '../../services/apiClient';
 import { Card, CardContent, CardHeader, CardTitle } from '../common/v2/Card';
 import { getConnectionIcon } from '../common/Helper';
 import { dataFormatLabels } from '../../pages/Connections';
-import { fieldPill, getLookupParts, getStatusBadge, getStatusIndicator, highlightBooleanOps, isIdentifier, JoinIcon, opText, pillBase, statusText, tablePill } from '../../pages/v2/MIgrationDefinitionDetails';
+import { fieldPill, getLookupParts, getStatusBadge, getStatusIndicator, highlightBooleanOps, isIdentifier, JoinIcon, opText, pillBase, statusText, tablePill } from '../../pages/MIgrationDefinitionDetails';
 import { Badge } from '../common/v2/Badge';
 import { cn } from '../../utils/utils';
 

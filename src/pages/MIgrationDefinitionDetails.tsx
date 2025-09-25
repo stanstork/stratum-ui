@@ -1,49 +1,48 @@
-import React, { useState, useEffect } from 'react';
 import {
-    Play,
-    Pencil,
-    RefreshCw,
-    Database,
-    Table,
-    ArrowRightLeft,
-    GitMerge,
-    Filter,
-    Settings,
-    ArrowRight,
-    ChevronRight,
-    Server,
-    User,
     ArrowLeft,
+    Database,
+    Server,
+    Settings,
     FileText,
-    GitBranch,
-    DatabaseIcon,
-} from 'lucide-react';
-import { useNavigate, useParams } from 'react-router-dom';
-// import apiClient from '../services/apiClient'; // Mocking for standalone
-import {
-    MigrationConfig,
-    Expression,
-    LookupExpr,
-    LiteralExpr,
-    ConditionExpr,
-    MigrateItem,
-    ArithmeticExpr,
-    FunctionCallExpr,
-    JoinCondition,
-    IdentifierExpr,
-    MigrateItemDTO,
-    getMigrationItem,
-} from '../types/MigrationConfig'; // Assuming types are in this path
-import { AnimatePresence, motion } from 'framer-motion';
-import { dataFormatLabels } from './Connections';
-import apiClient from '../services/apiClient';
+    Play,
+    Calendar,
+    CheckCircle,
+    XCircle,
+    AlertTriangle,
+    Clock,
+    Eye,
+    Edit,
+    Table,
+    FileStackIcon,
+    TableIcon,
+    ColumnsIcon,
+    Table2Icon,
+    BrickWall,
+    BrickWallIcon,
+    ConstructionIcon,
+    TableConfigIcon
+} from "lucide-react";
+import { format } from "date-fns";
+import { Link, useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { ArithmeticExpr, ConditionExpr, Expression, FunctionCallExpr, getMigrationItem, IdentifierExpr, LiteralExpr, LookupExpr, MigrateItemDTO, MigrationConfig } from "../types/MigrationConfig";
+import apiClient from "../services/apiClient";
+import { Button } from "../components/common/v2/Button";
+import { getMigrationConfig, JobDefinition } from "../types/JobDefinition";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/common/v2/Card";
+import { Badge } from "../components/common/v2/Badge";
+import { cn } from "../utils/utils";
+import { getConnectionIcon } from "../components/common/Helper";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/common/v2/Tabs";
+import { StatusType } from "../types/Connection";
+import { dataFormatLabels } from "./Connections";
 
-const isLookup = (expr: Expression): expr is LookupExpr => !!(expr as LookupExpr)?.Lookup;
-const isLiteral = (expr: Expression): expr is LiteralExpr => !!(expr as LiteralExpr)?.Literal;
-const isFunctionCall = (expr: Expression): expr is FunctionCallExpr => Array.isArray((expr as FunctionCallExpr)?.FunctionCall);
-const isArithmetic = (expr: Expression): expr is ArithmeticExpr => !!(expr as ArithmeticExpr)?.Arithmetic;
-const isCondition = (expr: Expression): expr is ConditionExpr => !!(expr as ConditionExpr)?.Condition;
-const isIdentifier = (expr: Expression): expr is IdentifierExpr => typeof (expr as IdentifierExpr).Identifier === 'string';
+export const isLookup = (expr: Expression): expr is LookupExpr => !!(expr as LookupExpr)?.Lookup;
+export const isLiteral = (expr: Expression): expr is LiteralExpr => !!(expr as LiteralExpr)?.Literal;
+export const isFunctionCall = (expr: Expression): expr is FunctionCallExpr => Array.isArray((expr as FunctionCallExpr)?.FunctionCall);
+export const isArithmetic = (expr: Expression): expr is ArithmeticExpr => !!(expr as ArithmeticExpr)?.Arithmetic;
+export const isCondition = (expr: Expression): expr is ConditionExpr => !!(expr as ConditionExpr)?.Condition;
+export const isIdentifier = (expr: Expression): expr is IdentifierExpr => typeof (expr as IdentifierExpr).Identifier === 'string';
 
 const COMPARATOR_MAP: Record<string, string> = {
     'Equal': '=', 'NotEqual': '!=', 'GreaterThan': '>', 'GreaterThanOrEqual': '>=', 'LessThan': '<', 'LessThanOrEqual': '<='
@@ -72,327 +71,114 @@ const renderExpression = (expr?: Expression | null): string => {
     return 'Unknown Expression';
 };
 
-const ConnectionSummary: React.FC<{ config: MigrationConfig }> = ({ config }) => (
-    <div className="flex flex-col md:flex-row items-stretch justify-center gap-4 md:gap-6">
-        {/* Source Card */}
-        <div
-            className="bg-white dark:bg-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700/60 flex-1"
-        >
-            <div className="flex items-center gap-4">
-                <DatabaseIcon type={config.connections.source.dataFormat} className="w-8 h-8 text-green-600 dark:text-green-400 flex-shrink-0" />
-                <div className="flex-1 overflow-hidden">
-                    <div className="flex items-baseline gap-3">
-                        <h3 className="font-bold text-xl text-slate-900 dark:text-slate-50 truncate">{config.connections.source.name}</h3>
-                        <span className="text-xs font-semibold px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 flex-shrink-0">{dataFormatLabels[config.connections.source.dataFormat] || config.connections.source.dataFormat}</span>
-                    </div>
-                </div>
-            </div>
-            <div className="space-y-3 mt-5 text-sm border-t border-slate-200 dark:border-slate-700 pt-4">
-                <div className="flex justify-between items-center text-slate-600 dark:text-slate-300">
-                    <div className="flex items-center gap-3">
-                        <Server size={16} className="text-slate-400 flex-shrink-0" />
-                        <span className="font-medium">Host:</span>
-                    </div>
-                    <span className="truncate font-mono">{config.connections.source.host}</span>
-                </div>
-                <div className="flex justify-between items-center text-slate-600 dark:text-slate-300">
-                    <div className="flex items-center gap-3">
-                        <Database size={16} className="text-slate-400 flex-shrink-0" />
-                        <span className="font-medium">Database:</span>
-                    </div>
-                    <span className="truncate font-mono">{config.connections.source.database}</span>
-                </div>
-                <div className="flex justify-between items-center text-slate-600 dark:text-slate-300">
-                    <div className="flex items-center gap-3">
-                        <User size={16} className="text-slate-400 flex-shrink-0" />
-                        <span className="font-medium">User:</span>
-                    </div>
-                    <span className="truncate font-mono">{config.connections.source.user}</span>
-                </div>
-            </div>
-        </div>
-
-        {/* Arrow */}
-        <div className="flex-shrink-0 flex items-center justify-center py-2 md:py-0">
-            <ArrowRight size={24} className="text-indigo-500 dark:text-indigo-400" />
-        </div>
-
-        {/* Destination Card */}
-        <div
-            className="bg-white dark:bg-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700/60 flex-1"
-        >
-            <div className="flex items-center gap-4">
-                <DatabaseIcon type={config.connections.dest.dataFormat} className="w-8 h-8 text-blue-600 dark:text-blue-400 flex-shrink-0" />
-                <div className="flex-1 overflow-hidden">
-                    <div className="flex items-baseline gap-3">
-                        <h3 className="font-bold text-xl text-slate-900 dark:text-slate-50 truncate">{config.connections.dest.name}</h3>
-                        <span className="text-xs font-semibold px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 flex-shrink-0">{dataFormatLabels[config.connections.dest.dataFormat] || config.connections.dest.dataFormat}</span>
-                    </div>
-                </div>
-            </div>
-            <div className="space-y-3 mt-5 text-sm border-t border-slate-200 dark:border-slate-700 pt-4">
-                <div className="flex justify-between items-center text-slate-600 dark:text-slate-300">
-                    <div className="flex items-center gap-3">
-                        <Server size={16} className="text-slate-400 flex-shrink-0" />
-                        <span className="font-medium">Host:</span>
-                    </div>
-                    <span className="truncate font-mono">{config.connections.dest.host}</span>
-                </div>
-                <div className="flex justify-between items-center text-slate-600 dark:text-slate-300">
-                    <div className="flex items-center gap-3">
-                        <Database size={16} className="text-slate-400 flex-shrink-0" />
-                        <span className="font-medium">Database:</span>
-                    </div>
-                    <span className="truncate font-mono">{config.connections.dest.database}</span>
-                </div>
-                <div className="flex justify-between items-center text-slate-600 dark:text-slate-300">
-                    <div className="flex items-center gap-3">
-                        <User size={16} className="text-slate-400 flex-shrink-0" />
-                        <span className="font-medium">User:</span>
-                    </div>
-                    <span className="truncate font-mono">{config.connections.dest.user}</span>
-                </div>
-            </div>
-        </div>
-    </div>
-);
-
-const TableMappingSummary: React.FC<{ migrateItem: MigrateItem }> = ({ migrateItem }) => (
-    <div className="flex items-center justify-around gap-4 md:gap-6 p-4">
-        <div className="flex-1 p-6 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 text-center transition-all duration-300 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800/80">
-            <div className="flex items-center justify-center gap-2">
-                <Table size={16} className="text-slate-500 dark:text-slate-400" />
-                <p className="text-sm text-slate-500 dark:text-slate-400">Source Table</p>
-            </div>
-            <p className="font-mono text-xl font-bold text-slate-800 dark:text-slate-100 mt-1">{migrateItem.source.names[0]}</p>
-        </div>
-        <div className="flex-shrink-0"><ArrowRight size={24} className="text-indigo-500 dark:text-indigo-400" /></div>
-        <div className="flex-1 p-6 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg border border-indigo-200 dark:border-indigo-500/50 text-center transition-all duration-300 hover:border-indigo-300 dark:hover:border-indigo-500/80 hover:bg-indigo-100 dark:hover:bg-indigo-900/50">
-            <div className="flex items-center justify-center gap-2">
-                <Table size={16} className="text-indigo-500 dark:text-indigo-300" />
-                <p className="text-sm text-indigo-500 dark:text-indigo-300">Destination Table</p>
-            </div>
-            <p className="font-mono text-xl font-bold text-indigo-800 dark:text-indigo-100 mt-1">{migrateItem.destination.names[0]}</p>
-        </div>
-    </div>
-);
-
-const ColumnMappingDisplay: React.FC<{ migrateItem: MigrateItem }> = ({ migrateItem }) => (
-    <div className="space-y-3">
-        <div className="flex items-center justify-between text-sm font-semibold text-slate-500 dark:text-slate-400 px-4">
-            <h2 className="w-5/12">Source Field ({migrateItem.source.names[0]})</h2>
-            <div className="w-2/12"></div>
-            <h2 className="w-5/12">Destination Field ({migrateItem.destination.names[0]})</h2>
-        </div>
-        {migrateItem.map.mappings.map((mapping, index) => (
-            <div key={index} className="flex items-center p-3 bg-slate-50 dark:bg-slate-800/70 rounded-lg border border-slate-200 dark:border-slate-700/60 hover:bg-slate-100 dark:hover:bg-slate-700/40 transition-colors">
-                <div className="w-5/12 font-mono text-sm pr-2">
-                    <span className="bg-slate-200 dark:bg-slate-700/50 py-1 px-2 rounded-md text-slate-700 dark:text-slate-300">{renderExpression(mapping.source)}</span>
-                </div>
-                <div className="w-2/12 flex justify-center"><ArrowRight className="text-indigo-500 dark:text-indigo-400" /></div>
-                <div className="w-5/12 font-mono text-sm pl-2">
-                    <span className="bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-200 py-1 px-2 rounded-md">{mapping.target}</span>
-                </div>
-            </div>
-        ))}
-    </div>
-);
-
-const CollapsibleSectionCard: React.FC<{ title: string; icon: React.ReactNode; children: React.ReactNode; initialOpen?: boolean }> = ({ title, icon, children, initialOpen = true }) => {
-    const [isOpen, setIsOpen] = useState(initialOpen);
-
-    return (
-        <div className="bg-white dark:bg-slate-800/50 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700/60 overflow-hidden">
-            <button
-                onClick={() => setIsOpen(!isOpen)}
-                className="w-full p-4 flex items-center justify-between text-left hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
-            >
-                <div className="flex items-center gap-3">
-                    <div className="text-indigo-500">{icon}</div>
-                    <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">{title}</h3>
-                </div>
-                <motion.div
-                    animate={{ rotate: isOpen ? 90 : 0 }}
-                    transition={{ duration: 0.2 }}
-                >
-                    <ChevronRight size={20} className="text-slate-500" />
-                </motion.div>
-            </button>
-            <AnimatePresence initial={false}>
-                {isOpen && (
-                    <motion.section
-                        key="content"
-                        initial="collapsed"
-                        animate="open"
-                        exit="collapsed"
-                        variants={{
-                            open: { opacity: 1, height: 'auto' },
-                            collapsed: { opacity: 0, height: 0 }
-                        }}
-                        transition={{ duration: 0.4, ease: [0.04, 0.62, 0.23, 0.98] }}
-                        className="overflow-hidden"
-                    >
-                        <div className="p-4 md:p-6 border-t border-slate-200 dark:border-slate-700/60">
-                            {children}
-                        </div>
-                    </motion.section>
-                )}
-            </AnimatePresence>
-        </div>
-    );
-};
-
-const JoinSummary: React.FC<{ join: JoinCondition }> = ({ join }) => (
-    <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700/80 transition-all hover:border-slate-300 dark:hover:border-slate-600">
-        <div className="flex justify-between items-center text-center gap-4">
-            <div className="flex-1">
-                <p className="text-xs text-slate-500 dark:text-slate-400 uppercase font-semibold">Source Table</p>
-                <p className="font-mono text-base font-bold text-slate-700 dark:text-slate-200 mt-1 truncate">{renderExpression(join.left)?.toString().split('.')[0]}</p>
-            </div>
-            <div className="flex-shrink-0 text-center">
-                <div className="w-12 h-12 flex items-center justify-center bg-indigo-100 dark:bg-indigo-500/20 rounded-full text-indigo-500 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/50">
-                    <GitMerge size={24} />
-                </div>
-                <p className="text-xs mt-1 font-semibold text-indigo-500 dark:text-indigo-400">JOIN</p>
-            </div>
-            <div className="flex-1">
-                <p className="text-xs text-slate-500 dark:text-slate-400 uppercase font-semibold">Joined Table</p>
-                <p className="font-mono text-base font-bold text-slate-700 dark:text-slate-200 mt-1 truncate">{renderExpression(join.right)?.toString().split('.')[0]}</p>
-            </div>
-        </div>
-        <div className="mt-4 text-center bg-slate-100 dark:bg-slate-900/70 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700">
-            <p className="text-xs text-slate-500 dark:text-slate-400 uppercase font-semibold mb-1">On Condition</p>
-            <code className="text-sm font-mono">
-                {renderExpression(join.left)} <span className="text-rose-500 dark:text-rose-400 font-bold mx-2">=</span> {renderExpression(join.right)}
-            </code>
-        </div>
-    </div>
-);
-
-const FilterSummary: React.FC<{ expression: Expression | null }> = ({ expression }) => (
-    <div className="relative p-4 pl-5 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-200 dark:border-slate-700">
-        <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500 rounded-l-lg"></div>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mb-2">The following WHERE clause will be applied:</p>
-        <code className="block text-base font-mono text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-slate-800/50 p-4 rounded-md overflow-x-auto">
-            {expression ? renderExpression(expression) : 'No filters defined.'}
-        </code>
-    </div>
-);
-
-const SettingsSummary: React.FC<{ settings: MigrateItem['settings'] }> = ({ settings }) => {
-    const settingItems = [
-        { label: "Batch Size", value: `${settings.batchSize} rows` },
-        { label: "Copy Columns", value: settings.copyColumns === 'All' ? "All" : "Mapped Only" },
-        { label: "Infer Schema", value: settings.inferSchema ? 'Enabled' : 'Disabled', enabled: settings.inferSchema },
-        { label: "Cascade Schema", value: settings.cascadeSchema ? 'Enabled' : 'Disabled', enabled: settings.cascadeSchema },
-        { label: "Ignore Constraints", value: settings.ignoreConstraints ? 'Enabled' : 'Disabled', enabled: settings.ignoreConstraints },
-        { label: "Create Missing Tables", value: settings.createMissingTables ? 'Enabled' : 'Disabled', enabled: settings.createMissingTables },
-    ];
-    return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {settingItems.map(item => (
-                <div key={item.label} className="bg-slate-50 dark:bg-slate-800 p-4 rounded-lg border border-slate-200 dark:border-slate-700/80">
-                    <p className="text-sm text-slate-500 dark:text-slate-400">{item.label}</p>
-                    <p className={`text-base font-semibold ${item.enabled ? 'text-green-600 dark:text-green-400' : 'text-slate-700 dark:text-slate-300'}`}>{item.value}</p>
-                </div>
-            ))}
-        </div>
-    );
-};
-
-const DataLineageFlow: React.FC<{ migrateItem: MigrateItem }> = ({ migrateItem }) => {
-    const sourceTable = migrateItem.source.names[0];
-    const destTable = migrateItem.destination.names[0];
-    const joins = migrateItem.load.matches;
-
-    const allJoinTables = new Set<string>();
-    joins.forEach(j => {
-        const leftTable = renderExpression(j.left)?.split('.')[0];
-        const rightTable = renderExpression(j.right)?.split('.')[0];
-        if (leftTable && leftTable !== sourceTable) allJoinTables.add(leftTable);
-        if (rightTable && rightTable !== sourceTable) allJoinTables.add(rightTable);
-    });
-
-    const joinTables = Array.from(allJoinTables);
-
-    const Node = ({ name, type }: { name: string, type: 'source' | 'join' | 'dest' }) => {
-        const baseClasses = "flex items-center gap-3 p-4 rounded-lg border-2 shadow-md w-64";
-        const typeClasses = {
-            source: "bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-700",
-            join: "bg-yellow-50 dark:bg-yellow-900/30 border-yellow-200 dark:border-yellow-700",
-            dest: "bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-700"
-        };
-        const iconClasses = {
-            source: "text-green-600 dark:text-green-400",
-            join: "text-yellow-600 dark:text-yellow-400",
-            dest: "text-blue-600 dark:text-blue-400"
-        };
-        const textClasses = {
-            source: "text-green-800 dark:text-green-200",
-            join: "text-yellow-800 dark:text-yellow-200",
-            dest: "text-blue-800 dark:text-blue-200"
-        }
-
-        return (
-            <div className={`${baseClasses} ${typeClasses[type]}`}>
-                <Table size={20} className={iconClasses[type]} />
-                <div className="flex flex-col">
-                    <span className="text-xs uppercase font-semibold text-slate-500 dark:text-slate-400">{type} table</span>
-                    <span className={`font-mono font-bold text-lg ${textClasses[type]}`}>{name}</span>
-                </div>
-            </div>
-        );
+export const statusText = (status: StatusType) => {
+    switch (status) {
+        case "valid":
+            return "Valid";
+        case "invalid":
+            return "Invalid";
+        case "testing":
+            return "Testing";
+        case "untested":
+            return "Untested";
+        default:
+            return "Unknown";
     }
+};
 
-    const Arrow = () => <div className="flex items-center justify-center mx-8"><ArrowRight size={32} className="text-slate-400 dark:text-slate-500" /></div>;
+export const getStatusBadge = (status: StatusType) => {
+    switch (status) {
+        case "valid":
+            return "text-green-800 dark:text-green-300";
+        case "invalid":
+            return "text-red-800 dark:text-red-300";
+        case "testing":
+            return "text-blue-800 dark:text-blue-300";
+        case "untested":
+            return "text-slate-800 dark:text-slate-300";
+        default:
+            return "text-gray-800 dark:text-gray-300";
+    }
+};
 
-    return (
-        <div className="bg-white dark:bg-slate-800/50 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700/60 p-6 overflow-x-auto">
-            <div className="flex items-center justify-center min-w-max p-8">
-                {/* Source Column */}
-                <div className="flex flex-col items-center gap-4">
-                    <Node name={sourceTable} type="source" />
-                    {joinTables.length > 0 && joinTables.map(table => (
-                        <Node key={table} name={table} type="join" />
-                    ))}
-                </div>
+export const getStatusIndicator = (status: StatusType) => {
+    switch (status) {
+        case "valid":
+            return "bg-green-500 rounded-full";
+        case "invalid":
+            return "bg-red-500 rounded-full";
+        case "testing":
+            return "bg-blue-500 rounded-full";
+        case "untested":
+            return "bg-slate-500 rounded-full";
+        default:
+            return "bg-gray-500 rounded-full";
+    }
+};
 
-                {/* Arrow & Join Logic */}
-                <div className="flex flex-col items-center justify-center mx-8">
-                    <div className="flex items-center justify-center p-4 bg-indigo-100 dark:bg-indigo-500/20 rounded-full text-indigo-500 dark:text-indigo-300 border-2 border-indigo-200 dark:border-indigo-500/50 mb-2">
-                        <GitMerge size={28} />
-                    </div>
-                    <span className="text-sm font-semibold text-indigo-600 dark:text-indigo-300">JOIN LOGIC</span>
-                    <svg width="100" height={joinTables.length > 0 ? (joinTables.length * 100) : 100} className="my-4">
-                        {/* Main line */}
-                        <line x1="50" y1="0" x2="50" y2={joinTables.length > 0 ? (joinTables.length * 100) : 100} stroke="rgb(165 180 252)" strokeWidth="3" />
-                        {/* Arrow head */}
-                        <polygon points="45,95 55,95 50,100" fill="rgb(165 180 252)" transform={`translate(0, ${joinTables.length > 0 ? (joinTables.length * 100) - 100 : 0})`} />
-                        {/* Lines from nodes */}
-                        <line x1="0" y1="35" x2="50" y2="35" stroke="rgb(165 180 252)" strokeWidth="2" strokeDasharray="4 4" />
-                        {joinTables.map((_, i) => (
-                            <line key={i} x1="0" y1={120 + i * 88} x2="50" y2={120 + i * 88} stroke="rgb(165 180 252)" strokeWidth="2" strokeDasharray="4 4" />
-                        ))}
-                    </svg>
-                </div>
+export const getLookupParts = (expr: Expression) => {
+    if (isLookup(expr)) {
+        return {
+            table: expr.Lookup.entity ?? "",
+            column: expr.Lookup.key ?? "",
+            raw: `${expr.Lookup.entity}.${expr.Lookup.key ?? "?"}`,
+            isLookup: true,
+        };
+    }
+    return {
+        table: "",
+        column: "",
+        raw: renderExpression(expr),
+        isLookup: false,
+    };
+};
 
+export const JoinIcon = () => (
+    <div className="w-10 h-10 rounded-lg flex items-center justify-center">
+        <svg className="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+        </svg>
+    </div>
+);
 
-                {/* Destination Column */}
-                <div className="flex flex-col items-center gap-4">
-                    <Node name={destTable} type="dest" />
-                </div>
-            </div>
-        </div>
-    );
+export const pillBase =
+    "px-2.5 py-1 rounded-md text-sm font-medium whitespace-nowrap";
+export const tablePill =
+    "bg-blue-500 text-white dark:bg-blue-500/30";
+export const fieldPill =
+    "bg-slate-200 text-slate-800 dark:bg-slate-700 dark:text-slate-100";
+export const opText = "text-slate-500 dark:text-slate-400 text-sm mx-1";
+
+export const highlightBooleanOps = (text: string) => {
+    // split but keep the delimiters
+    const parts = text.split(/(\bAND\b|\bOR\b)/gi);
+    return parts.map((p, i) => {
+        const up = p.toUpperCase();
+        if (up === "AND") {
+            return (
+                <span key={i} className="text-fuchsia-600 dark:text-fuchsia-400 font-semibold">
+                    AND
+                </span>
+            );
+        }
+        if (up === "OR") {
+            return (
+                <span key={i} className="text-amber-600 dark:text-amber-400 font-semibold">
+                    OR
+                </span>
+            );
+        }
+        return <span key={i}>{p}</span>;
+    });
 };
 
 
-const MigrationDetailsPage = () => {
+export default function DefinitionDetails() {
     const { definitionId } = useParams<{ definitionId: string }>();
-    const navigate = useNavigate();
     const [config, setConfig] = useState<MigrationConfig | null>(null);
+    const [definition, setDefinition] = useState<JobDefinition | null>(null);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState<'config' | 'lineage'>('config');
+    const [mappingQuery, setMappingQuery] = useState("");
 
     useEffect(() => {
         const fetchDefinition = async () => {
@@ -403,53 +189,9 @@ const MigrationDetailsPage = () => {
             setLoading(true);
             try {
                 const data = await apiClient.getJobDefinition(definitionId);
-                const migrationItem = JSON.parse(data.ast)['migration']['migrate_items'][0] as MigrateItemDTO;
-
-                const migrationConfig: MigrationConfig = {
-                    name: data.name,
-                    description: data.description,
-                    migration: {
-                        settings: {
-                            batchSize: migrationItem.settings.batch_size,
-                            csvHeader: migrationItem.settings.csv_header,
-                            copyColumns: migrationItem.settings.copy_columns,
-                            inferSchema: migrationItem.settings.infer_schema,
-                            csvDelimiter: migrationItem.settings.csv_delimiter,
-                            csvIdColumn: migrationItem.settings.csv_id_column,
-                            cascadeSchema: migrationItem.settings.cascade_schema,
-                            ignoreConstraints: migrationItem.settings.ignore_constraints,
-                            createMissingTables: migrationItem.settings.create_missing_tables,
-                            createMissingColumns: migrationItem.settings.create_missing_columns
-                        },
-                        migrateItems: [getMigrationItem(migrationItem)],
-                    },
-                    connections: {
-                        source: {
-                            id: data.sourceConnection.id,
-                            name: data.sourceConnection.name,
-                            dataFormat: data.sourceConnection.dataFormat,
-                            database: data.sourceConnection.dbName,
-                            status: data.sourceConnection.status,
-                            host: data.sourceConnection.host,
-                            port: data.sourceConnection.port,
-                            user: data.sourceConnection.username,
-                            description: `${data.sourceConnection.dataFormat} - ${data.sourceConnection.host}:${data.sourceConnection.port}`
-                        },
-                        dest: {
-                            id: data.destinationConnection.id,
-                            name: data.destinationConnection.name,
-                            dataFormat: data.destinationConnection.dataFormat,
-                            database: data.destinationConnection.dbName,
-                            status: data.destinationConnection.status,
-                            host: data.destinationConnection.host,
-                            port: data.destinationConnection.port,
-                            user: data.destinationConnection.username,
-                            description: `${data.destinationConnection.dataFormat} - ${data.destinationConnection.host}:${data.destinationConnection.port}`
-                        }
-                    },
-                    creation_date: data.createdAt instanceof Date ? data.createdAt.toISOString() : new Date(data.createdAt).toISOString(),
-                };
+                const migrationConfig = getMigrationConfig(data);
                 setConfig(migrationConfig);
+                setDefinition(data);
             } catch (error) {
                 console.error("Failed to fetch migration definition:", error);
             } finally {
@@ -460,109 +202,683 @@ const MigrationDetailsPage = () => {
         fetchDefinition();
     }, [definitionId]);
 
+    const getStatusIcon = (status: string) => {
+        switch (status) {
+            case "active":
+                return <CheckCircle className="text-green-600 dark:text-green-400" size={20} />;
+            case "inactive":
+                return <XCircle className="text-red-600 dark:text-red-400" size={20} />;
+            case "paused":
+                return <AlertTriangle className="text-yellow-600 dark:text-yellow-400" size={20} />;
+            default:
+                return <Clock className="text-slate-600 dark:text-slate-400" size={20} />;
+        }
+    };
+
+    const getStatusColor = (status: string) => {
+        switch (status) {
+            case "active":
+                return "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400";
+            case "inactive":
+                return "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400";
+            case "paused":
+                return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400";
+            default:
+                return "bg-slate-100 text-slate-800 dark:bg-slate-900/20 dark:text-slate-400";
+        }
+    };
+
     if (loading) {
-        return <div className="flex justify-center py-20"><RefreshCw className="animate-spin text-indigo-500" size={32} /></div>;
+        return (
+            <div className="flex items-center justify-center h-64">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-900 dark:border-white"></div>
+            </div>
+        );
     }
 
-    if (!config) {
-        return <div className="text-center text-slate-500 dark:text-slate-400">Migration definition not found.</div>;
+    if (!definition) {
+        return (
+            <div className="text-center py-12">
+                <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
+                    Migration Definition Not Found
+                </h2>
+                <p className="text-slate-600 dark:text-slate-400 mb-4">
+                    The requested migration definition could not be found.
+                </p>
+                <Link to="/definitions">
+                    <Button>
+                        <ArrowLeft size={16} className="mr-2" />
+                        Back to Definitions
+                    </Button>
+                </Link>
+            </div>
+        );
     }
 
-    const migrateItem = config.migration.migrateItems[0];
-
-    const TabButton = ({ tabName, currentTab, setTab, icon, children }: { tabName: 'config' | 'lineage', currentTab: string, setTab: (tab: 'config' | 'lineage') => void, icon: React.ReactNode, children: React.ReactNode }) => (
-        <button
-            onClick={() => setTab(tabName)}
-            className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-md transition-colors ${currentTab === tabName ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300' : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700'}`}
-        >
-            {icon}
-            {children}
-        </button>
-    );
+    const sourceConnection = definition.sourceConnection;
+    const destinationConnection = definition.destinationConnection;
 
     return (
-        <div className="p-4 sm:p-6 lg:p-8 bg-white dark:bg-slate-800/60 rounded-xl shadow-lg min-h-screen">
-            <div className="max-w-7xl mx-auto">
-                <header className="flex flex-wrap gap-4 justify-between items-center mb-6 border-b border-slate-200 dark:border-slate-700 pb-4">
-                    <div className="flex items-center gap-4">
-                        <button onClick={() => navigate ? navigate('/definitions') : alert('Navigate back')} className="p-2 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700">
-                            <ArrowLeft size={20} />
-                        </button>
-                        <div>
-                            <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">{config.name}</h1>
-                            <p className="text-sm text-slate-600 dark:text-slate-400 mt-1 max-w-2xl">{config.description}</p>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <button className="inline-flex items-center justify-center gap-2 h-10 px-4 bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-sm font-semibold rounded-lg shadow-sm border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600/80 transition-all" aria-label="Edit"><Pencil size={18} /></button>
-                        <button className="inline-flex items-center gap-2 h-10 px-6 bg-indigo-600 text-white text-sm font-bold rounded-lg shadow-md hover:bg-indigo-700 dark:hover:bg-indigo-500 transition-all"><Play size={16} /> Run Migration</button>
-                    </div>
-                </header>
-
-                <div className="mb-6">
-                    <div className="flex items-center gap-2 p-1 bg-slate-50 dark:bg-slate-800 rounded-lg">
-                        <TabButton tabName="config" currentTab={activeTab} setTab={setActiveTab} icon={<FileText size={16} />}>Configuration</TabButton>
-                        <TabButton tabName="lineage" currentTab={activeTab} setTab={setActiveTab} icon={<GitBranch size={16} />}>Data Lineage</TabButton>
+        <div className="space-y-6">
+            {/* Header */}
+            <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                    <Link to="/definitions">
+                        <Button variant="ghost">
+                            <ArrowLeft size={16} className="mr-2" />
+                            Back
+                        </Button>
+                    </Link>
+                    <div>
+                        <h1 className="text-[24px] font-bold leading-tight text-slate-900 dark:text-white">
+                            {definition.name}
+                        </h1>
+                        <p className="text-slate-700 dark:text-slate-300">
+                            Migration Definition Details
+                        </p>
                     </div>
                 </div>
 
-                <main>
-                    <AnimatePresence mode="wait">
-                        <motion.div
-                            key={activeTab}
-                            initial={{ y: 10, opacity: 0 }}
-                            animate={{ y: 0, opacity: 1 }}
-                            exit={{ y: -10, opacity: 0 }}
-                            transition={{ duration: 0.2 }}
-                        >
-                            {activeTab === 'config' && (
-                                <div className="space-y-6">
-                                    <CollapsibleSectionCard title="Connections" icon={<Database size={20} />}>
-                                        <ConnectionSummary config={config} />
-                                    </CollapsibleSectionCard>
-                                    {migrateItem && (
-                                        <>
-                                            <CollapsibleSectionCard title="Table Mapping" icon={<Table size={20} />}>
-                                                <TableMappingSummary migrateItem={migrateItem} />
-                                            </CollapsibleSectionCard>
-
-                                            {migrateItem.load.matches.length > 0 && (
-                                                <CollapsibleSectionCard title="Table Joins" icon={<GitMerge size={20} />}>
-                                                    <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
-                                                        {migrateItem.load.matches.map((join, i) => (
-                                                            <JoinSummary key={i} join={join} />
-                                                        ))}
-                                                    </div>
-                                                </CollapsibleSectionCard>
-                                            )}
-
-                                            <CollapsibleSectionCard title="Column Mappings" icon={<ArrowRightLeft size={20} />}>
-                                                <ColumnMappingDisplay migrateItem={migrateItem} />
-                                            </CollapsibleSectionCard>
-
-                                            {migrateItem.filter.expression && (
-                                                <CollapsibleSectionCard title="Data Filters" icon={<Filter size={20} />}>
-                                                    <FilterSummary expression={migrateItem.filter.expression} />
-                                                </CollapsibleSectionCard>
-                                            )}
-
-                                            <CollapsibleSectionCard title="Migration Settings" icon={<Settings size={20} />}>
-                                                <SettingsSummary settings={migrateItem.settings} />
-                                            </CollapsibleSectionCard>
-                                        </>
-                                    )}
-                                </div>
-                            )}
-
-                            {activeTab === 'lineage' && migrateItem && (
-                                <DataLineageFlow migrateItem={migrateItem} />
-                            )}
-                        </motion.div>
-                    </AnimatePresence>
-                </main>
+                <div className="flex items-center space-x-3">
+                    <Link to={`/wizard?edit=${definition.id}`}>
+                        <Button variant="primary">
+                            <Edit size={16} className="mr-2" />
+                            Edit Definition
+                        </Button>
+                    </Link>
+                </div>
             </div>
-        </div>
-    );
-};
 
-export default MigrationDetailsPage;
+            {/* Overview Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <Card className="bg-white dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm overflow-hidden relative hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_4px_12px_rgba(0,0,0,0.4)] hover:-translate-y-0.5 hover:scale-[1.005] duration-200 transition-all">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
+                        <CardTitle className="text-sm font-medium">Status</CardTitle>
+                        {getStatusIcon("active")}
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold text-slate-900 dark:text-white capitalize">
+                            {"active"}
+                        </div>
+                        <p className="text-xs text-slate-600 dark:text-slate-400">
+                            Current state
+                        </p>
+                    </CardContent>
+                </Card>
+
+                <Card className="bg-white dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm overflow-hidden relative hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_4px_12px_rgba(0,0,0,0.4)] hover:-translate-y-0.5 hover:scale-[1.005] duration-200 transition-all">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Source</CardTitle>
+                        {sourceConnection && getConnectionIcon(sourceConnection.dataFormat)}
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-lg font-bold text-slate-900 dark:text-white">
+                            {sourceConnection?.name || "Not configured"}
+                        </div>
+                        <p className="text-xs text-slate-600 dark:text-slate-400">
+                            {sourceConnection?.dataFormat || "No connection"}
+                        </p>
+                    </CardContent>
+                </Card>
+
+                <Card className="bg-white dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm overflow-hidden relative hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_4px_12px_rgba(0,0,0,0.4)] hover:-translate-y-0.5 hover:scale-[1.005] duration-200 transition-all">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Destination</CardTitle>
+                        {destinationConnection && getConnectionIcon(destinationConnection.dataFormat)}
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-lg font-bold text-slate-900 dark:text-white">
+                            {destinationConnection?.name || "Not configured"}
+                        </div>
+                        <p className="text-xs text-slate-600 dark:text-slate-400">
+                            {destinationConnection?.dataFormat || "No connection"}
+                        </p>
+                    </CardContent>
+                </Card>
+
+                <Card className="bg-white dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm overflow-hidden relative hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_4px_12px_rgba(0,0,0,0.4)] hover:-translate-y-0.5 hover:scale-[1.005] duration-200 transition-all">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Created</CardTitle>
+                        <Calendar className="h-4 w-4 text-slate-600 dark:text-slate-400" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-lg font-bold text-slate-900 dark:text-white">
+                            {definition.createdAt ? format(new Date(definition.createdAt), "MMM d") : "Unknown"}
+                        </div>
+                        <p className="text-xs text-slate-600 dark:text-slate-400">
+                            {definition.createdAt ? format(new Date(definition.createdAt), "yyyy") : ""}
+                        </p>
+                    </CardContent>
+                </Card>
+            </div>
+
+            {/* Detailed Information */}
+            <Tabs defaultValue="overview" className="space-y-6">
+                <TabsList
+                    className={cn(
+                        "w-fit rounded-xl bg-slate-100 dark:bg-slate-800 p-1",
+                        "border border-slate-200 dark:border-slate-700"
+                    )}
+                >
+                    {[
+                        { value: "overview", label: "Overview" },
+                        { value: "source", label: "Source" },
+                        { value: "mapping", label: "Mapping" },
+                        { value: "settings", label: "Settings" },
+                    ].map(({ value, label }) => (
+                        <TabsTrigger
+                            key={value}
+                            value={value}
+                            data-testid={`tab-${value}`}
+                            className={cn(
+                                "px-3.5 text-sm font-medium rounded-xl transition-all",
+                                "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white",
+                                "data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900",
+                                "data-[state=active]:text-slate-900 dark:data-[state=active]:text-white",
+                                "data-[state=active]:shadow-sm"
+                            )}
+                        >
+                            {label}
+                        </TabsTrigger>
+                    ))}
+                </TabsList>
+
+                <TabsContent value="overview">
+                    {/* Description */}
+                    <Card className="bg-white dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm overflow-hidden relative mb-6">
+                        <CardHeader>
+                            <CardTitle className="flex items-center space-x-2 font-semibold">
+                                <FileText className="text-slate-600 dark:text-slate-400" size={20} />
+                                <span>Description</span>
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-slate-700 dark:text-slate-300">
+                                {definition.description || "No description provided"}
+                            </p>
+                        </CardContent>
+                    </Card>
+
+                    {/* Connection Details */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 ">
+                        <Card className="border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-slate-800/50 p-4">
+                            <div className="space-y-4">
+                                <div className="flex items-center space-x-3">
+                                    {getConnectionIcon(sourceConnection?.dataFormat || "MySQL")}
+                                    <div className="flex-1">
+                                        <div className="flex items-center space-x-2">
+                                            <h3 className="font-semibold text-slate-900 dark:text-white">{sourceConnection?.name || "mysql sakila"}</h3>
+                                            <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs rounded font-medium">
+                                                {dataFormatLabels[sourceConnection?.dataFormat || "MySQL"]}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center space-x-1 mt-1">
+                                            <div className={`w-2 h-2 ${getStatusIndicator(sourceConnection?.status || "unknown")}`}></div>
+                                            <span className={`text-sm ${getStatusBadge(sourceConnection?.status || "unknown")}`}>{statusText(sourceConnection?.status || "unknown")}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-3">
+                                    <div className="flex items-center space-x-3">
+                                        <Database className="w-4 h-4 text-slate-400" />
+                                        <span className="text-sm text-slate-500 dark:text-slate-400 min-w-[60px]">Host:</span>
+                                        <span className="text-sm text-slate-900 dark:text-white font-mono">{sourceConnection?.host || "host.docker.internal"}</span>
+                                    </div>
+                                    <div className="flex items-center space-x-3">
+                                        <Database className="w-4 h-4 text-slate-400" />
+                                        <span className="text-sm text-slate-500 dark:text-slate-400 min-w-[60px]">Database:</span>
+                                        <span className="text-sm text-slate-900 dark:text-white font-mono">{sourceConnection?.dbName || "sakila"}</span>
+                                    </div>
+                                    <div className="flex items-center space-x-3">
+                                        <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                        </svg>
+                                        <span className="text-sm text-slate-500 dark:text-slate-400 min-w-[60px]">User:</span>
+                                        <span className="text-sm text-slate-900 dark:text-white font-mono">root</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </Card>
+
+                        <Card className="border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-slate-800/50 p-4">
+                            <div className="space-y-4">
+                                <div className="flex items-center space-x-3">
+                                    {getConnectionIcon(destinationConnection?.dataFormat || "MySQL")}
+                                    <div className="flex-1">
+                                        <div className="flex items-center space-x-2">
+                                            <h3 className="font-semibold text-slate-900 dark:text-white">{destinationConnection?.name || "mysql test db"}</h3>
+                                            <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs rounded font-medium">
+                                                {dataFormatLabels[destinationConnection?.dataFormat || "MySQL"]}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center space-x-1 mt-1">
+                                            <div className={`w-2 h-2 ${getStatusIndicator(destinationConnection?.status || "unknown")}`}></div>
+                                            <span className={`text-sm ${getStatusBadge(destinationConnection?.status || "unknown")}`}>{statusText(destinationConnection?.status || "unknown")}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-3">
+                                    <div className="flex items-center space-x-3">
+                                        <Database className="w-4 h-4 text-slate-400" />
+                                        <span className="text-sm text-slate-500 dark:text-slate-400 min-w-[60px]">Host:</span>
+                                        <span className="text-sm text-slate-900 dark:text-white font-mono">{destinationConnection?.host || "mysql_db"}</span>
+                                    </div>
+                                    <div className="flex items-center space-x-3">
+                                        <Database className="w-4 h-4 text-slate-400" />
+                                        <span className="text-sm text-slate-500 dark:text-slate-400 min-w-[60px]">Database:</span>
+                                        <span className="text-sm text-slate-900 dark:text-white font-mono">{destinationConnection?.dbName || "testdb"}</span>
+                                    </div>
+                                    <div className="flex items-center space-x-3">
+                                        <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                        </svg>
+                                        <span className="text-sm text-slate-500 dark:text-slate-400 min-w-[60px]">User:</span>
+                                        <span className="text-sm text-slate-900 dark:text-white font-mono">user</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </Card>
+                    </div>
+
+                    {/* Migration Statistics */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                        <Card className="bg-white dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm overflow-hidden relative">
+                            <CardContent className="p-6">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Source Tables</p>
+                                        <p className="text-2xl font-bold text-slate-900 dark:text-white">{(config?.migration.migrateItems[0].load?.entities?.length ?? 0) + 1}</p>
+                                        <p className="text-xs text-slate-500 mt-1">Primary: {config?.migration.migrateItems[0].source.names[0]}</p>
+                                    </div>
+                                    <div className="w-12 h-12 bg-blue-50 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+                                        <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
+                                        </svg>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        <Card className="bg-white dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm overflow-hidden relative">
+                            <CardContent className="p-6">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Column Mappings</p>
+                                        <p className="text-2xl font-bold text-slate-900 dark:text-white">
+                                            {(config?.migration.migrateItems[0].map?.mappings.length ?? 0) + 1}
+                                        </p>
+                                        <p className="text-xs text-slate-500 mt-1">Across {(config?.migration.migrateItems[0].load?.entities?.length ?? 0) + 1} tables</p>
+                                    </div>
+                                    <div className="w-12 h-12 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg flex items-center justify-center">
+                                        <svg className="w-6 h-6 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                                        </svg>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        <Card className="bg-white dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm overflow-hidden relative">
+                            <CardContent className="p-6">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Active Joins</p>
+                                        <p className="text-2xl font-bold text-slate-900 dark:text-white">{config?.migration.migrateItems[0].load?.entities?.length}</p>
+                                        <p className="text-xs text-slate-500 mt-1">Related tables</p>
+                                    </div>
+                                    <div className="w-12 h-12 bg-purple-50 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
+                                        <svg className="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                                        </svg>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+                </TabsContent>
+
+                <TabsContent value="source">
+                    <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 overflow-hidden">
+                        {/* Header */}
+                        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800/60">
+                            <div className="bg-blue-50 dark:bg-blue-900/20 px-4 py-2 flex items-center gap-2 rounded-md border border-blue-100 dark:border-blue-800">
+                                <Table className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                                <span className="font-medium text-blue-700 dark:text-blue-300">
+                                    {config?.migration.migrateItems[0].source?.names[0]}
+                                </span>
+                                <span className="text-xs text-slate-500 dark:text-slate-400 ml-auto">Primary Table</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Badge variant="outline" className="border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300">
+                                    Filters: {config?.migration.migrateItems[0].filter.expression ? 1 : 0}
+                                </Badge>
+                                <Badge variant="outline" className="border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300">
+                                    Joins: {config?.migration.migrateItems[0].load?.matches?.length ?? 0}
+                                </Badge>
+                            </div>
+                        </div>
+                        <div className="p-4 md:p-5 space-y-6">
+                            {/* Filters */}
+                            <section>
+                                <div className="flex items-center justify-between mb-2">
+                                    <h5 className="text-sm font-medium text-slate-700 dark:text-slate-300">Filters</h5>
+                                </div>
+
+                                {config?.migration.migrateItems[0].filter.expression ? (
+                                    <div className="relative rounded-lg bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700">
+                                        <div className="absolute left-0 top-0 h-full w-1.5 bg-blue-500 rounded-l-lg" />
+                                        <div className="pl-4 pr-3 py-3 md:pl-5">
+                                            <div className="text-[11px] uppercase tracking-wide text-slate-500 dark:text-slate-400 mb-1">
+                                                Where
+                                            </div>
+                                            <pre className="text-sm font-mono text-slate-900 dark:text-slate-100 whitespace-pre-wrap break-words">
+                                                {highlightBooleanOps(renderExpression(config.migration.migrateItems[0].filter.expression))}
+                                            </pre>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="rounded-lg border border-dashed border-slate-200 dark:border-slate-700 p-4 text-sm text-slate-500 dark:text-slate-400">
+                                        No filters defined.
+                                    </div>
+                                )}
+                            </section>
+
+                            {/* Joins */}
+                            <section>
+                                <h5 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Joins</h5>
+
+                                {config?.migration.migrateItems[0].load?.matches?.length ? (
+                                    <div className="space-y-2">
+                                        {config.migration.migrateItems[0].load.matches.map((join, idx) => {
+                                            const L = getLookupParts(join.left);
+                                            const R = getLookupParts(join.right);
+                                            const leftField = L.isLookup ? (L.column || L.raw) : L.raw;
+                                            const rightField = R.isLookup ? (R.column || R.raw) : R.raw;
+
+                                            return (
+                                                <div
+                                                    key={idx}
+                                                    className="flex items-center gap-2 flex-wrap rounded-lg px-3 py-2 border border-blue-100 dark:border-blue-900/40 bg-blue-50/60 dark:bg-blue-900/20"
+                                                >
+                                                    {/* table A */}
+                                                    <span className={`${pillBase} ${tablePill}`} title={L.table || leftField}>
+                                                        {L.table || leftField}
+                                                    </span>
+
+                                                    {/* join icon */}
+                                                    <JoinIcon />
+
+                                                    {/* table B */}
+                                                    <span className={`${pillBase} ${tablePill}`} title={R.table || rightField}>
+                                                        {R.table || rightField}
+                                                    </span>
+
+                                                    <span className={opText}>where</span>
+
+                                                    {/* condition */}
+                                                    <span className={`${pillBase} ${fieldPill}`} title={leftField}>
+                                                        {leftField}
+                                                    </span>
+                                                    <span className="text-rose-500 dark:text-rose-400 font-semibold mx-1">=</span>
+                                                    <span className={`${pillBase} ${fieldPill}`} title={rightField}>
+                                                        {rightField}
+                                                    </span>
+
+                                                    {/* optional: join type tag (default INNER) */}
+                                                    <span className="ml-auto text-[11px] px-1.5 py-0.5 rounded bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300">
+                                                        INNER
+                                                    </span>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                ) : (
+                                    <div className="rounded-lg border border-dashed border-slate-200 dark:border-slate-700 p-4 text-sm text-slate-500 dark:text-slate-400">
+                                        No joins configured.
+                                    </div>
+                                )}
+                            </section>
+
+                        </div>
+                    </div>
+                </TabsContent>
+
+                <TabsContent value="mapping">
+                    <div className="space-y-6">
+                        <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 overflow-hidden">
+                            {/* Header */}
+                            <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800/60">
+                                <div className="flex items-center gap-2">
+                                    <Badge
+                                        variant="outline"
+                                        className="bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800"
+                                    >
+                                        {config?.migration.migrateItems[0].source.names[0]}
+                                    </Badge>
+                                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                                        Column Mappings
+                                    </span>
+                                    <span className="text-xs text-slate-500 dark:text-slate-400">
+                                        {(config?.migration.migrateItems[0].map?.mappings?.length ?? 0)} total
+                                    </span>
+                                </div>
+
+                                {/* Search */}
+                                <div className="relative">
+                                    <input
+                                        value={mappingQuery}
+                                        onChange={(e) => setMappingQuery(e.target.value)}
+                                        placeholder="Search columns…"
+                                        className="h-8 w-52 rounded-md bg-white/70 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 px-3 text-sm text-slate-700 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Table */}
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-sm">
+                                    <colgroup>
+                                        <col className="w-[45%]" />
+                                        <col className="w-[10%]" />
+                                        <col className="w-[45%]" />
+                                    </colgroup>
+
+                                    <thead className="sticky top-0 z-[1] bg-gray-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
+                                        <tr>
+                                            <th className="px-4 py-3 text-left font-semibold text-slate-900 dark:text-white">
+                                                Source Column
+                                            </th>
+                                            <th className="px-4 py-3 text-center font-semibold text-slate-900 dark:text-white">
+                                                {/* arrow col */}
+                                            </th>
+                                            <th className="px-4 py-3 text-left font-semibold text-slate-900 dark:text-white">
+                                                Destination Column
+                                            </th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                                        {(Object.entries(config?.migration.migrateItems[0].map.mappings ?? [])
+                                            .filter(([_, m]) => {
+                                                const src = renderExpression(m.source).toLowerCase();
+                                                const dst = (m.target ?? "").toLowerCase();
+                                                const q = mappingQuery.trim().toLowerCase();
+                                                return !q || src.includes(q) || dst.includes(q);
+                                            }) as Array<[string, { source: Expression; target: string }]>).map(
+                                                ([key, m], idx) => (
+                                                    <tr
+                                                        key={key ?? idx}
+                                                        className="hover:bg-blue-50/60 dark:hover:bg-blue-900/20 transition-colors"
+                                                    >
+                                                        <td className="px-4 py-2.5">
+                                                            <div className="flex items-center gap-2">
+                                                                {/* tiny badge to hint if it's derived (function/arithmetic/condition) */}
+                                                                {!isLookup(m.source) && !isIdentifier(m.source) && !isLiteral(m.source) ? (
+                                                                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/60">
+                                                                        Expr
+                                                                    </span>
+                                                                ) : null}
+                                                                <span
+                                                                    title={renderExpression(m.source)}
+                                                                    className="font-mono text-slate-700 dark:text-slate-300 block truncate"
+                                                                >
+                                                                    {renderExpression(m.source)}
+                                                                </span>
+                                                            </div>
+                                                        </td>
+
+                                                        <td className="px-4 py-2.5 text-center text-slate-400">→</td>
+
+                                                        <td className="px-4 py-2.5">
+                                                            <span
+                                                                title={m.target}
+                                                                className="font-mono font-medium text-slate-900 dark:text-white block truncate"
+                                                            >
+                                                                {m.target}
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                )
+                                            )}
+                                    </tbody>
+                                </table>
+
+                                {/* Empty state on filter */}
+                                {mappingQuery &&
+                                    (Object.entries(config?.migration.migrateItems[0].map.mappings ?? []).filter(([_, m]) => {
+                                        const src = renderExpression(m.source).toLowerCase();
+                                        const dst = (m.target ?? "").toLowerCase();
+                                        const q = mappingQuery.trim().toLowerCase();
+                                        return !q || src.includes(q) || dst.includes(q);
+                                    }).length === 0) && (
+                                        <div className="px-4 py-6 text-sm text-slate-500 dark:text-slate-400">
+                                            No mappings match “{mappingQuery}”.
+                                        </div>
+                                    )}
+                            </div>
+                        </div>
+                    </div>
+                </TabsContent>
+
+                <TabsContent value="settings">
+                    <Card className="bg-white dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm overflow-hidden relative">
+                        <CardHeader className="flex flex-row items-center justify-between">
+                            <CardTitle className="flex items-center gap-2 text-[20px] font-semibold">
+                                <Settings className="text-slate-600 dark:text-slate-400" size={20} />
+                                <span>Migration Settings</span>
+                            </CardTitle>
+                        </CardHeader>
+
+                        <CardContent>
+                            {(() => {
+                                const s = config?.migration.migrateItems[0].settings;
+                                const rows =
+                                    s
+                                        ? [
+                                            {
+                                                key: "batchSize",
+                                                label: "Batch Size",
+                                                value: `${s.batchSize} rows`,
+                                                desc:
+                                                    "Number of records processed in each batch. Larger batches improve performance but use more memory.",
+                                                icon: (
+                                                    <FileStackIcon size={14} />
+                                                ),
+                                            },
+                                            {
+                                                key: "copyColumns",
+                                                label: "Copy Columns",
+                                                value: s.copyColumns === "All" ? "All" : "Mapped Only",
+                                                desc: "Controls which columns are copied to the target system.",
+                                                icon: (
+                                                    <ColumnsIcon size={14} />
+                                                ),
+                                            },
+                                            {
+                                                key: "inferSchema",
+                                                label: "Infer Schema",
+                                                value: s.inferSchema,
+                                                desc: "Automatically infer the database schema from the source data.",
+                                                icon: (
+                                                    <Table2Icon size={14} />
+                                                ),
+                                            },
+                                            {
+                                                key: "cascadeSchema",
+                                                label: "Cascade Schema",
+                                                value: s.cascadeSchema,
+                                                desc: "Automatically create related tables in the target schema.",
+                                                icon: (
+                                                    <BrickWallIcon size={14} />
+                                                ),
+                                            },
+                                            {
+                                                key: "ignoreConstraints",
+                                                label: "Ignore Constraints",
+                                                value: s.ignoreConstraints,
+                                                desc: "Ignore database constraints during migration.",
+                                                icon: (
+                                                    <ConstructionIcon size={14} />
+                                                ),
+                                            },
+                                            {
+                                                key: "createMissingTables",
+                                                label: "Create Missing Tables",
+                                                value: s.createMissingTables,
+                                                desc: "Create tables in the target schema if they don't exist.",
+                                                icon: (
+                                                    <TableConfigIcon size={14} />
+                                                ),
+                                            },
+                                        ]
+                                        : [];
+
+                                const BoolPill = ({ on }: { on: boolean }) => (
+                                    <span
+                                        className={cn(
+                                            "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-medium border",
+                                            on
+                                                ? "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800"
+                                                : "bg-slate-100 dark:bg-slate-900/50 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700"
+                                        )}
+                                    >
+                                        <span className={cn("w-1.5 h-1.5 rounded-full", on ? "bg-green-500" : "bg-slate-500")} />
+                                        {on ? "Enabled" : "Disabled"}
+                                    </span>
+                                );
+
+                                return (
+                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                        {rows.map((r) => (
+                                            <div
+                                                key={r.key}
+                                                className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4"
+                                            >
+                                                <dl className="space-y-1.5">
+                                                    <dt className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white">
+                                                        <span className="text-slate-500 dark:text-slate-400">{r.icon}</span>
+                                                        {r.label}
+                                                    </dt>
+                                                    <dd className="text-base font-mono font-medium">
+                                                        {typeof r.value === "boolean" ? (
+                                                            <BoolPill on={r.value} />
+                                                        ) : (
+                                                            <span className="text-blue-700 dark:text-blue-300">{r.value}</span>
+                                                        )}
+                                                    </dd>
+                                                    <dd className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">{r.desc}</dd>
+                                                </dl>
+                                            </div>
+                                        ))}
+                                    </div>
+                                );
+                            })()}
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+            </Tabs>
+        </div >
+    );
+}

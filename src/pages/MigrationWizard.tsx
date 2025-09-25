@@ -1,7 +1,20 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import {
+    ArrowRight,
+    Check,
+    CheckCircle2,
+    Database,
+    FileText,
+    Filter,
+    Link2,
+    Loader,
+    Settings,
+    Table,
+} from "lucide-react";
+import React from "react";
 import { emptyMigrationConfig, MigrationConfig } from "../types/MigrationConfig";
-import { ArrowRight, ArrowRightLeft, Check, CheckCircle2, Database, FileText, Filter, Link2, Loader, Settings, Table } from "lucide-react";
-import Button from "../components/common/Button";
+import { TableMetadata } from "../types/Metadata";
+import apiClient from "../services/apiClient";
 import Step1_Details from "../components/wizard_step/Step1_Details";
 import Step2_Connections from "../components/wizard_step/Step2_Connections";
 import Step3_SelectTable from "../components/wizard_step/Step3_SelectTable";
@@ -9,22 +22,76 @@ import Step4_Joins from "../components/wizard_step/Step4_Joins";
 import Step5_ColumnMapping from "../components/wizard_step/Step5_ColumnMapping";
 import Step6_Filters from "../components/wizard_step/Step6_Filters";
 import Step7_Settings from "../components/wizard_step/Step7_Settings";
-import { TableMetadata } from "../types/Metadata";
-import apiClient from "../services/apiClient";
 import Step8_Preview from "../components/wizard_step/Step8_Preview";
-import React from "react";
+import { Card, CardContent } from "../components/common/v2/Card";
+import { Button } from "../components/common/v2/Button";
+import { useSearchParams } from "react-router-dom";
+import { getMigrationConfig } from "../types/JobDefinition";
+
+// --------------------------------------------
+// Wizard metadata
+// --------------------------------------------
 
 type MigrationWizardProps = {
     setView: (view: string, params?: any) => void;
     onBack: () => void;
 };
 
-const MigrationWizard: React.FC<MigrationWizardProps> = ({ setView, onBack }) => {
-    const [currentStep, setCurrentStep] = useState(1);
+const steps = [
+    { num: 1, title: "Details", icon: <FileText size={18} /> },
+    { num: 2, title: "Connections", icon: <Database size={18} /> },
+    { num: 3, title: "Source", icon: <Table size={18} /> },
+    { num: 4, title: "Joins", icon: <Link2 size={18} /> },
+    { num: 5, title: "Mapping", icon: <ArrowRight size={18} /> },
+    { num: 6, title: "Filters", icon: <Filter size={18} /> },
+    { num: 7, title: "Settings", icon: <Settings size={18} /> },
+    { num: 8, title: "Preview", icon: <CheckCircle2 size={18} /> },
+] as const;
+
+// --------------------------------------------
+// Component
+// --------------------------------------------
+
+export default function MigrationWizard({ setView, onBack }: MigrationWizardProps) {
+    const [currentStep, setCurrentStep] = useState<number>(1);
     const [config, setConfig] = useState<MigrationConfig>(emptyMigrationConfig());
     const [isMetadataLoading, setIsMetadataLoading] = useState(false);
     const [metadata, setMetadata] = useState<Record<string, TableMetadata> | null>(null);
     const [isSaving, setIsSaving] = useState(false);
+
+    // --- Edit mode detection ---
+    const [searchParams] = useSearchParams();
+    const editId = searchParams.get("edit")?.trim() || null;
+    const isEditing = useMemo(() => !!editId, [editId]);
+    const [isConfigLoading, setIsConfigLoading] = useState(false);
+
+    // Load existing config when ?edit=... is present
+    useEffect(() => {
+        const fetchExisting = async (id: string) => {
+            setIsConfigLoading(true);
+            try {
+                const existing = await apiClient.getJobDefinition(id);
+                const config = getMigrationConfig(existing);
+
+                if (existing) {
+                    setConfig((prev) => ({
+                        // Keep a safe baseline, then overlay fetched config
+                        ...emptyMigrationConfig(),
+                        ...config,
+                    }));
+                } else {
+                    console.warn("No config returned for edit id:", id);
+                }
+            } catch (e) {
+                console.error("Failed to load config for editing:", e);
+            } finally {
+                setIsConfigLoading(false);
+            }
+        };
+
+        if (editId) fetchExisting(editId);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [editId]);
 
     // Fetch metadata when source connection changes
     useEffect(() => {
@@ -36,10 +103,10 @@ const MigrationWizard: React.FC<MigrationWizardProps> = ({ setView, onBack }) =>
             }
             setIsMetadataLoading(true);
             try {
-                const fetchedMetadata = await apiClient.getMetadata(sourceId);
-                setMetadata(fetchedMetadata);
-            } catch (error) {
-                console.error("Failed to fetch metadata:", error);
+                const fetched = await apiClient.getMetadata(sourceId);
+                setMetadata(fetched);
+            } catch (e) {
+                console.error("Failed to load metadata", e);
                 setMetadata(null);
             } finally {
                 setIsMetadataLoading(false);
@@ -48,17 +115,7 @@ const MigrationWizard: React.FC<MigrationWizardProps> = ({ setView, onBack }) =>
         loadMetadata();
     }, [config.connections.source?.id]);
 
-    const steps = [
-        { num: 1, title: 'Details', icon: <FileText size={20} /> },
-        { num: 2, title: 'Connections', icon: <Database size={20} /> },
-        { num: 3, title: 'Source Table', icon: <Table size={20} /> },
-        { num: 4, title: 'Joins', icon: <Link2 size={20} /> },
-        { num: 5, title: 'Column Mapping', icon: <ArrowRightLeft size={20} /> },
-        { num: 6, title: 'Filters', icon: <Filter size={20} /> },
-        { num: 7, title: 'Settings', icon: <Settings size={20} /> },
-        { num: 8, title: 'Preview', icon: <CheckCircle2 size={20} /> }
-    ];
-
+    // Step gating
     const isStepDisabled = (stepNum: number) => {
         if (stepNum === 1) return false;
         if (!config.name) return true; // Step 1 must be complete
@@ -67,139 +124,177 @@ const MigrationWizard: React.FC<MigrationWizardProps> = ({ setView, onBack }) =>
         return false;
     };
 
+    const goToStep = (stepNum: number) => {
+        if (!isStepDisabled(stepNum)) setCurrentStep(stepNum);
+    };
+
     const handleNext = () => {
         if (currentStep < steps.length) {
-            const nextStep = currentStep + 1;
-            if (!isStepDisabled(nextStep)) {
-                setCurrentStep(nextStep);
-            }
+            const next = currentStep + 1;
+            if (!isStepDisabled(next)) setCurrentStep(next);
         }
     };
 
     const handlePrev = () => {
-        if (currentStep > 1) {
-            setCurrentStep(currentStep - 1);
-        }
-    };
-
-    const goToStep = (stepNum: number) => {
-        if (!isStepDisabled(stepNum)) {
-            setCurrentStep(stepNum);
-        }
-    }
-
-    const renderStep = () => {
-        const props = { config, setConfig, migrateItem: config.migration.migrateItems[0] };
-        switch (currentStep) {
-            case 1: return <Step1_Details {...props} />;
-            case 2: return <Step2_Connections {...props} />;
-            case 3: return <Step3_SelectTable {...props} metadata={metadata} isMetadataLoading={isMetadataLoading} />;
-            case 4: return <Step4_Joins {...props} metadata={metadata} />;
-            case 5: return <Step5_ColumnMapping {...props} metadata={metadata} />;
-            case 6: return <Step6_Filters {...props} metadata={metadata} />;
-            case 7: return <Step7_Settings {...props} />;
-            case 8: return <Step8_Preview {...props} onEditStep={goToStep} setView={setView} />;
-            default: return <Step1_Details {...props} />;
-        }
+        if (currentStep > 1) setCurrentStep(currentStep - 1);
     };
 
     const isNextDisabled = () => {
         switch (currentStep) {
-            case 1: return !config.name;
-            case 2: return !config.connections.source?.id || !config.connections.dest?.id;
-            case 3: return !config.migration.migrateItems[0].source.names[0];
-            default: return false;
+            case 1:
+                return !config.name;
+            case 2:
+                return !config.connections.source?.id || !config.connections.dest?.id;
+            case 3:
+                return !config.migration.migrateItems[0].source.names[0];
+            default:
+                return false;
         }
     };
 
     const handleSave = async () => {
         setIsSaving(true);
         try {
-            console.log("Saving migration config:", config);
-            await apiClient.createJobDefinition(config);
-            setView('definitions'); // Navigate on success
-        } catch (error) {
-            console.error("Failed to save migration:", error);
-            // Optionally show an error message to the user
+            if (isEditing && editId) {
+                await apiClient.updateJobDefinition(editId, config);
+            } else {
+                await apiClient.createJobDefinition(config);
+            }
+            setView("definitions");
         } finally {
             setIsSaving(false);
         }
     };
 
-    return (
-        <div className="w-full">
-            <div className="bg-white dark:bg-slate-800/60 rounded-xl shadow-lg">
+    // Step content
+    const renderStep = () => {
+        const props = { config, setConfig, migrateItem: config.migration.migrateItems[0] } as const;
+        switch (currentStep) {
+            case 1:
+                return <Step1_Details {...props} />;
+            case 2:
+                return <Step2_Connections {...props} />;
+            case 3:
+                return (
+                    <Step3_SelectTable {...props} metadata={metadata} isMetadataLoading={isMetadataLoading} />
+                );
+            case 4:
+                return <Step4_Joins {...props} metadata={metadata} />;
+            case 5:
+                return <Step5_ColumnMapping {...props} metadata={metadata} />;
+            case 6:
+                return <Step6_Filters {...props} metadata={metadata} />;
+            case 7:
+                return <Step7_Settings {...props} />;
+            case 8:
+                return <Step8_Preview {...props} onEditStep={goToStep} setView={setView} />;
+            default:
+                return <Step1_Details {...props} />;
+        }
+    };
 
-                {/* Header Zone: Title & Buttons */}
-                <div className="p-6 border-b border-slate-200 dark:border-slate-700/60">
-                    <div className="flex justify-between items-center">
-                        <div>
-                            <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100">New Migration Configuration</h2>
-                            <p className="text-slate-500 dark:text-slate-400 mt-1">
-                                {config.connections.source.name ? `From ${config.connections.source.name} to ${config.connections.dest.name || '...'}` : 'Configure your data transfer job.'}
-                            </p>
-                        </div>
-                        <div className="flex gap-2">
-                            <Button variant="outline" onClick={onBack}>Cancel</Button>
-                            <Button variant="outline">Save Draft</Button>
-                        </div>
+    return (
+        <div className="space-y-6">
+            {isConfigLoading && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center rounded-xl backdrop-blur-sm bg-white/40 dark:bg-slate-900/30">
+                    <div className="flex items-center gap-3 text-slate-700 dark:text-slate-200">
+                        <Loader className="animate-spin" size={18} /> Loading configuration...
                     </div>
                 </div>
+            )}
+            {/* Header */}
+            <div className="flex items-start justify-between gap-3">
+                <div>
+                    <h1 className="text-[32px] font-bold leading-tight text-slate-900 dark:text-white">
+                        {isEditing ? "Edit Migration Configuration" : "New Migration Configuration"}
+                    </h1>
+                    <p className="text-slate-700 dark:text-slate-300">
+                        {config.connections.source.name
+                            ? `From ${config.connections.source.name} to ${config.connections.dest.name || "..."}`
+                            : isEditing
+                                ? "Loaded existing configuration."
+                                : "Configure your data transfer job."}
+                    </p>
+                </div>
+                <div className="flex gap-2">
+                    <Button variant="outline" type="button" onClick={onBack}>Cancel</Button>
+                    {!isEditing && <Button variant="outline">Save Draft</Button>}
+                </div>
+            </div>
 
-                {/* Stepper Zone */}
-                <div className="p-6 border-b border-slate-200 dark:border-slate-700/60">
-                    <ol className="flex items-center w-full">
+            {/* Stepper */}
+            <Card className="bg-white dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm overflow-hidden">
+                <CardContent className="p-6">
+                    <div className="flex items-center w-full">
                         {steps.map((step, index) => {
-                            const isDisabled = isStepDisabled(step.num);
-                            const isCompleted = currentStep > step.num && !isDisabled;
-                            const isActive = currentStep === step.num;
+                            const disabled = isStepDisabled(step.num);
+                            const completed = currentStep > step.num && !disabled;
+                            const active = currentStep === step.num;
+
                             return (
-                                <React.Fragment key={step.num}>
-                                    <li className="relative flex items-center">
+                                <div key={step.title} className="flex items-center flex-1">
+                                    <div className="flex items-center">
                                         <button
+                                            type="button"
                                             onClick={() => goToStep(step.num)}
-                                            disabled={isDisabled}
-                                            className="flex items-center gap-3 text-sm font-medium transition-colors"
+                                            disabled={disabled}
+                                            className={`flex items-center justify-center w-8 h-8 rounded-full transition-all text-sm font-medium ${completed || active
+                                                ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900"
+                                                : "bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400"
+                                                } ${disabled ? "cursor-not-allowed" : "hover:scale-105"}`}
                                         >
-                                            <span className={`flex items-center justify-center w-8 h-8 rounded-full transition-colors duration-300 border-2 ${isActive ? 'bg-indigo-600 border-indigo-600 text-white' : isCompleted ? 'bg-white dark:bg-slate-700 border-indigo-600 text-indigo-600' : isDisabled ? 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-400 cursor-not-allowed' : 'bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600 text-slate-500 hover:border-slate-400'}`}>
-                                                {isCompleted ? <Check size={16} /> : <span className="text-xs font-bold">{step.num}</span>}
-                                            </span>
-                                            <span className={`${isActive ? 'text-indigo-600 dark:text-indigo-300' : 'text-slate-700 dark:text-slate-300'} ${isDisabled ? 'text-slate-400' : ''}`}>{step.title}</span>
+                                            {completed && !active ? <Check size={14} /> : <span>{step.num}</span>}
                                         </button>
-                                    </li>
-                                    {index < steps.length - 1 && <div className={`flex-auto border-t-2 mx-4 transition duration-500 ${isCompleted ? 'border-indigo-600' : 'border-slate-200 dark:border-slate-700'}`}></div>}
-                                </React.Fragment>
+                                        <div className="ml-3">
+                                            <div
+                                                className={`text-sm font-medium ${completed || active ? "text-slate-900 dark:text-white" : "text-slate-500 dark:text-slate-400"
+                                                    }`}
+                                            >
+                                                {step.title}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {index < steps.length - 1 && (
+                                        <div className="flex-1 mx-4">
+                                            <div
+                                                className={`h-0.5 w-full ${currentStep > step.num ? "bg-slate-900 dark:bg-white" : "bg-slate-200 dark:bg-slate-700"
+                                                    }`}
+                                            />
+                                        </div>
+                                    )}
+                                </div>
                             );
                         })}
-                    </ol>
-                </div>
+                    </div>
+                </CardContent>
+            </Card>
 
-                {/* Step Content Zone */}
-                <main className="p-6">
-                    {renderStep()}
-                </main>
+            {/* Body + Footer */}
+            <div>
+                <Card className="bg-white dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm overflow-hidden relative">
+                    <main className="p-5 sm:p-6">{renderStep()}</main>
+                </Card>
 
-                {/* Footer Actions Zone */}
-                <footer className="p-4 bg-slate-50 dark:bg-slate-900/30 rounded-b-xl border-t border-slate-200 dark:border-slate-700/60">
-                    <div className="flex justify-between items-center">
-                        <Button onClick={handlePrev} variant="outline" className={currentStep === 1 ? 'invisible' : ''}>
+                <div className="bg-slate-50/60 dark:bg-slate-900/30 mt-4">
+                    <div className="flex items-center justify-between">
+                        <Button variant="outline" type="button" onClick={handlePrev} className={currentStep === 1 ? "invisible" : ""}>
                             Previous Step
                         </Button>
+
                         {currentStep < steps.length ? (
-                            <Button onClick={handleNext} disabled={isNextDisabled()}>
+                            <Button type="button" onClick={handleNext} disabled={isNextDisabled()} variant="primary">
                                 Next Step <ArrowRight size={16} className="ml-2" />
                             </Button>
                         ) : (
-                            <Button onClick={handleSave} variant="primary" disabled={isSaving}>
+                            <Button type="button" onClick={handleSave} disabled={isSaving} variant="primary">
                                 {isSaving && <Loader size={16} className="animate-spin mr-2" />}
-                                {isSaving ? 'Saving...' : 'Confirm & Save'}
+                                {isSaving ? (isEditing ? "Updating..." : "Saving...") : isEditing ? "Update" : "Confirm & Save"}
                             </Button>
                         )}
                     </div>
-                </footer>
+                </div>
             </div>
         </div>
     );
-};
-
-export default MigrationWizard;
+}

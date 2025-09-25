@@ -1,88 +1,60 @@
-import { useEffect, useState, Fragment, useRef, useMemo } from 'react';
+import { useParams, Link, useNavigate } from "react-router-dom";
+import { useState, useMemo, useRef, useEffect } from "react";
 import {
     ArrowLeft,
-    CheckCircle2,
-    Clock,
+    Play,
+    Pause,
+    Square,
     RefreshCw,
-    XCircle,
-    Loader,
-    Settings,
     Download,
-    FileText,
     Database,
-    Container,
-    Webhook,
-    Server,
-    X,
-    FileCode,
-    ArrowRight,
-    Timer,
+    Clock,
+    CheckCircle,
+    XCircle,
     AlertTriangle,
+    Activity,
+    BarChart3,
+    FileText,
+    Zap,
     Search,
     ArrowDown,
-} from 'lucide-react';
-import { useNavigate, useParams } from 'react-router-dom';
-import apiClient from '../services/apiClient';
-import { Dialog, Transition } from '@headlessui/react';
-import { JobDefinition } from '../types/JobDefinition';
-import { JobExecution } from '../types/JobExecution';
-import { MigrateItem } from '../types/MigrationConfig';
-import { motion } from 'framer-motion';
+    FileCode,
+    Webhook,
+    Server,
+    Container,
+    CheckCircle2,
+    Loader,
+    ArrowRight,
+    Timer
+} from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+import { JobExecution } from "../types/JobExecution";
+import { JobDefinition } from "../types/JobDefinition";
+import apiClient from "../services/apiClient";
+import { MigrateItem } from "../types/MigrationConfig";
+import { Button } from "../components/common/v2/Button";
+import { Badge } from "../components/common/v2/Badge";
+import { cn } from "../utils/utils";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/common/v2/Card";
+import { Progress } from "../components/common/v2/Progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/common/v2/Tabs";
+import { motion } from "framer-motion";
+
+interface ExecutionMetrics {
+    recordsProcessed: number;
+    recordsTotal: number;
+    tablesProcessed: number;
+    tablesTotal: number;
+    dataTransferred: string;
+    throughput: string;
+    errorCount: number;
+    warningCount: number;
+}
 
 const cleanAnsi = (text: string) => {
     const ansiRegex = /\u001b\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]/g;
     return text.replace(ansiRegex, '');
 };
-
-const ConnectionIcon = ({ type, className }: { type: string | undefined, className?: string }) => {
-    const iconType = type?.toLowerCase() || '';
-    switch (iconType) {
-        case 'mysql': case 'postgresql': case 'pg': return <Database className={className} />;
-        case 'csv': case 'json': case 'file': return <FileText className={className} />;
-        case 'api': return <Webhook className={className} />;
-        case 'nosql': case 'mongodb': return <Container className={className} />;
-        default: return <Server className={className} />;
-    }
-};
-
-const StatusBadge = ({ status }: { status: string }) => {
-    const baseClasses = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold";
-    switch (status) {
-        case 'succeeded': return <div className={`${baseClasses} bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300`}><CheckCircle2 size={14} /><span>{status}</span></div>;
-        case 'failed': return <div className={`${baseClasses} bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300`}><XCircle size={14} /><span>{status}</span></div>;
-        case 'running': return <div className={`${baseClasses} bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300`}><Loader size={14} className="animate-spin" /><span>Running</span></div>;
-        case 'pending': return <div className={`${baseClasses} bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-300`}><Clock size={14} /><span>{status}</span></div>;
-        default: return <div className={`${baseClasses} bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300`}><Clock size={14} /><span>{status}</span></div>;
-    }
-};
-
-const ConfigurationModal = ({ isOpen, onClose, definition, config }: { isOpen: boolean; onClose: () => void; definition: JobDefinition | null; config: MigrateItem | null }) => (
-    <Transition appear show={isOpen} as={Fragment}>
-        <Dialog as="div" className="relative z-50" onClose={onClose}>
-            <Transition.Child as={Fragment} enter="ease-out duration-300" enterFrom="opacity-0" enterTo="opacity-100" leave="ease-in duration-200" leaveFrom="opacity-100" leaveTo="opacity-0">
-                <div className="fixed inset-0 bg-black/30" />
-            </Transition.Child>
-            <div className="fixed inset-0 overflow-y-auto">
-                <div className="flex min-h-full items-center justify-center p-4 text-center">
-                    <Transition.Child as={Fragment} enter="ease-out duration-300" enterFrom="opacity-0 scale-95" enterTo="opacity-100 scale-100" leave="ease-in duration-200" leaveFrom="opacity-100 scale-100" leaveTo="opacity-0 scale-95">
-                        <Dialog.Panel className="w-full max-w-lg transform overflow-hidden rounded-2xl bg-white dark:bg-slate-800 p-6 text-left align-middle shadow-xl transition-all">
-                            <Dialog.Title as="h3" className="text-lg font-bold leading-6 text-slate-900 dark:text-slate-50 flex justify-between items-center">
-                                <span>Run Configuration</span>
-                                <button onClick={onClose} className="p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700"><X size={18} /></button>
-                            </Dialog.Title>
-                            <div className="mt-4 space-y-4 text-sm">
-                                <p><span className="font-semibold text-slate-500">Job Name:</span> {definition?.name}</p>
-                                <p><span className="font-semibold text-slate-500">Batch Size:</span> {config?.settings.batchSize}</p>
-                                <p><span className="font-semibold text-slate-500">Primary Table:</span> {config?.source.names[0]}</p>
-                            </div>
-                        </Dialog.Panel>
-                    </Transition.Child>
-                </div>
-            </div>
-        </Dialog>
-    </Transition>
-);
-
 
 const LogPanel = ({ logs }: { logs?: string }) => {
     const [logSearch, setLogSearch] = useState('');
@@ -143,6 +115,16 @@ const LogPanel = ({ logs }: { logs?: string }) => {
         }
     };
 
+    const highlightSearch = (text: string) => {
+        if (!logSearch.trim()) return text;
+        const regex = new RegExp(`(${logSearch})`, 'gi');
+        return text.split(regex).map((part, i) =>
+            regex.test(part)
+                ? <mark key={i} className="bg-yellow-300 dark:bg-yellow-500/50 text-black dark:text-white">{part}</mark>
+                : part
+        );
+    };
+
     return (
         <div className="bg-white dark:bg-slate-800/50 p-6 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm h-[550px] flex flex-col">
             <div className="flex flex-wrap gap-4 justify-between items-center mb-4">
@@ -150,9 +132,9 @@ const LogPanel = ({ logs }: { logs?: string }) => {
                 <div className="flex items-center gap-2">
                     <div className="relative">
                         <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                        <input type="text" placeholder="Search logs..." value={logSearch} onChange={e => setLogSearch(e.target.value)} className="pl-9 pr-3 py-1.5 text-sm w-48 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                        <input type="text" placeholder="Search logs..." value={logSearch} onChange={e => setLogSearch(e.target.value)} className="pl-9 pr-3 py-1.5 text-sm w-48 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
                     </div>
-                    <select value={levelFilter} onChange={e => setLevelFilter(e.target.value)} className="px-3 py-1.5 text-sm border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    <select value={levelFilter} onChange={e => setLevelFilter(e.target.value)} className="px-3 py-1.5 text-sm border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none">
                         <option>All</option>
                         <option>INFO</option>
                         <option>SUCCESS</option>
@@ -168,7 +150,7 @@ const LogPanel = ({ logs }: { logs?: string }) => {
                             <div key={log.id} className="flex gap-4">
                                 <span className="text-slate-500">{log.timestamp}</span>
                                 <span className={`font-bold ${getLevelColor(log.level)}`}>{log.level ? `[${log.level}]` : ''}</span>
-                                <span>{log.message}</span>
+                                <span>{highlightSearch(log.message)}</span>
                             </div>
                         ))}
                     </pre>
@@ -183,34 +165,96 @@ const LogPanel = ({ logs }: { logs?: string }) => {
     );
 };
 
-const MigrationRunDetails = () => {
+export default function ExecutionDetails() {
     const { runId } = useParams<{ runId: string }>();
     const [execution, setExecution] = useState<JobExecution | null>(null);
     const [definition, setDefinition] = useState<JobDefinition | null>(null);
     const [migrationConfig, setMigrationConfig] = useState<MigrateItem | null>(null);
     const [loading, setLoading] = useState(true);
-    const [isConfigOpen, setIsConfigOpen] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
-        setLoading(true);
-        setTimeout(async () => {
-            if (!runId) {
-                setLoading(false);
-                return;
-            }
-            const execData = await apiClient.getJobExecution(runId);
-            const defData = await apiClient.getJobDefinition(execData.jobDefinitionId);
-            const migrationItem = JSON.parse(defData.ast)['migration']['migrate_items'][0] as MigrateItem;
-
-            console.log('Migration Item:', migrationItem);
-
-            setExecution(execData);
-            setDefinition(defData);
-            setMigrationConfig(migrationItem);
+        if (!runId) {
             setLoading(false);
-        }, 500);
-    }, []);
+            return;
+        }
+        let cancelled = false;
+        (async () => {
+            try {
+                setLoading(true);
+                const execData = await apiClient.getJobExecution(runId);
+                if (cancelled) return;
+                const defData = await apiClient.getJobDefinition(execData.jobDefinitionId);
+                if (cancelled) return;
+                const migrationItem = JSON.parse(defData.ast).migration.migrate_items[0];
+                setExecution(execData);
+                setDefinition(defData);
+                setMigrationConfig(migrationItem);
+            } catch (e) {
+                console.error(e);
+            } finally {
+                if (!cancelled) setLoading(false);
+            }
+        })();
+        return () => { cancelled = true; };
+    }, [runId]);
+
+
+    // Interactive logs state
+    const [logFilter, setLogFilter] = useState<string>("all");
+    const [searchTerm, setSearchTerm] = useState("");
+    const scrollAreaRef = useRef<HTMLDivElement>(null);
+    const logContainerRef = useRef<HTMLDivElement>(null);
+
+    const getBytesTransferredText = () => {
+        const bytes = execution?.bytesTransferred ?? 0;
+        if (bytes >= 1024 ** 3) {
+            return `${(bytes / 1024 ** 3).toFixed(2)} GB`;
+        } else if (bytes >= 1024 ** 2) {
+            return `${(bytes / 1024 ** 2).toFixed(2)} MB`;
+        } else if (bytes >= 1024) {
+            return `${(bytes / 1024).toFixed(2)} KB`;
+        } else {
+            return `${bytes} bytes`;
+        }
+    };
+
+    const mockMetrics: ExecutionMetrics = {
+        recordsProcessed: execution?.recordsProcessed ?? 0,
+        recordsTotal: 5095149,
+        tablesProcessed: 2,
+        tablesTotal: 2,
+        dataTransferred: getBytesTransferredText(),
+        throughput: "N/A",
+        errorCount: 0,
+        warningCount: 0
+    };
+
+    const getStatusIcon = (status: string) => {
+        switch (status) {
+            case "succeeded":
+                return <CheckCircle className="text-green-600 dark:text-green-400" size={20} />;
+            case "failed":
+                return <XCircle className="text-red-600 dark:text-red-400" size={20} />;
+            case "running":
+                return <Activity className="text-blue-600 dark:text-blue-400 animate-pulse" size={20} />;
+            default:
+                return <Clock className="text-yellow-600 dark:text-yellow-400" size={20} />;
+        }
+    };
+
+    const getStatusColor = (status: string) => {
+        switch (status) {
+            case "succeeded":
+                return "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400";
+            case "failed":
+                return "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400";
+            case "running":
+                return "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400";
+            default:
+                return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400";
+        }
+    };
 
     const formatDuration = (start?: Date, end?: Date) => {
         if (!start || !end) return 'N/A';
@@ -221,90 +265,260 @@ const MigrationRunDetails = () => {
     };
 
     if (loading) {
-        return <div className="flex justify-center py-20"><RefreshCw className="animate-spin text-indigo-500" size={32} /></div>;
+        return (
+            <div className="space-y-6">
+                <div className="flex items-center space-x-4">
+                    <div className="h-8 w-8 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></div>
+                    <div className="h-8 w-64 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></div>
+                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {[1, 2, 3].map((i) => (
+                        <div key={i} className="h-32 bg-slate-200 dark:bg-slate-700 rounded-lg animate-pulse"></div>
+                    ))}
+                </div>
+            </div>
+        );
     }
 
-    // const progress = execution?.recordsTotal ? (execution.recordsProcessed / execution.recordsTotal) * 100 : 0;
+    if (!execution) {
+        return (
+            <div className="text-center py-12">
+                <XCircle className="mx-auto text-slate-400 mb-4" size={48} />
+                <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">
+                    Execution Not Found
+                </h2>
+                <p className="text-slate-600 dark:text-slate-400 mb-4">
+                    The requested migration execution could not be found.
+                </p>
+                <Link to="/executions">
+                    <Button>
+                        <ArrowLeft className="mr-2" size={16} />
+                        Back to Executions
+                    </Button>
+                </Link>
+            </div>
+        );
+    }
 
     return (
-        <>
-            <ConfigurationModal isOpen={isConfigOpen} onClose={() => setIsConfigOpen(false)} definition={definition} config={null} />
-            <div className="space-y-6">
-                {/* --- UNIFIED HEADER --- */}
-                <div className="bg-white dark:bg-slate-800/50 p-6 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm">
-                    <div className="flex flex-wrap gap-4 justify-between items-center pb-4">
-                        <div className="flex items-center gap-4">
-                            <button onClick={() => navigate('/executions')} className="p-2 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700">
-                                <ArrowLeft size={20} />
-                            </button>
-                            <div>
-                                <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">{definition?.name}</h1>
-                                <div className="flex items-center gap-4 text-sm text-slate-500 dark:text-slate-400 mt-1">
-                                    <StatusBadge status={execution?.status || 'Unknown'} />
-                                    <span>Run #{execution?.id}</span>
-                                </div>
-                            </div>
+        <div className="space-y-6" data-testid="execution-details">
+            {/* Header */}
+            <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                    <Link to="/executions">
+                        <Button variant="ghost" size="sm" data-testid="button-back">
+                            <ArrowLeft className="mr-2" size={16} />
+                            Back
+                        </Button>
+                    </Link>
+                    <div>
+                        <div className="flex items-center space-x-3 mb-1">
+                            {getStatusIcon(execution.status)}
+                            <h1 className="text-[24px] font-bold leading-tight text-slate-900 dark:text-white">
+                                {execution.id}
+                            </h1>
+                            <Badge className={cn("text-xs", getStatusColor(execution.status))}>
+                                {execution.status.toUpperCase()}
+                            </Badge>
                         </div>
-                        <div className="flex items-center gap-1 border border-slate-300 dark:border-slate-600 rounded-lg p-1">
-                            <button onClick={() => setIsConfigOpen(true)} className="p-1.5 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md transition-colors" aria-label="View Configuration">
-                                <Settings size={18} />
-                            </button>
-                            <button className="p-1.5 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md transition-colors" aria-label="Download Logs">
-                                <Download size={18} />
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* --- METRICS GRID --- */}
-                    <div className="grid grid-cols-2 md:grid-cols-6 gap-6 pt-4 border-t border-slate-200 dark:border-slate-700/60">
-                        <div className="col-span-2 md:col-span-2">
-                            <div className="text-sm text-slate-500 dark:text-slate-400">Connections</div>
-                            <div className="flex items-center gap-2 mt-1 text-md font-semibold text-slate-700 dark:text-slate-200">
-                                <ConnectionIcon type={definition?.sourceConnection.dataFormat} className="w-5 h-5" />
-                                <span className="truncate">{definition?.sourceConnection.name}</span>
-                                <ArrowRight size={16} className="text-slate-400 flex-shrink-0" />
-                                <ConnectionIcon type={definition?.destinationConnection.dataFormat} className="w-5 h-5" />
-                                <span className="truncate">{definition?.destinationConnection.name}</span>
-                            </div>
-                        </div>
-                        <div>
-                            <div className="text-sm text-slate-500 dark:text-slate-400">Duration</div>
-                            <div className="flex items-center gap-2 mt-1 text-xl font-bold text-slate-800 dark:text-slate-100">
-                                <Timer size={18} />
-                                {formatDuration(execution?.runStartedAt, execution?.runCompletedAt)}
-                            </div>
-                        </div>
-                        <div>
-                            <div className="text-sm text-slate-500 dark:text-slate-400">Records Copied</div>
-                            <div className="flex items-center gap-2 mt-1 text-xl font-bold text-slate-800 dark:text-slate-100">
-                                <CheckCircle2 size={18} />
-                                {"N/A" /* execution?.recordsProcessed.toLocaleString() || 'N/A' */}
-                            </div>
-                        </div>
-                        <div>
-                            <div className="text-sm text-slate-500 dark:text-slate-400">Errors</div>
-                            <div className="flex items-center gap-2 mt-1 text-xl font-bold text-red-600 dark:text-red-400">
-                                <AlertTriangle size={18} />
-                                {"N/A" /* execution?.recordsFailed.toLocaleString() || 'N/A' */}
-                            </div>
-                        </div>
-                        <div>
-                            <div className="flex justify-between items-center text-sm text-slate-500 dark:text-slate-400 mb-1">
-                                <span>Progress</span>
-                                <span>{Math.floor(100)}%</span>
-                            </div>
-                            <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2.5 overflow-hidden">
-                                <motion.div className="bg-green-500 h-2.5" initial={{ width: 0 }} animate={{ width: `${100}%` }} transition={{ duration: 1, ease: 'easeInOut' }}></motion.div>
-                            </div>
-                        </div>
+                        <p className="text-slate-600 dark:text-slate-400">
+                            Started {execution.runStartedAt ? formatDistanceToNow(new Date(execution.runStartedAt), { addSuffix: true }) : 'Unknown'}
+                            {execution.runCompletedAt && (
+                                <span> • Completed {formatDistanceToNow(new Date(execution.runCompletedAt), { addSuffix: true })}</span>
+                            )}
+                        </p>
                     </div>
                 </div>
-
-                {/* Main Content */}
-                <LogPanel logs={cleanAnsi(execution?.logs ?? '')} />
+                <div className="flex space-x-2">
+                    <Button variant="outline" size="sm" data-testid="button-download-logs">
+                        <Download className="mr-2" size={16} />
+                        Download Logs
+                    </Button>
+                    <Button variant="outline" size="sm" data-testid="button-refresh">
+                        <RefreshCw className="mr-2" size={16} />
+                        Refresh
+                    </Button>
+                    {execution.status === "running" && (
+                        <>
+                            <Button variant="outline" size="sm" data-testid="button-pause">
+                                <Pause className="mr-2" size={16} />
+                                Pause
+                            </Button>
+                            <Button variant="outline" size="sm" className="text-red-600" data-testid="button-stop">
+                                <Square className="mr-2" size={16} />
+                                Stop
+                            </Button>
+                        </>
+                    )}
+                    {execution.status === "paused" && (
+                        <Button size="sm" data-testid="button-resume">
+                            <Play className="mr-2" size={16} />
+                            Resume
+                        </Button>
+                    )}
+                </div>
             </div>
-        </>
-    );
-};
 
-export default MigrationRunDetails;
+            {/* Progress Overview */}
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                <Card className="bg-white dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm overflow-hidden relative hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_4px_12px_rgba(0,0,0,0.4)] hover:-translate-y-0.5 hover:scale-[1.005] duration-200 transition-all">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Records Processed</CardTitle>
+                        <BarChart3 className="h-4 w-4 text-slate-600 dark:text-slate-400" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold text-slate-900 dark:text-white">
+                            {mockMetrics.recordsProcessed.toLocaleString()}
+                        </div>
+                        {/* <p className="text-xs text-slate-600 dark:text-slate-400">
+                            of N/A total
+                        </p>
+                        <Progress
+                            value={(mockMetrics.recordsProcessed / mockMetrics.recordsTotal) * 100}
+                            className="mt-2"
+                        /> */}
+                    </CardContent>
+                </Card>
+
+                <Card className="bg-white dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm overflow-hidden relative hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_4px_12px_rgba(0,0,0,0.4)] hover:-translate-y-0.5 hover:scale-[1.005] duration-200 transition-all">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Data Transferred</CardTitle>
+                        <Database className="h-4 w-4 text-slate-600 dark:text-slate-400" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold text-slate-900 dark:text-white">
+                            {mockMetrics.dataTransferred}
+                        </div>
+                        {/* <p className="text-xs text-slate-600 dark:text-slate-400">
+                            Throughput: {mockMetrics.throughput}
+                        </p> */}
+                    </CardContent>
+                </Card>
+
+                <Card className="bg-white dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm overflow-hidden relative hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_4px_12px_rgba(0,0,0,0.4)] hover:-translate-y-0.5 hover:scale-[1.005] duration-200 transition-all">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Duration</CardTitle>
+                        <Timer className="h-4 w-4 text-slate-600 dark:text-slate-400" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold text-slate-900 dark:text-white">
+                            {formatDuration(execution?.runStartedAt, execution?.runCompletedAt)}
+                        </div>
+                        {/* <p className="text-xs text-slate-600 dark:text-slate-400">
+                            Time taken for this run
+                        </p> */}
+                    </CardContent>
+                </Card>
+
+                <Card className="bg-white dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm overflow-hidden relative hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_4px_12px_rgba(0,0,0,0.4)] hover:-translate-y-0.5 hover:scale-[1.005] duration-200 transition-all">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Issues</CardTitle>
+                        <Zap className="h-4 w-4 text-slate-600 dark:text-slate-400" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold text-slate-900 dark:text-white">
+                            {mockMetrics.errorCount + mockMetrics.warningCount}
+                        </div>
+                        {/* <p className="text-xs text-slate-600 dark:text-slate-400">
+                            {mockMetrics.errorCount} errors, {mockMetrics.warningCount} warnings
+                        </p> */}
+                    </CardContent>
+                </Card>
+            </div>
+
+            {/* Detailed Information */}
+            <Tabs defaultValue="logs" className="space-y-6">
+                <TabsList
+                    className={cn(
+                        "w-fit rounded-xl bg-slate-100 dark:bg-slate-800 p-1",
+                        "border border-slate-200 dark:border-slate-700"
+                    )}
+                >
+                    {[
+                        { value: "logs", label: "Execution Logs" },
+                        { value: "metrics", label: "Metrics" },
+                        // { value: "config", label: "Configuration" },
+                    ].map(({ value, label }) => (
+                        <TabsTrigger
+                            key={value}
+                            value={value}
+                            data-testid={`tab-${value}`}
+                            className={cn(
+                                "px-3.5 text-sm font-medium rounded-xl transition-all",
+                                "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white",
+                                "data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900",
+                                "data-[state=active]:text-slate-900 dark:data-[state=active]:text-white",
+                                "data-[state=active]:shadow-sm"
+                            )}
+                        >
+                            {label}
+                        </TabsTrigger>
+                    ))}
+                </TabsList>
+
+                <TabsContent value="logs">
+                    <LogPanel logs={cleanAnsi(execution.logs ?? "")} />
+                </TabsContent>
+
+                <TabsContent value="metrics">
+                    <div>
+                        <Card className="bg-white dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm overflow-hidden relative">
+                            <CardHeader>
+                                <CardTitle>Performance Metrics</CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="flex justify-between">
+                                    <span className="text-sm text-slate-600 dark:text-slate-400">Average Throughput</span>
+                                    <span className="font-medium">N/A</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-sm text-slate-600 dark:text-slate-400">Total Data Transferred</span>
+                                    <span className="font-medium">N/A</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-sm text-slate-600 dark:text-slate-400">Records per Second</span>
+                                    <span className="font-medium">N/A</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-sm text-slate-600 dark:text-slate-400">Peak Memory Usage</span>
+                                    <span className="font-medium">N/A</span>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        {/* <Card className="bg-white dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm overflow-hidden relative">
+                            <CardHeader>
+                                <CardTitle>Table Statistics</CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="space-y-3">
+                                    <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
+                                        <div>
+                                            <p className="font-medium text-slate-900 dark:text-white">orders</p>
+                                            <p className="text-xs text-slate-500">1,847,293 records</p>
+                                        </div>
+                                        <Badge className="bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400">
+                                            Completed
+                                        </Badge>
+                                    </div>
+                                    <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
+                                        <div>
+                                            <p className="font-medium text-slate-900 dark:text-white">order_items</p>
+                                            <p className="text-xs text-slate-500">3,247,856 records</p>
+                                        </div>
+                                        <Badge className="bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400">
+                                            Completed
+                                        </Badge>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card> */}
+                    </div>
+                </TabsContent>
+
+                {/* <TabsContent value="config">
+                </TabsContent> */}
+            </Tabs>
+        </div>
+    );
+}

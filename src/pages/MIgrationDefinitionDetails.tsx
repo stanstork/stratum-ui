@@ -20,7 +20,9 @@ import {
     BrickWall,
     BrickWallIcon,
     ConstructionIcon,
-    TableConfigIcon
+    TableConfigIcon,
+    TestTube2,
+    TestTube
 } from "lucide-react";
 import { format } from "date-fns";
 import { Link, useParams } from "react-router-dom";
@@ -36,6 +38,7 @@ import { getConnectionIcon } from "../components/common/Helper";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/common/v2/Tabs";
 import { StatusType } from "../types/Connection";
 import { dataFormatLabels } from "./Connections";
+import { DryRunReport } from "../types/DryRun";
 
 export const isLookup = (expr: Expression): expr is LookupExpr => !!(expr as LookupExpr)?.Lookup;
 export const isLiteral = (expr: Expression): expr is LiteralExpr => !!(expr as LiteralExpr)?.Literal;
@@ -179,6 +182,8 @@ export default function DefinitionDetails() {
     const [definition, setDefinition] = useState<JobDefinition | null>(null);
     const [loading, setLoading] = useState(true);
     const [mappingQuery, setMappingQuery] = useState("");
+    const [dryRunOpen, setDryRunOpen] = useState(false);
+    const [dryRunReport, setDryRunReport] = useState<DryRunReport | null>(null);
 
     useEffect(() => {
         const fetchDefinition = async () => {
@@ -201,6 +206,22 @@ export default function DefinitionDetails() {
 
         fetchDefinition();
     }, [definitionId]);
+
+    const fetchDryRunReport = async () => {
+        if (!definitionId) return;
+
+        try {
+            const report = await apiClient.getDryRunReport(definitionId);
+            setDryRunReport(report);
+            setDryRunOpen(true);
+        } catch (error) {
+            console.error("Failed to fetch dry run report:", error);
+        }
+    };
+
+    const handleDryRunClick = () => {
+        fetchDryRunReport();
+    };
 
     const getStatusIcon = (status: string) => {
         switch (status) {
@@ -280,6 +301,10 @@ export default function DefinitionDetails() {
                 </div>
 
                 <div className="flex items-center space-x-3">
+                    <Button variant="outline" onClick={handleDryRunClick}>
+                        <TestTube2 size={16} className="mr-2" />
+                        Dry Run
+                    </Button>
                     <Link to={`/wizard?edit=${definition.id}`}>
                         <Button variant="primary">
                             <Edit size={16} className="mr-2" />

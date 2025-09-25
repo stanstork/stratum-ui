@@ -7,6 +7,7 @@ import { mapMetadataResponse, MetadataResponse, TableMetadata } from "../types/M
 import { data } from "react-router-dom";
 import { getMigrationDTO, MigrationConfig } from "../types/MigrationConfig";
 import { a } from "framer-motion/dist/types.d-B_QPEvFK";
+import { DryRunReport, DryRunReportEntityDTO, mapDryRunReport } from "../types/DryRun";
 
 interface ApiClient extends AxiosInstance {
     getConnectionById: (connectionId: string) => Promise<Connection | null>;
@@ -27,6 +28,7 @@ interface ApiClient extends AxiosInstance {
     getJobDefinitions: () => Promise<JobDefinition[]>;
     getExecutionStats: () => Promise<ExecutionStat>;
     listJobDefinitionsWithStats: () => Promise<JobDefinitionStat[]>;
+    getDryRunReport: (definitionId: string) => Promise<DryRunReport>;
     login: (username: string, password: string) => Promise<string>;
     logout: () => void;
 }
@@ -222,5 +224,12 @@ apiClient.listJobDefinitionsWithStats = async (): Promise<JobDefinitionStat[]> =
     const response = await apiClient.get<JobDefinitionStatDTO[]>('/jobs/stats');
     return response.data.map(mapJobDefinitionStat);
 };
+
+apiClient.getDryRunReport = async (definitionId: string): Promise<DryRunReport> => {
+    const response = await apiClient.post<Record<string, DryRunReportEntityDTO>>(`/reports/dry-run/${definitionId}`);
+    const report = mapDryRunReport(response.data);
+    console.log("Dry run report:", report);
+    return report;
+}
 
 export default apiClient;

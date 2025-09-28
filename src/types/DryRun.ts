@@ -88,6 +88,13 @@ export interface DryRunReportEntityDTO {
     };
 }
 
+export interface Finding {
+    code: string;
+    message: string;
+    severity: "error" | "warning" | "info";
+    kind: string;
+}
+
 export interface DryRunReportEntity {
     runId: string;
     engineVersion: string;
@@ -139,12 +146,7 @@ export interface DryRunReportEntity {
         }>;
     };
     schemaValidation: {
-        findings: Array<{
-            code: string;
-            message: string;
-            severity: "error" | "warning" | "info";
-            kind: string;
-        }>;
+        findings: Array<Finding>;
     };
     generatedSql: {
         statements: Array<{

@@ -39,6 +39,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/common/v
 import { StatusType } from "../types/Connection";
 import { dataFormatLabels } from "./Connections";
 import { DryRunReport } from "../types/DryRun";
+import DryRunPanel from "../components/DryRunPanel";
 
 export const isLookup = (expr: Expression): expr is LookupExpr => !!(expr as LookupExpr)?.Lookup;
 export const isLiteral = (expr: Expression): expr is LiteralExpr => !!(expr as LiteralExpr)?.Literal;
@@ -184,6 +185,7 @@ export default function DefinitionDetails() {
     const [mappingQuery, setMappingQuery] = useState("");
     const [dryRunOpen, setDryRunOpen] = useState(false);
     const [dryRunReport, setDryRunReport] = useState<DryRunReport | null>(null);
+    const [dryRunLoading, setDryRunLoading] = useState(false);
 
     useEffect(() => {
         const fetchDefinition = async () => {
@@ -211,11 +213,14 @@ export default function DefinitionDetails() {
         if (!definitionId) return;
 
         try {
+            setDryRunLoading(true);
             const report = await apiClient.getDryRunReport(definitionId);
             setDryRunReport(report);
             setDryRunOpen(true);
         } catch (error) {
             console.error("Failed to fetch dry run report:", error);
+        } finally {
+            setDryRunLoading(false);
         }
     };
 
@@ -301,9 +306,9 @@ export default function DefinitionDetails() {
                 </div>
 
                 <div className="flex items-center space-x-3">
-                    <Button variant="outline" onClick={handleDryRunClick}>
+                    <Button variant="outline" onClick={handleDryRunClick} disabled={dryRunLoading}>
                         <TestTube2 size={16} className="mr-2" />
-                        Dry Run
+                        {dryRunLoading ? "Running..." : "Dry Run"}
                     </Button>
                     <Link to={`/wizard?edit=${definition.id}`}>
                         <Button variant="primary">
@@ -904,6 +909,18 @@ export default function DefinitionDetails() {
                     </Card>
                 </TabsContent>
             </Tabs>
-        </div >
+
+            <DryRunPanel
+                open={dryRunOpen}
+                onOpenChange={setDryRunOpen}
+                result={dryRunReport ?? undefined}
+                isLoading={dryRunLoading}
+                onRunDryRun={fetchDryRunReport}
+                canRunMigration={true}
+                onRunMigration={() => { console.log("Run migration clicked"); }}
+                showConfigChanged={false}
+                showControls={true}
+            />
+        </div>
     );
 }

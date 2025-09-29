@@ -1,5 +1,5 @@
-import { AlertTriangle, ArrowRight, BarChart, CheckCircle, Database, FunctionSquare, GitBranch, GitMerge, Map, Play, RefreshCw, Search, Settings, ShieldAlert, TestTube2, XCircle, Zap } from "lucide-react";
-import { DryRunReport, Finding } from "../types/DryRun";
+import { AlertTriangle, ArrowRight, BarChart, CheckCircle, ChevronLeft, ChevronRight, Code, Code2, Copy, Database, FileInput, FileOutput, FunctionSquare, GitBranch, GitMerge, Map, Play, RefreshCw, Search, Settings, ShieldAlert, TestTube2, XCircle, Zap } from "lucide-react";
+import { Computed, DryRunReport, FieldValue, Finding, GeneratedSqlStatement, Rename, TransformedRecord } from "../types/DryRun";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./common/Dialog";
 import { Badge } from "./common/v2/Badge";
 import { Card, CardContent, CardHeader, CardTitle } from "./common/v2/Card";
@@ -104,6 +104,20 @@ const DryRunPanel: React.FC<DryRunPanelProps> = ({
     }, [reportEntity]);
 
     const hasErrors = (findings.errors?.length ?? 0) > 0;
+
+    const { schemaStatements, dataStatements } = useMemo(() => {
+        const statements = reportEntity?.generatedSql.statements ?? [];
+        return {
+            schemaStatements: statements.filter(s => s.kind === 'schema'),
+            dataStatements: statements.filter(s => s.kind === 'data'),
+        }
+    }, [reportEntity]);
+
+    const currentRecord = reportEntity?.transform?.sample?.[currentRecordIndex];
+    const currentEntityMapping = useMemo(() => {
+        if (!reportEntity || !currentRecord) return null;
+        return reportEntity.mapping.entities.find(e => e.sourceEntity === currentRecord.input.entity);
+    }, [reportEntity, currentRecord]);
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -425,6 +439,93 @@ const DryRunPanel: React.FC<DryRunPanelProps> = ({
                                         </Card>
 
                                     </TabsContent>
+                                    <TabsContent value="sql">
+                                        <Card className="bg-white dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm">
+                                            <CardHeader>
+                                                <CardTitle className="flex items-center gap-2 text-slate-900 dark:text-white">
+                                                    <Code2 className="w-5 h-5 text-primary" />
+                                                    <span>Generated SQL Statements</span>
+                                                </CardTitle>
+                                            </CardHeader>
+                                            <CardContent>
+                                                <Tabs defaultValue="schema" className="w-full">
+                                                    <TabsList className="w-fit rounded-xl bg-slate-200/60 dark:bg-slate-800 p-1 border border-slate-200 dark:border-slate-700">
+                                                        <TabsTrigger value="schema" className={cn(
+                                                            "px-3.5 text-sm font-medium rounded-lg transition-all",
+                                                            "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white",
+                                                            "data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900",
+                                                            "data-[state=active]:text-slate-900 dark:data-[state=active]:text-white",
+                                                            "data-[state=active]:shadow-sm"
+                                                        )}>Schema DDL</TabsTrigger>
+                                                        <TabsTrigger value="data" className={cn(
+                                                            "px-3.5 text-sm font-medium rounded-lg transition-all",
+                                                            "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white",
+                                                            "data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900",
+                                                            "data-[state=active]:text-slate-900 dark:data-[state=active]:text-white",
+                                                            "data-[state=active]:shadow-sm"
+                                                        )}>Data Queries</TabsTrigger>
+                                                    </TabsList>
+                                                    <TabsContent value="schema" className="mt-4 space-y-4">
+                                                        {schemaStatements.length > 0 ? (
+                                                            schemaStatements.map((stmt, i) => <SqlStatement key={i} statement={stmt} />)
+                                                        ) : (
+                                                            <p className="text-sm text-slate-500 dark:text-slate-400 text-center py-8">No Schema DDL statements were generated.</p>
+                                                        )}
+                                                    </TabsContent>
+                                                    <TabsContent value="data" className="mt-4 space-y-4">
+                                                        {dataStatements.length > 0 ? (
+                                                            dataStatements.map((stmt, i) => <SqlStatement key={i} statement={stmt} />)
+                                                        ) : (
+                                                            <p className="text-sm text-slate-500 dark:text-slate-400 text-center py-8">No Data Query statements were generated.</p>
+                                                        )}
+                                                    </TabsContent>
+                                                </Tabs>
+                                            </CardContent>
+                                        </Card>
+                                    </TabsContent>
+                                    <TabsContent value="transform">
+                                        <Card className="bg-white dark:bg-slate-800/50">
+                                            <CardHeader>
+                                                <div className="flex items-center justify-between">
+                                                    <CardTitle>
+                                                        Data Transformation Sample
+                                                        <p className="text-sm font-normal text-slate-500 dark:text-slate-400">
+                                                            {reportEntity?.transform?.sample
+                                                                ? `Showing record ${currentRecordIndex + 1} of ${reportEntity.transform.sample.length}`
+                                                                : "No transformation sample available"}
+                                                        </p>
+                                                    </CardTitle>
+                                                    <div className="flex items-center gap-2">
+                                                        <Button variant="outline" size="icon" onClick={() => setCurrentRecordIndex(p => Math.max(0, p - 1))} disabled={currentRecordIndex === 0}>
+                                                            <ChevronLeft className="w-4 h-4" />
+                                                        </Button>
+                                                        <Button
+                                                            variant="outline"
+                                                            size="icon"
+                                                            onClick={() =>
+                                                                setCurrentRecordIndex(p =>
+                                                                    reportEntity && reportEntity.transform && reportEntity.transform.sample
+                                                                        ? Math.min(reportEntity.transform.sample.length - 1, p + 1)
+                                                                        : p
+                                                                )
+                                                            }
+                                                            disabled={
+                                                                !reportEntity ||
+                                                                !reportEntity.transform ||
+                                                                !reportEntity.transform.sample ||
+                                                                currentRecordIndex === reportEntity.transform.sample.length - 1
+                                                            }
+                                                        >
+                                                            <ChevronRight className="w-4 h-4" />
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            </CardHeader>
+                                            <CardContent>
+                                                {currentRecord && currentEntityMapping && <TransformRecordView record={currentRecord} />}
+                                            </CardContent>
+                                        </Card>
+                                    </TabsContent>
                                 </Tabs>
                             </>
                         )}
@@ -457,5 +558,81 @@ const FindingCard: React.FC<{ finding: Finding }> = ({ finding }) => {
         </div>
     );
 };
+
+const SqlStatement: React.FC<{ statement: GeneratedSqlStatement }> = ({ statement }) => {
+    const [copied, setCopied] = useState(false);
+
+    const handleCopy = () => {
+        let textToCopy = statement.sql;
+        if (statement.params) {
+            textToCopy += `\n\nParameters: ${JSON.stringify(statement.params)}`;
+        }
+        navigator.clipboard.writeText(textToCopy);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    };
+
+    return (
+        <div className="bg-white dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm overflow-hidden relative">
+            <div className="flex items-center justify-between px-4 py-2 border-b border-slate-200 dark:border-slate-700/60">
+                <Badge variant="outline">{statement.dialect}</Badge>
+                <Button variant="ghost" size="icon" onClick={handleCopy}>
+                    {copied ? <CheckCircle className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                </Button>
+            </div>
+            <div className="p-4">
+                <pre className="text-sm font-mono text-slate-900 dark:text-slate-100 whitespace-pre-wrap break-all">
+                    <code>{statement.sql}</code>
+                </pre>
+                {statement.params && (
+                    <p className="mt-2 text-xs text-slate-500 dark:text-slate-400 font-mono whitespace-pre-wrap break-all">
+                        Parameters: {JSON.stringify(statement.params)}
+                    </p>
+                )}
+            </div>
+        </div>
+    );
+};
+
+const TransformRecordView: React.FC<{ record: TransformedRecord }> = ({ record }) => {
+    const outputFields = record.output.fieldValues;
+
+    return (
+        <div>
+            <div className="flex items-center gap-2 text-slate-800 dark:text-slate-200 font-semibold text-sm mb-2">
+                <FileOutput className="w-4 h-4 text-primary" /> Transformed Data
+            </div>
+
+            <div className="space-y-2">
+                {outputFields.map(field => {
+                    return (
+                        <FieldRow
+                            key={field.name}
+                            field={field}
+                            bgColor={"bg-slate-50 dark:bg-slate-800/50"}
+                            isNew={false}
+                        />
+                    );
+                })}
+            </div>
+        </div>
+    );
+}
+
+const FieldRow: React.FC<{ field: FieldValue; bgColor: string; isNew?: boolean }> = ({ field, bgColor, isNew = false }) => (
+    <div className={cn("p-3 rounded-lg border border-slate-200 dark:border-slate-700/60", bgColor)}>
+        <div className="flex justify-between items-center">
+            <div className="flex items-center gap-2">
+                <p className="font-semibold text-slate-800 dark:text-slate-200">{field.name}</p>
+                {isNew && <Badge variant="outline" className="text-xs border-blue-300 bg-white text-blue-700 dark:bg-blue-900 dark:border-blue-700 dark:text-blue-200">NEW</Badge>}
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400">({field.dataType})</p>
+        </div>
+        <p className="font-mono text-xs text-slate-600 dark:text-slate-300 mt-1 p-1.5 rounded-md break-all">
+            {JSON.stringify(field.value)}
+        </p>
+    </div>
+);
+
 
 export default DryRunPanel;

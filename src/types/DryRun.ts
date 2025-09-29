@@ -95,6 +95,40 @@ export interface Finding {
     kind: string;
 }
 
+export interface GeneratedSqlStatement {
+    dialect: string;
+    kind: "schema" | "data";
+    sql: string;
+    params?: Array<any>;
+}
+
+export interface FieldValue {
+    name: string;
+    value: any;
+    dataType: string;
+}
+
+export interface TransformedRecord {
+    input: {
+        entity: string;
+        fieldValues: Array<FieldValue>;
+    };
+    output: {
+        entity: string;
+        fieldValues: Array<FieldValue>;
+    };
+}
+
+export interface Rename {
+    from: string;
+    to: string;
+}
+
+export interface Computed {
+    name: string;
+    expressionPreview: string;
+}
+
 export interface DryRunReportEntity {
     runId: string;
     engineVersion: string;
@@ -127,8 +161,8 @@ export interface DryRunReportEntity {
             copyPolicy: string;
             mappedFields: number;
             createdFields: number;
-            renames: Array<{ from: string; to: string }>;
-            computed: Array<{ name: string; expressionPreview: string }>;
+            renames: Array<Rename>;
+            computed: Array<Computed>;
         }>;
         lookups: Array<{
             sourceEntity: string;
@@ -149,34 +183,12 @@ export interface DryRunReportEntity {
         findings: Array<Finding>;
     };
     generatedSql: {
-        statements: Array<{
-            dialect: string;
-            kind: "schema" | "data";
-            sql: string;
-            params?: Array<any>;
-        }>;
+        statements: Array<GeneratedSqlStatement>;
     };
     transform: {
         ok: number;
         failed: number;
-        sample: Array<{
-            input: {
-                entity: string;
-                fieldValues: Array<{
-                    name: string;
-                    value: any;
-                    dataType: string;
-                }>;
-            };
-            output: {
-                entity: string;
-                fieldValues: Array<{
-                    name: string;
-                    value: any;
-                    dataType: string;
-                }>;
-            };
-        }>;
+        sample: Array<TransformedRecord>;
     };
 }
 

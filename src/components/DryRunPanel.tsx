@@ -1,5 +1,5 @@
-import { AlertTriangle, ArrowRight, BarChart, CheckCircle, ChevronLeft, ChevronRight, Code, Code2, Copy, Database, FileInput, FileOutput, FunctionSquare, GitBranch, GitMerge, Map, Play, RefreshCw, Search, Settings, ShieldAlert, TestTube2, XCircle, Zap } from "lucide-react";
-import { Computed, DryRunReport, FieldValue, Finding, GeneratedSqlStatement, Rename, TransformedRecord } from "../types/DryRun";
+import { AlertTriangle, ArrowRight, BarChart, CheckCircle, ChevronLeft, ChevronRight, Code2, Copy, Database, Download, FileOutput, FunctionSquare, GitBranch, GitMerge, Map, Play, RefreshCw, Settings, ShieldAlert, TestTube2, TrendingUp, XCircle, Zap } from "lucide-react";
+import { DryRunReport, FieldValue, Finding, GeneratedSqlStatement, TransformedRecord } from "../types/DryRun";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./common/Dialog";
 import { Badge } from "./common/v2/Badge";
 import { Card, CardContent, CardHeader, CardTitle } from "./common/v2/Card";
@@ -118,6 +118,17 @@ const DryRunPanel: React.FC<DryRunPanelProps> = ({
         if (!reportEntity || !currentRecord) return null;
         return reportEntity.mapping.entities.find(e => e.sourceEntity === currentRecord.input.entity);
     }, [reportEntity, currentRecord]);
+
+    const downloadJson = () => {
+        if (!result) return;
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(result, null, 2));
+        const downloadAnchorNode = document.createElement('a');
+        downloadAnchorNode.setAttribute("href", dataStr);
+        downloadAnchorNode.setAttribute("download", "dry_run_report.json");
+        document.body.appendChild(downloadAnchorNode);
+        downloadAnchorNode.click();
+        downloadAnchorNode.remove();
+    };
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -364,7 +375,7 @@ const DryRunPanel: React.FC<DryRunPanelProps> = ({
                                                                                 {entity.mappedFields} mapped fields &bull; {entity.computed?.length ?? 0} computed fields &bull; {entity.renames?.length ?? 0} renames
                                                                             </p>
                                                                         </div>
-                                                                        <Badge variant="secondary">{entity.copyPolicy}</Badge>
+                                                                        <Badge variant="secondary">Copy Policy: {entity.copyPolicy}</Badge>
                                                                     </div>
 
                                                                     {(entity.renames?.length > 0 || entity.computed?.length > 0) && (
@@ -429,7 +440,7 @@ const DryRunPanel: React.FC<DryRunPanelProps> = ({
                                             </div>
                                         </div> */}
 
-                                                <div>
+                                                <div className="mt-6 pt-4 border-t border-slate-200 dark:border-slate-700/60">
                                                     <p className="text-sm text-slate-600 dark:text-slate-400">Mapping Hash</p>
                                                     <p className="font-mono text-xs text-slate-500 dark:text-slate-500 mt-1 break-all bg-slate-100 dark:bg-slate-800 p-2 rounded-md">
                                                         {reportEntity?.mapping?.mappingHash ?? "N/A"}
@@ -484,11 +495,12 @@ const DryRunPanel: React.FC<DryRunPanelProps> = ({
                                         </Card>
                                     </TabsContent>
                                     <TabsContent value="transform">
-                                        <Card className="bg-white dark:bg-slate-800/50">
+                                        <Card className="bg-white dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm">
                                             <CardHeader>
                                                 <div className="flex items-center justify-between">
                                                     <CardTitle>
-                                                        Data Transformation Sample
+                                                        <TrendingUp className="w-5 h-5 text-primary inline-block mr-2" />
+                                                        Transform Sample
                                                         <p className="text-sm font-normal text-slate-500 dark:text-slate-400">
                                                             {reportEntity?.transform?.sample
                                                                 ? `Showing record ${currentRecordIndex + 1} of ${reportEntity.transform.sample.length}`
@@ -504,17 +516,13 @@ const DryRunPanel: React.FC<DryRunPanelProps> = ({
                                                             size="icon"
                                                             onClick={() =>
                                                                 setCurrentRecordIndex(p =>
-                                                                    reportEntity && reportEntity.transform && reportEntity.transform.sample
-                                                                        ? Math.min(reportEntity.transform.sample.length - 1, p + 1)
-                                                                        : p
+                                                                    Math.min(
+                                                                        ((reportEntity?.transform?.sample?.length ?? 1) - 1),
+                                                                        p + 1
+                                                                    )
                                                                 )
                                                             }
-                                                            disabled={
-                                                                !reportEntity ||
-                                                                !reportEntity.transform ||
-                                                                !reportEntity.transform.sample ||
-                                                                currentRecordIndex === reportEntity.transform.sample.length - 1
-                                                            }
+                                                            disabled={currentRecordIndex === ((reportEntity?.transform?.sample?.length ?? 1) - 1)}
                                                         >
                                                             <ChevronRight className="w-4 h-4" />
                                                         </Button>
@@ -529,6 +537,28 @@ const DryRunPanel: React.FC<DryRunPanelProps> = ({
                                 </Tabs>
                             </>
                         )}
+                    </div>
+
+                    <div className="flex-shrink-0 flex items-center justify-between space-x-4 mt-6">
+                        <Button variant="ghost" onClick={downloadJson} disabled={!result}>
+                            <Download className="w-4 h-4 mr-2" />
+                            Download Report
+                        </Button>
+                        <div className="flex items-center gap-4">
+                            <Button variant="outline" onClick={handleRunDryRun} disabled={isLoading}>
+                                <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+                                {isLoading ? 'Running...' : 'Re-run Analysis'}
+                            </Button>
+                            <Button
+                                variant={hasErrors ? "destructive" : "primary"}
+                                onClick={onRunMigration}
+                                disabled={!canRunMigration || hasErrors}
+                                title={hasErrors ? "Cannot run migration due to errors in the dry run." : ""}
+                            >
+                                <Play className="w-4 h-4 mr-2" />
+                                {hasErrors ? `Cannot Run (${findings.errors.length} errors)` : 'Run Migration'}
+                            </Button>
+                        </div>
                     </div>
                 </div>
             </DialogContent>
@@ -599,11 +629,12 @@ const TransformRecordView: React.FC<{ record: TransformedRecord }> = ({ record }
 
     return (
         <div>
-            <div className="flex items-center gap-2 text-slate-800 dark:text-slate-200 font-semibold text-sm mb-2">
-                <FileOutput className="w-4 h-4 text-primary" /> Transformed Data
+            <div className="mb-6">
+                <Database className="w-5 h-5 text-primary inline-block mr-2" />
+                <span className="text-lg font-bold text-slate-900 dark:text-white">{record.output.entity}</span>
             </div>
 
-            <div className="space-y-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {outputFields.map(field => {
                     return (
                         <FieldRow
@@ -619,20 +650,24 @@ const TransformRecordView: React.FC<{ record: TransformedRecord }> = ({ record }
     );
 }
 
-const FieldRow: React.FC<{ field: FieldValue; bgColor: string; isNew?: boolean }> = ({ field, bgColor, isNew = false }) => (
-    <div className={cn("p-3 rounded-lg border border-slate-200 dark:border-slate-700/60", bgColor)}>
-        <div className="flex justify-between items-center">
-            <div className="flex items-center gap-2">
-                <p className="font-semibold text-slate-800 dark:text-slate-200">{field.name}</p>
-                {isNew && <Badge variant="outline" className="text-xs border-blue-300 bg-white text-blue-700 dark:bg-blue-900 dark:border-blue-700 dark:text-blue-200">NEW</Badge>}
-            </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400">({field.dataType})</p>
-        </div>
-        <p className="font-mono text-xs text-slate-600 dark:text-slate-300 mt-1 p-1.5 rounded-md break-all">
-            {JSON.stringify(field.value)}
-        </p>
-    </div>
-);
+const FieldRow: React.FC<{ field: FieldValue; bgColor: string; isNew?: boolean }> = ({ field, bgColor, isNew = false }) => {
+    // field.value is always { type: actualValue }
+    const entries = Object.entries(field.value || {});
+    const [type, val] = entries.length > 0 ? entries[0] : ["Unknown", ""];
 
+    return (
+        <div key={field.name} className="p-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_4px_12px_rgba(0,0,0,0.4)] hover:-translate-y-0.5 hover:scale-[1.005] duration-200 transition-all">
+            <div className="flex justify-between items-center mb-1">
+                <span className="font-semibold text-slate-800 dark:text-slate-200">{field.name}</span>
+                <Badge variant="outline" className="text-xs">
+                    {field.dataType}
+                </Badge>
+            </div>
+            <p className="font-mono text-sm text-slate-700 dark:text-slate-300 truncate">
+                {val === null || val === undefined ? <span className="text-slate-400 italic">null</span> : String(val)}
+            </p>
+        </div>
+    );
+};
 
 export default DryRunPanel;

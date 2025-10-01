@@ -1,4 +1,4 @@
-import { AlertTriangle, ArrowRight, BarChart, CheckCircle, ChevronLeft, ChevronRight, Code2, Copy, Database, Download, FileOutput, FunctionSquare, GitBranch, GitMerge, Map, Play, RefreshCw, Settings, ShieldAlert, TestTube2, TrendingUp, XCircle, Zap } from "lucide-react";
+import { AlertTriangle, ArrowRight, BarChart, CheckCircle, ChevronLeft, ChevronRight, Code2, Copy, CopyIcon, Database, Download, FileOutput, FunctionSquare, GitBranch, GitMerge, Map, Play, RefreshCw, Settings, ShieldAlert, TestTube2, Trash2, TrendingUp, XCircle, Zap } from "lucide-react";
 import { DryRunReport, FieldValue, Finding, GeneratedSqlStatement, TransformedRecord } from "../types/DryRun";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./common/Dialog";
 import { Badge } from "./common/v2/Badge";
@@ -349,7 +349,7 @@ const DryRunPanel: React.FC<DryRunPanelProps> = ({
                                             <CardContent>
                                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
                                                     <StatBox value={reportEntity?.mapping.totals.entities ?? 0} label="Entities" icon={<Database className="w-5 h-5" />} />
-                                                    <StatBox value={reportEntity?.mapping.totals.mappedFields ?? 0} label="Mapped Fields" icon={<BarChart className="w-5 h-5" />} />
+                                                    <StatBox value={reportEntity?.mapping.totals.mappedFields ?? 0} label="Renames" icon={<BarChart className="w-5 h-5" />} />
                                                     <StatBox value={reportEntity?.mapping.totals.computedFields ?? 0} label="Computed Fields" icon={<FunctionSquare className="w-5 h-5" />} />
                                                     <StatBox value={reportEntity?.mapping.totals.lookupCount ?? 0} label="Lookups" icon={<GitMerge className="w-5 h-5" />} />
                                                 </div>
@@ -360,7 +360,7 @@ const DryRunPanel: React.FC<DryRunPanelProps> = ({
                                                         <span>Entity Mappings</span>
                                                     </h3>
                                                     {reportEntity?.mapping?.entities
-                                                        ?.filter(entity => entity.mappedFields > 0 || (entity.computed?.length ?? 0) > 0 || (entity.renames?.length ?? 0) > 0)
+                                                        ?.filter(entity => entity.mappedFields > 0 || (entity.computed?.length ?? 0) > 0 || (entity.renames?.length ?? 0) > 0 || (entity.oneToOne?.length ?? 0) > 0 || (entity.omittedSourceColumns?.length ?? 0) > 0)
                                                         .map((entity, i) => (
                                                             <Card key={i} className="bg-white dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm overflow-hidden">
                                                                 <div className="p-4">
@@ -372,14 +372,29 @@ const DryRunPanel: React.FC<DryRunPanelProps> = ({
                                                                                 <Badge variant="outline" className="bg-blue-100 border-blue-200 text-blue-800 dark:bg-blue-900/30 dark:border-blue-800/50 dark:text-blue-300">{entity.destEntity}</Badge>
                                                                             </div>
                                                                             <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
-                                                                                {entity.mappedFields} mapped fields &bull; {entity.computed?.length ?? 0} computed fields &bull; {entity.renames?.length ?? 0} renames
+                                                                                {entity.mappedFields} mapped fields &bull; {entity.computed?.length ?? 0} computed fields &bull; {entity.renames?.length ?? 0} renames &bull; {entity.oneToOne?.length ?? 0} direct copies &bull; {entity.omittedSourceColumns?.length ?? 0} omitted fields
                                                                             </p>
                                                                         </div>
                                                                         <Badge variant="secondary">Copy Policy: {entity.copyPolicy}</Badge>
                                                                     </div>
-
-                                                                    {(entity.renames?.length > 0 || entity.computed?.length > 0) && (
+                                                                    {(entity.renames?.length > 0 || entity.computed?.length > 0 || entity.oneToOne?.length > 0 || entity.omittedSourceColumns?.length > 0) && (
                                                                         <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700/60 space-y-3">
+                                                                            {entity.oneToOne?.length > 0 && (
+                                                                                <div>
+                                                                                    <h5 className="flex items-center gap-1.5 text-sm font-semibold mb-2 text-slate-700 dark:text-slate-300">
+                                                                                        <CopyIcon className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
+                                                                                        Direct Copies
+                                                                                    </h5>
+                                                                                    <div className="flex flex-wrap gap-1.5">
+                                                                                        {entity.oneToOne.map(col => (
+                                                                                            <div key={col} className="px-2 py-1 rounded-md bg-teal-50 dark:bg-teal-900/20 font-mono text-xs text-teal-900 dark:text-teal-200 border border-teal-100 dark:border-teal-800/50">
+                                                                                                {col}
+                                                                                            </div>
+                                                                                        ))}
+                                                                                    </div>
+                                                                                </div>
+                                                                            )}
+
                                                                             {entity.renames?.length > 0 && (
                                                                                 <div>
                                                                                     <h5 className="flex items-center gap-1.5 text-sm font-semibold mb-2 text-slate-700 dark:text-slate-300">
@@ -406,6 +421,21 @@ const DryRunPanel: React.FC<DryRunPanelProps> = ({
                                                                                             <div key={c.name} className="px-3 py-2 rounded-md bg-purple-50 dark:bg-purple-900/20 font-mono text-xs text-purple-900 dark:text-purple-200 border border-purple-100 dark:border-purple-800/50">
                                                                                                 <p className="font-bold">{c.name}</p>
                                                                                                 <p className="text-purple-600 dark:text-purple-300">{c.expressionPreview}</p>
+                                                                                            </div>
+                                                                                        ))}
+                                                                                    </div>
+                                                                                </div>
+                                                                            )}
+                                                                            {entity.omittedSourceColumns?.length > 0 && (
+                                                                                <div>
+                                                                                    <h5 className="flex items-center gap-1.5 text-sm font-semibold mb-2 text-slate-700 dark:text-slate-300">
+                                                                                        <Trash2 className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
+                                                                                        Omitted Columns
+                                                                                    </h5>
+                                                                                    <div className="flex flex-wrap gap-1.5">
+                                                                                        {entity.omittedSourceColumns.map(col => (
+                                                                                            <div key={col} className="px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-800 font-mono text-xs text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                                                                                                {col}
                                                                                             </div>
                                                                                         ))}
                                                                                     </div>

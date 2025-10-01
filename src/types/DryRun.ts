@@ -30,8 +30,11 @@ export interface DryRunReportEntityDTO {
             copy_policy: string;
             mapped_fields: number;
             created_fields: number;
+            one_to_one: Array<string>;
             renames: Array<{ from: string; to: string }>;
             computed: Array<{ name: string; expression_preview: string }>;
+            omitted_source_columns: Array<string>;
+            warnings: Array<string>;
         }>;
         lookups: Array<{
             source_entity: string;
@@ -161,8 +164,11 @@ export interface DryRunReportEntity {
             copyPolicy: string;
             mappedFields: number;
             createdFields: number;
+            oneToOne: Array<string>;
             renames: Array<Rename>;
             computed: Array<Computed>;
+            omittedSourceColumns: Array<string>;
+            warnings: Array<string>;
         }>;
         lookups: Array<{
             sourceEntity: string;
@@ -227,8 +233,11 @@ export function mapDryRunReport(dto: Record<string, DryRunReportEntityDTO>): Rec
                     copyPolicy: e.copy_policy,
                     mappedFields: e.mapped_fields,
                     createdFields: e.created_fields,
+                    oneToOne: e.one_to_one,
                     renames: (e.renames ?? []).map(r => ({ from: r.from, to: r.to })),
                     computed: (e.computed ?? []).map(c => ({ name: c.name, expressionPreview: c.expression_preview })),
+                    omittedSourceColumns: e.omitted_source_columns ?? [],
+                    warnings: e.warnings ?? [],
                 })),
                 lookups: (entity.mapping.lookups ?? []).map(l => ({
                     sourceEntity: l.source_entity,

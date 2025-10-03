@@ -81,5 +81,6 @@ export function getMigrationConfig(dto: JobDefinition): MigrationConfig {
             migrateItems: [getMigrationItem(migrationItem)],
         },
         creation_date: dto.createdAt.toISOString(),
+        activeItemIndex: 0 // Default to first item
     };
 }

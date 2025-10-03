@@ -7,6 +7,7 @@ export interface MigrationConfig {
     creation_date: string; // ISO date string
     migration: Migration;
     connections: ConnectionPairInfo;
+    activeItemIndex: number; // Index of the currently active migration item
 }
 
 // Connection pair with basic info
@@ -202,7 +203,8 @@ export function emptyMigrationConfig(): MigrationConfig {
             },
             migrateItems: [emptyMigrationItem()]
         },
-        connections: emptyConnectionPair()
+        connections: emptyConnectionPair(),
+        activeItemIndex: 0
     };
 }
 

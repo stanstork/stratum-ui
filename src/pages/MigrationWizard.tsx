@@ -27,6 +27,8 @@ import { Card, CardContent } from "../components/common/v2/Card";
 import { Button } from "../components/common/v2/Button";
 import { useSearchParams } from "react-router-dom";
 import { getMigrationConfig } from "../types/JobDefinition";
+import Step3_MigrationItems from "../components/wizard_step/Step3_MigrationItems";
+import { ItemScopedHeader } from "../components/ItemScopedHeader";
 
 // --------------------------------------------
 // Wizard metadata
@@ -40,12 +42,13 @@ type MigrationWizardProps = {
 const steps = [
     { num: 1, title: "Details", icon: <FileText size={18} /> },
     { num: 2, title: "Connections", icon: <Database size={18} /> },
-    { num: 3, title: "Source", icon: <Table size={18} /> },
-    { num: 4, title: "Joins", icon: <Link2 size={18} /> },
-    { num: 5, title: "Mapping", icon: <ArrowRight size={18} /> },
-    { num: 6, title: "Filters", icon: <Filter size={18} /> },
-    { num: 7, title: "Settings", icon: <Settings size={18} /> },
-    { num: 8, title: "Preview", icon: <CheckCircle2 size={18} /> },
+    { num: 3, title: "Items", icon: <Table size={18} /> },
+    { num: 4, title: "Source", icon: <Table size={18} /> },
+    { num: 5, title: "Joins", icon: <Link2 size={18} /> },
+    { num: 6, title: "Mapping", icon: <ArrowRight size={18} /> },
+    { num: 7, title: "Filters", icon: <Filter size={18} /> },
+    { num: 8, title: "Settings", icon: <Settings size={18} /> },
+    { num: 9, title: "Preview", icon: <CheckCircle2 size={18} /> },
 ] as const;
 
 // --------------------------------------------
@@ -120,7 +123,7 @@ export default function MigrationWizard({ setView, onBack }: MigrationWizardProp
         if (stepNum === 1) return false;
         if (!config.name) return true; // Step 1 must be complete
         if (stepNum > 2 && (!config.connections.source?.id || !config.connections.dest?.id)) return true; // Step 2 must be complete
-        if (stepNum > 3 && !config.migration.migrateItems[0].source.names[0]) return true; // Step 3 must be complete
+        if (stepNum > 4 && !config.migration.migrateItems[0].source.names[0]) return true; // Step 4 must be complete
         return false;
     };
 
@@ -145,7 +148,7 @@ export default function MigrationWizard({ setView, onBack }: MigrationWizardProp
                 return !config.name;
             case 2:
                 return !config.connections.source?.id || !config.connections.dest?.id;
-            case 3:
+            case 4:
                 return !config.migration.migrateItems[0].source.names[0];
             default:
                 return false;
@@ -175,18 +178,23 @@ export default function MigrationWizard({ setView, onBack }: MigrationWizardProp
             case 2:
                 return <Step2_Connections {...props} />;
             case 3:
-                return (
-                    <Step3_SelectTable {...props} metadata={metadata} isMetadataLoading={isMetadataLoading} />
-                );
+                return <Step3_MigrationItems config={config} setConfig={setConfig} />;
             case 4:
-                return <Step4_Joins {...props} metadata={metadata} />;
+                return (
+                    <>
+                        {<ItemScopedHeader config={config} setConfig={setConfig} />}
+                        {<Step3_SelectTable {...props} metadata={metadata} isMetadataLoading={isMetadataLoading} />}
+                    </>
+                );
             case 5:
-                return <Step5_ColumnMapping {...props} metadata={metadata} />;
+                return <Step4_Joins {...props} metadata={metadata} />;
             case 6:
-                return <Step6_Filters {...props} metadata={metadata} />;
+                return <Step5_ColumnMapping {...props} metadata={metadata} />;
             case 7:
-                return <Step7_Settings {...props} />;
+                return <Step6_Filters {...props} metadata={metadata} />;
             case 8:
+                return <Step7_Settings {...props} />;
+            case 9:
                 return <Step8_Preview {...props} onEditStep={goToStep} setView={setView} />;
             default:
                 return <Step1_Details {...props} />;

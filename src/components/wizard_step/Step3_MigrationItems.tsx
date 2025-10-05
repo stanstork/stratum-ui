@@ -1,4 +1,4 @@
-import { Database, FileText, Plus, Trash2 } from "lucide-react";
+import { Database, FileText, List, Plus, Trash2 } from "lucide-react";
 import { emptyMigrationItem, MigrateItem, MigrationConfig } from "../../types/MigrationConfig";
 import { Button } from "../common/v2/Button";
 import { Card, CardContent } from "../common/v2/Card";
@@ -76,20 +76,16 @@ const Step3_MigrationItems: React.FC<Step3_MigrationItemsProps> = ({
                 {config.migration.migrateItems.map((item, index) => (
                     <Card
                         className={`cursor-pointer transition-all ${index === config.activeItemIndex
-                            ? 'border-2 border-blue-500 bg-blue-50 dark:bg-blue-950/30'
-                            : 'border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                            ? 'border-blue-500 bg-blue-50 dark:border-blue-600/60 dark:bg-blue-600/20'
+                            : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/60'
                             }`}
                         onClick={() => handleSelectItem(index)}
                     >
                         <CardContent className="p-4">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3 flex-1">
-                                    <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 shadow-lg">
-                                        {item.destination.kind === 'file' ? (
-                                            <FileText className="w-5 h-5 text-white" />
-                                        ) : (
-                                            <Database className="w-5 h-5 text-white" />
-                                        )}
+                                    <div className="p-2">
+                                        <FileText className="w-6 h-6 text-gray-500 dark:text-gray-400" />
                                     </div>
                                     <div className="flex-1">
                                         <div className="flex items-center">
@@ -121,7 +117,7 @@ const Step3_MigrationItems: React.FC<Step3_MigrationItemsProps> = ({
                                         size="sm"
                                         onClick={() => handleDeleteItem(index)}
                                         disabled={config.migration.migrateItems.length === 1}
-                                        className="text-red-600 hover:bg-red-50 dark:hover:bg-red-950"
+                                        className="text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
                                     >
                                         <Trash2 className="w-4 h-4" />
                                     </Button>

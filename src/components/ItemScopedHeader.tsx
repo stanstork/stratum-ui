@@ -1,4 +1,4 @@
-import { Database } from "lucide-react";
+import { Database, FileText } from "lucide-react";
 import { MigrationConfig } from "../types/MigrationConfig";
 import Select from "./common/Select";
 
@@ -32,7 +32,7 @@ export const ItemScopedHeader: React.FC<ItemScopedHeaderProps> = ({
         <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
             <div className="flex items-center justify-between gap-4">
                 <div className="flex min-w-0 items-center gap-3 w-full">
-                    <Database className="w-5 h-5 flex-shrink-0 text-blue-600 dark:text-blue-400" />
+                    <FileText className="w-5 h-5 flex-shrink-0 text-blue-600 dark:text-blue-400" />
                     <div className="min-w-0">
                         <p className="truncate text-sm font-medium text-blue-900 dark:text-blue-100" title={activeItemName}>
                             Editing: {activeItemName}
@@ -42,7 +42,7 @@ export const ItemScopedHeader: React.FC<ItemScopedHeaderProps> = ({
                         </p>
                     </div>
                 </div>
-                <div className="w-48">
+                <div className="w-1/4">
                     <Select
                         value={config.activeItemIndex.toString()}
                         options={migrateItems.map((item, index) => ({

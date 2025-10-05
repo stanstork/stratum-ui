@@ -57,7 +57,7 @@ export function mapJobDefinition(dto: JobDefinitionDTO): JobDefinition {
 }
 
 export function getMigrationConfig(dto: JobDefinition): MigrationConfig {
-    const migrationItem = JSON.parse(dto.ast as string)['migration']['migrate_items'][0] as MigrateItemDTO;
+    const migrationItems = JSON.parse(dto.ast as string)['migration']['migrate_items'] as MigrateItemDTO[];
     return {
         name: dto.name,
         description: dto.description,
@@ -67,18 +67,18 @@ export function getMigrationConfig(dto: JobDefinition): MigrationConfig {
         },
         migration: {
             settings: {
-                batchSize: migrationItem.settings.batch_size,
-                csvHeader: migrationItem.settings.csv_header,
-                copyColumns: migrationItem.settings.copy_columns,
-                inferSchema: migrationItem.settings.infer_schema,
-                csvDelimiter: migrationItem.settings.csv_delimiter,
-                csvIdColumn: migrationItem.settings.csv_id_column,
-                cascadeSchema: migrationItem.settings.cascade_schema,
-                ignoreConstraints: migrationItem.settings.ignore_constraints,
-                createMissingTables: migrationItem.settings.create_missing_tables,
-                createMissingColumns: migrationItem.settings.create_missing_columns
+                batchSize: 1000,
+                csvHeader: true,
+                copyColumns: 'All',
+                inferSchema: true,
+                csvDelimiter: ',',
+                csvIdColumn: null,
+                cascadeSchema: true,
+                ignoreConstraints: false,
+                createMissingTables: true,
+                createMissingColumns: true
             },
-            migrateItems: [getMigrationItem(migrationItem)],
+            migrateItems: migrationItems.map(getMigrationItem),
         },
         creation_date: dto.createdAt.toISOString(),
         activeItemIndex: 0 // Default to first item

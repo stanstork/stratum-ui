@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Plus, X, FolderPlus, CircleDot, Filter as FilterIcon } from 'lucide-react';
 import AllAvailableTablesProvider from './AllAvailableTablesProvider';
 import { ConditionExpr, Expression, LiteralExpr, LookupExpr, MigrateItem, MigrationConfig, FunctionCallExpr } from '../../types/MigrationConfig';
@@ -117,31 +117,65 @@ type Step6_FiltersProps = {
     setConfig: React.Dispatch<React.SetStateAction<MigrationConfig>>;
 };
 
-const Step6_Filters: React.FC<Step6_FiltersProps> = ({ config, migrateItem, metadata, setConfig }) => {
-    const [rootNode, setRootNode] = useState<UIGroup>(() => {
-        const expr = migrateItem.filter?.expression;
+const Step7_Filters: React.FC<Step6_FiltersProps> = ({ config, migrateItem, metadata, setConfig }) => {
+    const buildRootFromExpr = (expr?: Expression | null): UIGroup => {
         const node = expressionToUINode(expr);
-        if (node && node.type === 'group') {
-            return node;
-        }
+        if (node && node.type === 'group') return node;
         return { type: 'group', id: 'root', op: 'AND', children: node ? [node] : [] };
-    });
+    };
+
+    const [rootNode, setRootNode] = useState<UIGroup>(() =>
+        buildRootFromExpr(migrateItem.filter?.expression)
+    );
+
+    // track the last expression we pushed to config to avoid loops
+    const lastSyncedExprJsonRef = useRef<string>(
+        JSON.stringify(migrateItem.filter?.expression ?? null)
+    );
 
     useEffect(() => {
         const newExpression = uiNodeToExpression(rootNode);
+        const newExprJson = JSON.stringify(newExpression ?? null);
 
-        setConfig(currentConfig => {
-            const newConfig = structuredClone(currentConfig);
-            const index = 0; // Assuming single migration item
+        if (newExprJson === lastSyncedExprJsonRef.current) {
+            // no real change; skip setConfig to avoid re-render loop
+            return;
+        }
 
-            if (!newConfig.migration.migrateItems[index].filter) {
-                newConfig.migration.migrateItems[index].filter = { expression: newExpression };
-            } else {
-                newConfig.migration.migrateItems[index].filter.expression = newExpression;
+        setConfig((currentConfig) => {
+            const next = structuredClone(currentConfig);
+            const idx = next.activeItemIndex || 0;
+
+            const prevExpr = next.migration.migrateItems[idx].filter?.expression ?? null;
+            const prevExprJson = JSON.stringify(prevExpr);
+
+            if (prevExprJson === newExprJson) {
+                // nothing to update in config; bail out returning previous object
+                return currentConfig;
             }
-            return newConfig;
+
+            if (!next.migration.migrateItems[idx].filter) {
+                next.migration.migrateItems[idx].filter = { expression: newExpression };
+            } else {
+                next.migration.migrateItems[idx].filter!.expression = newExpression;
+            }
+
+            // mark as synced to break the loop
+            lastSyncedExprJsonRef.current = newExprJson;
+            return next;
         });
     }, [rootNode, setConfig]);
+
+    useEffect(() => {
+        const incomingExpr = migrateItem.filter?.expression ?? null;
+        const incomingJson = JSON.stringify(incomingExpr);
+
+        if (incomingJson !== lastSyncedExprJsonRef.current) {
+            // update editor state from incoming filter
+            setRootNode(buildRootFromExpr(incomingExpr));
+            lastSyncedExprJsonRef.current = incomingJson; // keep ref in sync
+        }
+    }, [migrateItem]);
 
     const updateNodeByPath = useCallback((path: string[], updater: (node: UINode) => UINode) => {
         setRootNode(currentRoot => {
@@ -360,4 +394,4 @@ const FilterCondition: React.FC<{ node: UICondition } & Omit<FilterNodeProps, 'n
     );
 };
 
-export default Step6_Filters;
+export default Step7_Filters;

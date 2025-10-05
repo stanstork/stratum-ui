@@ -436,7 +436,7 @@ type Step5_ColumnMappingProps = {
     setConfig: React.Dispatch<React.SetStateAction<MigrationConfig>>;
 };
 
-const Step5_ColumnMapping: React.FC<Step5_ColumnMappingProps> = ({ config, migrateItem, metadata, setConfig }) => {
+const Step6_ColumnMapping: React.FC<Step5_ColumnMappingProps> = ({ config, migrateItem, metadata, setConfig }) => {
     const [isPanelCollapsed, setIsPanelCollapsed] = useState(false);
     const [columnSearchTerm, setColumnSearchTerm] = useState("");
     const { mappings } = useMemo(() => migrateItem.map || { mappings: [] }, [migrateItem.map]);
@@ -444,7 +444,8 @@ const Step5_ColumnMapping: React.FC<Step5_ColumnMappingProps> = ({ config, migra
     const updateMapStep = (updatedMapStep: MapStep) => {
         setConfig((currentConfig) => {
             const newConfig = structuredClone(currentConfig);
-            newConfig.migration.migrateItems[0].map = updatedMapStep;
+            const idx = newConfig.activeItemIndex || 0;
+            newConfig.migration.migrateItems[idx].map = updatedMapStep;
             return newConfig;
         });
     };
@@ -467,6 +468,7 @@ const Step5_ColumnMapping: React.FC<Step5_ColumnMappingProps> = ({ config, migra
         (allAvailableTables: TableMetadata[]) => {
             const existingTargets = new Set(mappings.map((m) => m.target));
             let newMappings: Mapping[] = [];
+
             allAvailableTables.forEach((table) => {
                 Object.keys(table.columns).forEach((columnName) => {
                     const targetName = `${table.name}_${columnName}`;
@@ -479,17 +481,21 @@ const Step5_ColumnMapping: React.FC<Step5_ColumnMappingProps> = ({ config, migra
                 });
             });
 
-            const destTableName = config.migration.migrateItems[0].destination.names[0];
+            const destTableName = migrateItem.destination.names?.[0];
             if (destTableName && allAvailableTables.length === 1 && allAvailableTables[0].name !== destTableName) {
-                newMappings = newMappings.map((m) => ({ ...m, target: m.target.replace(`${allAvailableTables[0].name}_`, "") }));
+                newMappings = newMappings.map((m) => ({
+                    ...m,
+                    target: m.target.replace(`${allAvailableTables[0].name}_`, ""),
+                }));
             }
 
             if (newMappings.length > 0) {
                 updateMapStep({ mappings: [...mappings, ...newMappings] });
             }
         },
-        [mappings, config.migration.migrateItems]
+        [mappings, migrateItem.destination.names]
     );
+
 
     const removeMapping = (mappingIndex: number) => {
         const newMappings = mappings.filter((_, index) => index !== mappingIndex);
@@ -610,4 +616,4 @@ const Step5_ColumnMapping: React.FC<Step5_ColumnMappingProps> = ({ config, migra
     );
 };
 
-export default Step5_ColumnMapping;
+export default Step6_ColumnMapping;

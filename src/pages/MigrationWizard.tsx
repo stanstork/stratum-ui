@@ -11,18 +11,17 @@ import {
     Settings,
     Table,
 } from "lucide-react";
-import React from "react";
 import { emptyMigrationConfig, MigrationConfig } from "../types/MigrationConfig";
 import { TableMetadata } from "../types/Metadata";
 import apiClient from "../services/apiClient";
 import Step1_Details from "../components/wizard_step/Step1_Details";
 import Step2_Connections from "../components/wizard_step/Step2_Connections";
-import Step3_SelectTable from "../components/wizard_step/Step3_SelectTable";
-import Step4_Joins from "../components/wizard_step/Step4_Joins";
-import Step5_ColumnMapping from "../components/wizard_step/Step5_ColumnMapping";
-import Step6_Filters from "../components/wizard_step/Step6_Filters";
-import Step7_Settings from "../components/wizard_step/Step7_Settings";
-import Step8_Preview from "../components/wizard_step/Step8_Preview";
+import Step4_SelectTable from "../components/wizard_step/Step4_SelectTable";
+import Step5_Joins from "../components/wizard_step/Step5_Joins";
+import Step6_ColumnMapping from "../components/wizard_step/Step6_ColumnMapping";
+import Step7_Filters from "../components/wizard_step/Step7_Filters";
+import Step8_Settings from "../components/wizard_step/Step8_Settings";
+import Step9_Preview from "../components/wizard_step/Step9_Preview";
 import { Card, CardContent } from "../components/common/v2/Card";
 import { Button } from "../components/common/v2/Button";
 import { useSearchParams } from "react-router-dom";
@@ -183,19 +182,64 @@ export default function MigrationWizard({ setView, onBack }: MigrationWizardProp
                 return (
                     <>
                         {<ItemScopedHeader config={config} setConfig={setConfig} />}
-                        {<Step3_SelectTable {...props} metadata={metadata} isMetadataLoading={isMetadataLoading} />}
+                        {<Step4_SelectTable
+                            config={config}
+                            migrateItem={config.migration.migrateItems[config.activeItemIndex]}
+                            metadata={metadata}
+                            isMetadataLoading={isMetadataLoading}
+                            setConfig={setConfig}
+                        />}
                     </>
                 );
             case 5:
-                return <Step4_Joins {...props} metadata={metadata} />;
+                return (
+                    <>
+                        {<ItemScopedHeader config={config} setConfig={setConfig} />}
+                        {<Step5_Joins
+                            config={config}
+                            migrateItem={config.migration.migrateItems[config.activeItemIndex]}
+                            metadata={metadata}
+                            setConfig={setConfig}
+                        />}
+                    </>
+                );
             case 6:
-                return <Step5_ColumnMapping {...props} metadata={metadata} />;
+                return (
+                    <>
+                        {<ItemScopedHeader config={config} setConfig={setConfig} />}
+                        {<Step6_ColumnMapping
+                            config={config}
+                            migrateItem={config.migration.migrateItems[config.activeItemIndex]}
+                            metadata={metadata}
+                            setConfig={setConfig}
+                        />}
+                    </>
+                )
             case 7:
-                return <Step6_Filters {...props} metadata={metadata} />;
+                return (
+                    <>
+                        {<ItemScopedHeader config={config} setConfig={setConfig} />}
+                        {<Step7_Filters
+                            config={config}
+                            migrateItem={config.migration.migrateItems[config.activeItemIndex]}
+                            metadata={metadata}
+                            setConfig={setConfig}
+                        />}
+                    </>
+                )
             case 8:
-                return <Step7_Settings {...props} />;
+                return (
+                    <>
+                        {<ItemScopedHeader config={config} setConfig={setConfig} />}
+                        {<Step8_Settings
+                            config={config}
+                            migrateItem={config.migration.migrateItems[config.activeItemIndex]}
+                            setConfig={setConfig}
+                        />}
+                    </>
+                );
             case 9:
-                return <Step8_Preview {...props} onEditStep={goToStep} setView={setView} />;
+                return <Step9_Preview {...props} />;
             default:
                 return <Step1_Details {...props} />;
         }

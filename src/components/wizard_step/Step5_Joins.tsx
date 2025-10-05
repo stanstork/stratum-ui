@@ -222,7 +222,7 @@ type Step4_JoinsProps = {
     setConfig: React.Dispatch<React.SetStateAction<MigrationConfig>>;
 };
 
-const Step4_Joins = ({ config, metadata, setConfig, migrateItem }: Step4_JoinsProps) => {
+const Step5_Joins = ({ config, metadata, setConfig, migrateItem }: Step4_JoinsProps) => {
     const sourceTableName = useMemo(() => migrateItem.source.names[0], [migrateItem]);
     const loadStep = useMemo<LoadStep>(() => migrateItem.load || { entities: [], matches: [] }, [migrateItem]);
 
@@ -240,7 +240,8 @@ const Step4_Joins = ({ config, metadata, setConfig, migrateItem }: Step4_JoinsPr
     const updateLoadStep = (updatedLoadStep: LoadStep) => {
         setConfig((currentConfig) => {
             const newConfig = structuredClone(currentConfig);
-            newConfig.migration.migrateItems[0].load = updatedLoadStep;
+            const idx = newConfig.activeItemIndex || 0;
+            newConfig.migration.migrateItems[idx].load = updatedLoadStep;
             return newConfig;
         });
     };
@@ -371,4 +372,4 @@ const Step4_Joins = ({ config, metadata, setConfig, migrateItem }: Step4_JoinsPr
     );
 };
 
-export default Step4_Joins;
+export default Step5_Joins;

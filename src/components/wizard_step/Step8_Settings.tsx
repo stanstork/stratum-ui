@@ -47,17 +47,23 @@ const LabeledControl: React.FC<{ label: string; description: string; children: R
 );
 
 
-const Step7_Settings = ({ config, setConfig, migrateItem }: Step7SettingsProps) => {
+const Step8_Settings = ({ config, setConfig, migrateItem }: Step7SettingsProps) => {
     const { settings } = migrateItem;
 
-    const updateSetting = <K extends keyof MigrationSettings>(key: K, value: MigrationSettings[K]) => {
-        setConfig(currentConfig => {
-            const newConfig = structuredClone(currentConfig);
-            if (!newConfig.migration.migrateItems || newConfig.migration.migrateItems.length === 0) {
-                return currentConfig;
-            }
-            newConfig.migration.migrateItems[0].settings[key] = value;
-            return newConfig;
+    const updateSetting = <K extends keyof MigrationSettings>(
+        key: K,
+        value: MigrationSettings[K]
+    ) => {
+        setConfig((currentConfig) => {
+            const next = structuredClone(currentConfig);
+            const idx = next.activeItemIndex || 0;
+
+            // ensure the item/settings exist
+            const item = next.migration.migrateItems[idx];
+            if (!item.settings) item.settings = {} as MigrationSettings;
+
+            item.settings[key] = value;
+            return next;
         });
     };
 
@@ -141,4 +147,4 @@ const Step7_Settings = ({ config, setConfig, migrateItem }: Step7SettingsProps) 
     );
 };
 
-export default Step7_Settings;
+export default Step8_Settings;

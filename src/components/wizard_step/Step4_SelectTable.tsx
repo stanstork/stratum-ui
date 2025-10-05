@@ -25,7 +25,7 @@ interface Step3_SelectTableProps {
     setConfig: React.Dispatch<React.SetStateAction<MigrationConfig>>;
 }
 
-const Step3_SelectTable: React.FC<Step3_SelectTableProps> = ({
+const Step4_SelectTable: React.FC<Step3_SelectTableProps> = ({
     config,
     metadata,
     setConfig,
@@ -68,18 +68,20 @@ const Step3_SelectTable: React.FC<Step3_SelectTableProps> = ({
 
         setConfig((currentConfig) => {
             const newConfig = structuredClone(currentConfig);
-            const migrationIndex = 0;
-            if (migrationIndex > -1) {
-                const currentItem = newConfig.migration.migrateItems[migrationIndex];
-                newConfig.migration.migrateItems[migrationIndex] = {
-                    ...currentItem,
-                    source: { kind: "Table", names: [table.name] },
-                    destination: { kind: "Table", names: [table.name] },
-                    load: { entities: [], matches: [] },
-                    map: { mappings: [] },
-                    filter: { expression: null },
-                };
-            }
+            const migrationIndex =
+                typeof newConfig.activeItemIndex === "number"
+                    ? newConfig.activeItemIndex
+                    : 0;
+
+            const currentItem = newConfig.migration.migrateItems[migrationIndex];
+            newConfig.migration.migrateItems[migrationIndex] = {
+                ...currentItem,
+                source: { kind: "Table", names: [table.name] },
+                destination: { kind: "Table", names: [table.name] },
+                load: { entities: [], matches: [] },
+                map: { mappings: [] },
+                filter: { expression: null },
+            };
             return newConfig;
         });
     };
@@ -88,12 +90,14 @@ const Step3_SelectTable: React.FC<Step3_SelectTableProps> = ({
         setDestinationTableName(newDestName);
         setConfig((currentConfig) => {
             const newConfig = structuredClone(currentConfig);
-            const migrationIndex = 0;
-            if (migrationIndex > -1) {
-                newConfig.migration.migrateItems[migrationIndex].destination.names = [
-                    newDestName,
-                ];
-            }
+            const migrationIndex =
+                typeof newConfig.activeItemIndex === "number"
+                    ? newConfig.activeItemIndex
+                    : 0;
+
+            newConfig.migration.migrateItems[migrationIndex].destination.names = [
+                newDestName,
+            ];
             return newConfig;
         });
     };
@@ -408,4 +412,4 @@ const Step3_SelectTable: React.FC<Step3_SelectTableProps> = ({
     );
 };
 
-export default Step3_SelectTable;
+export default Step4_SelectTable;

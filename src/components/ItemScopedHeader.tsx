@@ -42,22 +42,24 @@ export const ItemScopedHeader: React.FC<ItemScopedHeaderProps> = ({
                         </p>
                     </div>
                 </div>
-                <Select
-                    value={config.activeItemIndex.toString()}
-                    options={migrateItems.map((item, index) => ({
-                        label: item.destination?.names?.[0] || `Item ${index + 1}`,
-                        value: index.toString()
-                    }))}
-                    onChange={(e) => {
-                        const index = parseInt(e.target.value, 10);
-                        if (!isNaN(index)) {
-                            setConfig(prev => ({
-                                ...prev,
-                                activeItemIndex: index,
-                            }));
-                        }
-                    }}
-                />
+                <div className="w-48">
+                    <Select
+                        value={config.activeItemIndex.toString()}
+                        options={migrateItems.map((item, index) => ({
+                            label: item.destination?.names?.[0] || `Item ${index + 1}`,
+                            value: index.toString()
+                        }))}
+                        onChange={(e) => {
+                            const index = parseInt(e.target.value, 10);
+                            if (!isNaN(index)) {
+                                setConfig(prev => ({
+                                    ...prev,
+                                    activeItemIndex: index,
+                                }));
+                            }
+                        }}
+                    />
+                </div>
             </div>
         </div>
     );

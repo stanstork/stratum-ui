@@ -377,3 +377,53 @@ export function getMigrationItem(dto: MigrateItemDTO): MigrateItem {
         destination: dto.destination
     };
 }
+
+export function countFilterConditions(filter: Filter): number {
+    return countConditions(filter.expression);
+}
+
+function countConditions(expr: Expression | null): number {
+    if (!expr) return 0;
+
+    if (isCondition(expr)) {
+        // Count this condition, plus any (rare) nested conditions in its sides
+        return 1 + countConditions(expr.Condition.left) + countConditions(expr.Condition.right);
+    }
+
+    if (isFunctionCall(expr)) {
+        const [fnName, args] = expr.FunctionCall;
+        // Whether it's AND/OR or any other function, just traverse args
+        return (args ?? []).reduce((sum, arg) => sum + countConditions(arg), 0);
+    }
+
+    // Traverse into other composite nodes just in case
+    if (isArithmetic(expr)) {
+        return countConditions(expr.Arithmetic.left) + countConditions(expr.Arithmetic.right);
+    }
+
+    if (isLookup(expr) || isLiteral(expr) || isIdentifier(expr)) {
+        return 0; // leaves
+    }
+
+    // Exhaustiveness fallback
+    return 0;
+}
+
+function isCondition(e: Expression): e is ConditionExpr {
+    return (e as any).Condition !== undefined;
+}
+function isFunctionCall(e: Expression): e is FunctionCallExpr {
+    return (e as any).FunctionCall !== undefined;
+}
+function isArithmetic(e: Expression): e is ArithmeticExpr {
+    return (e as any).Arithmetic !== undefined;
+}
+function isLookup(e: Expression): e is LookupExpr {
+    return (e as any).Lookup !== undefined;
+}
+function isLiteral(e: Expression): e is LiteralExpr {
+    return (e as any).Literal !== undefined;
+}
+function isIdentifier(e: Expression): e is IdentifierExpr {
+    return (e as any).Identifier !== undefined;
+}

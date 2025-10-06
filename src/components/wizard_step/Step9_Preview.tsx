@@ -35,7 +35,7 @@ export const isIdentifier = (expr: Expression): expr is IdentifierExpr => typeof
 const COMPARATOR_MAP: Record<string, string> = { 'Equal': '=', 'NotEqual': '!=', 'GreaterThan': '>', 'GreaterThanOrEqual': '>=', 'LessThan': '<', 'LessThanOrEqual': '<=' };
 const ARITHMETIC_OPERATORS: Record<string, string> = { 'Add': '+', 'Subtract': '-', 'Multiply': '*', 'Divide': '/' };
 
-function exprToString(expr?: Expression | null): string {
+export function exprToString(expr?: Expression | null): string {
     if (!expr) return 'N/A';
     if (isLookup(expr)) return `${expr.Lookup.entity}.${expr.Lookup.key || '?'}`;
     if (isLiteral(expr)) {
@@ -241,7 +241,7 @@ const ItemCard: React.FC<{ item: MigrateItem; idx: number; dense?: boolean }> = 
     );
 };
 
-const Section: React.FC<{ title: string; icon: React.ReactNode; children: React.ReactNode; }> = ({ title, icon, children }) => (
+export const Section: React.FC<{ title: string; icon: React.ReactNode; children: React.ReactNode; }> = ({ title, icon, children }) => (
     <div>
         <div className="flex items-center gap-3 border-b border-slate-200/75 dark:border-slate-800 pb-2">
             <div className="text-slate-400 dark:text-slate-500">{icon}</div>
@@ -251,7 +251,7 @@ const Section: React.FC<{ title: string; icon: React.ReactNode; children: React.
     </div>
 );
 
-const SettingsGrid: React.FC<{ item: MigrateItem }> = ({ item }) => (
+export const SettingsGrid: React.FC<{ item: MigrateItem }> = ({ item }) => (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3">
         <SettingItem label="Create Tables" enabled={item.settings?.createMissingTables} />
         <SettingItem label="Create Columns" enabled={item.settings?.createMissingColumns} />

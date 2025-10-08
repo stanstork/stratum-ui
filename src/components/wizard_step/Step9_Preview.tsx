@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import {
     FileText,
     ArrowRight,
@@ -9,6 +9,7 @@ import {
     Table,
     Check,
     X,
+    TestTube2,
 } from "lucide-react";
 import {
     MigrationConfig,
@@ -23,6 +24,10 @@ import {
 } from "../../types/MigrationConfig";
 import { Card, CardContent } from "../common/v2/Card";
 import { Badge } from "../common/v2/Badge";
+import { Button } from "../common/v2/Button";
+import { cn } from "../../utils/utils";
+import { DryRunReport } from "../../types/DryRun";
+import apiClient from "../../services/apiClient";
 
 const isLookup = (e?: Expression): e is LookupExpr => !!(e as LookupExpr)?.Lookup;
 const isLiteral = (e?: Expression): e is LiteralExpr => !!(e as LiteralExpr)?.Literal;
@@ -80,6 +85,29 @@ export const getLookupParts = (expr: Expression) => {
 type Step9PreviewProps = { config: MigrationConfig };
 
 const Step9_Preview: React.FC<Step9PreviewProps> = ({ config }) => {
+    const [dryRunOpen, setDryRunOpen] = useState(false);
+    const [dryRunReport, setDryRunReport] = useState<DryRunReport | null>(null);
+    const [dryRunLoading, setDryRunLoading] = useState(false);
+    const definitionId = "temp-def-id"; // Replace with actual definition ID from context or props
+
+    const fetchDryRunReport = async () => {
+        if (!definitionId) return;
+        try {
+            setDryRunLoading(true);
+            const report = await apiClient.getDryRunReport(definitionId);
+            setDryRunReport(report);
+            setDryRunOpen(true);
+        } catch (error) {
+            console.error("Failed to fetch dry run report:", error);
+        } finally {
+            setDryRunLoading(false);
+        }
+    };
+
+    const handleDryRun = () => {
+        fetchDryRunReport();
+    };
+
     const items = config.migration?.migrateItems ?? [];
     const isSingle = items.length === 1;
     const totals = useMemo(() => {
@@ -97,7 +125,7 @@ const Step9_Preview: React.FC<Step9PreviewProps> = ({ config }) => {
                 <div>
                     <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Review & Confirm</h2>
                     <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-                        Preview the configuration before running the migration.
+                        Preview the configuration before saving the migration.
                     </p>
                 </div>
                 {!isSingle && (
@@ -107,6 +135,10 @@ const Step9_Preview: React.FC<Step9PreviewProps> = ({ config }) => {
                         <Badge variant="secondary">{totals.maps} mappings</Badge>
                     </div>
                 )}
+                <Button onClick={handleDryRun} disabled={dryRunLoading} variant="outline">
+                    <TestTube2 className={cn("w-4 h-4 mr-2", dryRunLoading && "animate-spin")} />
+                    {dryRunLoading ? "Running..." : "Dry Run"}
+                </Button>
             </div>
             {isSingle ? (
                 <ItemCard item={items[0]} idx={0} dense />

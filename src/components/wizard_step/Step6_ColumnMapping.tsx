@@ -214,8 +214,8 @@ const ArithmeticEditor: React.FC<ExpressionEditorProps> = ({ expression, onUpdat
                     ))}
                 </div>
                 <Input
-                    value={((right as LiteralExpr).Literal?.Integer ?? "").toString()}
-                    onChange={(e) => handleUpdate("right", { Literal: { Integer: parseFloat(e.target.value) || 0 } })}
+                    value={((right as LiteralExpr).Literal?.Float ?? "").toString()}
+                    onChange={(e) => handleUpdate("right", { Literal: { Float: parseFloat(e.target.value) || 0 } })}
                     placeholder="Value"
                     className="flex-grow"
                     step="0.01"

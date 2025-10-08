@@ -1,11 +1,11 @@
-import { AlertTriangle, ArrowRight, BarChart, CheckCircle, ChevronLeft, ChevronRight, Code2, Copy, CopyIcon, Database, Download, FileOutput, FunctionSquare, GitBranch, GitMerge, Map, Play, RefreshCw, Settings, ShieldAlert, TestTube2, Trash2, TrendingUp, XCircle, Zap } from "lucide-react";
+import { AlertTriangle, ArrowRight, BarChart, CheckCircle, ChevronLeft, ChevronRight, Code2, Copy, CopyIcon, Database, Download, FileOutput, FileText, FunctionSquare, GitBranch, GitMerge, List, Map, Play, RefreshCw, Settings, ShieldAlert, TestTube2, Trash2, TrendingUp, XCircle, Zap } from "lucide-react";
 import { DryRunReport, FieldValue, Finding, GeneratedSqlStatement, TransformedRecord } from "../types/DryRun";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./common/Dialog";
 import { Badge } from "./common/v2/Badge";
 import { Card, CardContent, CardHeader, CardTitle } from "./common/v2/Card";
 import { Label } from "./common/v2/Label";
 import { Button } from "./common/v2/Button";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Select from "./common/Select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./common/v2/Tabs";
 import { cn } from "../utils/utils";
@@ -76,24 +76,36 @@ const DryRunPanel: React.FC<DryRunPanelProps> = ({
     showConfigChanged = false,
     showControls = true
 }) => {
-    const [config, setConfig] = useState<DryRunConfig>({
-        sampleSize: 10,
-    });
-
+    const [config, setConfig] = useState<DryRunConfig>({ sampleSize: 10 });
     const [currentRecordIndex, setCurrentRecordIndex] = useState(0);
+    const [selectedItemName, setSelectedItemName] = useState<string | null>(null);
+
+    const itemNames = useMemo(() => (result ? Object.keys(result) : []), [result]);
+
+    useEffect(() => {
+        // When a new report comes in, select the first item by default
+        if (itemNames.length > 0 && !itemNames.includes(selectedItemName || '')) {
+            setSelectedItemName(itemNames[0]);
+        } else if (itemNames.length === 0) {
+            setSelectedItemName(null);
+        }
+        setCurrentRecordIndex(0); // Reset record index on new report
+    }, [result]);
 
     const handleRunDryRun = () => {
-        setCurrentRecordIndex(0); // Reset to first record when running a new dry run
+        setCurrentRecordIndex(0);
         onRunDryRun?.(config);
     };
 
-    // Currently, we only support one entity per dry run
-    // So we just pick the first one from the result object
+    const handleItemChange = (newItemName: string) => {
+        setSelectedItemName(newItemName);
+        setCurrentRecordIndex(0); // Reset to first record when switching items
+    };
+
     const reportEntity = useMemo(() => {
-        if (!result) return null;
-        const entityKey = Object.keys(result)[0];
-        return entityKey ? result[entityKey] : null;
-    }, [result]);
+        if (!result || !selectedItemName) return null;
+        return result[selectedItemName];
+    }, [result, selectedItemName]);
 
     const findings = useMemo(() => {
         if (!reportEntity?.schemaValidation?.findings) return { errors: [], warnings: [], infos: [] };
@@ -105,6 +117,21 @@ const DryRunPanel: React.FC<DryRunPanelProps> = ({
 
     const hasErrors = (findings.errors?.length ?? 0) > 0;
 
+    const { hasAnyErrorsInReport, totalErrorCount } = useMemo(() => {
+        if (!result) {
+            return { hasAnyErrorsInReport: false, totalErrorCount: 0 };
+        }
+        let totalErrors = 0;
+        for (const entity of Object.values(result)) {
+            const errorCount = entity.schemaValidation?.findings?.filter(f => f.severity === 'error').length ?? 0;
+            totalErrors += errorCount;
+        }
+        return {
+            hasAnyErrorsInReport: totalErrors > 0,
+            totalErrorCount: totalErrors,
+        };
+    }, [result]);
+
     const { schemaStatements, dataStatements } = useMemo(() => {
         const statements = reportEntity?.generatedSql.statements ?? [];
         return {
@@ -114,10 +141,6 @@ const DryRunPanel: React.FC<DryRunPanelProps> = ({
     }, [reportEntity]);
 
     const currentRecord = reportEntity?.transform?.sample?.[currentRecordIndex];
-    const currentEntityMapping = useMemo(() => {
-        if (!reportEntity || !currentRecord) return null;
-        return reportEntity.mapping.entities.find(e => e.sourceEntity === currentRecord.input.entity);
-    }, [reportEntity, currentRecord]);
 
     const downloadJson = () => {
         if (!result) return;
@@ -204,6 +227,19 @@ const DryRunPanel: React.FC<DryRunPanelProps> = ({
                         {/* Results Section */}
                         {result && !isLoading && (
                             <>
+                                {itemNames.length > 1 && (
+                                    <Card className="bg-white dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm">
+                                        <CardHeader><CardTitle className="text-lg flex items-center space-x-2 text-slate-900 dark:text-white"><FileText className="w-5 h-5" /><span>Select Migration Item</span></CardTitle></CardHeader>
+                                        <CardContent>
+                                            <Select
+                                                value={selectedItemName || ''}
+                                                onChange={(e) => handleItemChange(e.target.value)}
+                                                options={itemNames.map(name => ({ value: name, label: name }))}
+                                            />
+                                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">Select an item to view its detailed dry run report.</p>
+                                        </CardContent>
+                                    </Card>
+                                )}
                                 {/* Summary Cards */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                                     <Card className="bg-white dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm">
@@ -560,7 +596,7 @@ const DryRunPanel: React.FC<DryRunPanelProps> = ({
                                                 </div>
                                             </CardHeader>
                                             <CardContent>
-                                                {currentRecord && currentEntityMapping && <TransformRecordView record={currentRecord} />}
+                                                {currentRecord && <TransformRecordView record={currentRecord} />}
                                             </CardContent>
                                         </Card>
                                     </TabsContent>
@@ -580,13 +616,13 @@ const DryRunPanel: React.FC<DryRunPanelProps> = ({
                                 {isLoading ? 'Running...' : 'Re-run Analysis'}
                             </Button>
                             <Button
-                                variant={hasErrors ? "destructive" : "primary"}
+                                variant={hasAnyErrorsInReport ? "destructive" : "primary"}
                                 onClick={onRunMigration}
-                                disabled={!canRunMigration || hasErrors}
-                                title={hasErrors ? "Cannot run migration due to errors in the dry run." : ""}
+                                disabled={!canRunMigration || hasAnyErrorsInReport}
+                                title={hasAnyErrorsInReport ? "Cannot run migration due to errors in the dry run." : ""}
                             >
                                 <Play className="w-4 h-4 mr-2" />
-                                {hasErrors ? `Cannot Run (${findings.errors.length} errors)` : 'Run Migration'}
+                                {hasAnyErrorsInReport ? `Cannot Run (${totalErrorCount} errors)` : 'Run Migration'}
                             </Button>
                         </div>
                     </div>

@@ -13,6 +13,8 @@ import MigrationDetailsPage from './pages/MIgrationDefinitionDetails';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import AddConnection from './pages/AddConnection';
+import NotFound from './pages/NotFound';
+import AdminUsers from './pages/AdminUsers';
 
 interface AppContextProps {
     page: string;
@@ -130,6 +132,10 @@ const InnerApp: React.FC = () => {
                             </PrivateRoute>
                         }
                     />
+                    <Route path="admin/users" element={<AdminUsers />} />
+                    <Route path="settings" element={<NotFound />} />
+                    <Route path="help" element={<NotFound />} />
+                    <Route path="*" element={<NotFound />} />
                 </Route>
             </Routes>
         </Layout>

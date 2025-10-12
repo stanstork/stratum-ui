@@ -1,13 +1,12 @@
-import axios, { AxiosInstance, AxiosRequestConfig } from "axios";
+import axios, { AxiosInstance } from "axios";
 import { JobDefinition, JobDefinitionDTO, mapJobDefinition } from "../types/JobDefinition";
 import { JobExecution, JobExecutionDTO, mapJobExecution } from "../types/JobExecution";
 import { emptyExecutionStat, ExecutionStat, JobDefinitionStat, JobDefinitionStatDTO, mapExecutionStat, mapJobDefinitionStat } from "../types/ExecutionStat";
 import { Connection, ConnectionDTO, ConnectionTestResult, mapConnection, mapFrontendDataFormatToBackend } from "../types/Connection";
 import { mapMetadataResponse, MetadataResponse, TableMetadata } from "../types/Metadata";
-import { data } from "react-router-dom";
 import { getMigrationDTO, MigrationConfig } from "../types/MigrationConfig";
-import { a } from "framer-motion/dist/types.d-B_QPEvFK";
 import { DryRunReport, DryRunReportEntityDTO, mapDryRunReport } from "../types/DryRun";
+import { mapUser, User, UserDTO } from "../types/User";
 
 interface ApiClient extends AxiosInstance {
     getConnectionById: (connectionId: string) => Promise<Connection | null>;
@@ -31,6 +30,10 @@ interface ApiClient extends AxiosInstance {
     getDryRunReport: (definitionId: string) => Promise<DryRunReport>;
     login: (username: string, password: string) => Promise<string>;
     logout: () => void;
+    users: () => Promise<User[]>;
+    updateUserRoles: (userId: string, roles: string[]) => Promise<void>;
+    inviteUser: (email: string, roles: string[]) => Promise<void>;
+    deleteUser: (userId: string) => Promise<void>;
 }
 
 const apiClient: ApiClient = axios.create({
@@ -78,6 +81,7 @@ apiClient.login = async (email: string, password: string): Promise<string> => {
 
 apiClient.logout = (): void => {
     localStorage.removeItem('token');
+    localStorage.removeItem('email');
     delete apiClient.defaults.headers.common['Authorization'];
 };
 
@@ -230,6 +234,11 @@ apiClient.getDryRunReport = async (definitionId: string): Promise<DryRunReport> 
     const report = mapDryRunReport(response.data);
     console.log("Dry run report:", report);
     return report;
+}
+
+apiClient.users = async (): Promise<User[]> => {
+    const response = await apiClient.get<UserDTO[]>('/users');
+    return response.data.map(mapUser);
 }
 
 export default apiClient;

@@ -1,10 +1,25 @@
-import { Link, useLocation } from "react-router-dom";
-import { Database, ChartLine, FileText, Play, Plug, Settings, HelpCircle, User, Bell, Plus } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { ChartLine, FileText, Play, Plug, Settings, HelpCircle, Plus, Users, LogOut } from "lucide-react";
 import { cn } from "../utils/utils";
 import { Button } from "./common/v2/Button";
 import LogoIcon from "./icons/LogoIcon";
+import { useAuth } from "../context/AuthContext";
+import type { LucideIcon } from "lucide-react";
 
-const navigation = [
+type NavigationItem = {
+    name: string;
+    href: string;
+    icon: LucideIcon;
+    requiresAdmin?: boolean;
+};
+
+type NavigationSection = {
+    name: string;
+    items: NavigationItem[];
+    requiresAdmin?: boolean;
+};
+
+const navigation: NavigationSection[] = [
     {
         name: "GENERAL",
         items: [
@@ -21,6 +36,13 @@ const navigation = [
         ]
     },
     {
+        name: "ADMIN",
+        requiresAdmin: true,
+        items: [
+            { name: "Users", href: "/admin/users", icon: Users },
+        ]
+    },
+    {
         name: "SUPPORT",
         items: [
             { name: "Settings", href: "/settings", icon: Settings },
@@ -31,6 +53,36 @@ const navigation = [
 
 export default function Sidebar() {
     const location = useLocation();
+    const navigate = useNavigate();
+    const { user, logout } = useAuth();
+
+    const visibleNavigation = navigation
+        .map((section) => {
+            const items = section.items.filter((item) => {
+                const requireAdmin = section.requiresAdmin ?? item.requiresAdmin;
+                if (requireAdmin) {
+                    return user?.isAdmin;
+                }
+                return true;
+            });
+            return { ...section, items };
+        })
+        .filter((section) => section.items.length > 0);
+
+    const displayName = user?.displayName || user?.email || "User";
+    const initials = displayName
+        .split(/\s+/)
+        .filter(Boolean)
+        .map((part) => part[0])
+        .join('')
+        .slice(0, 2)
+        .toUpperCase() || "U";
+    const secondaryLine = user?.email && user.email !== displayName ? user.email : undefined;
+
+    const handleLogout = () => {
+        logout();
+        navigate("/login", { replace: true });
+    };
 
     return (
         <div className="w-64 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 flex flex-col" data-testid="sidebar">
@@ -43,7 +95,7 @@ export default function Sidebar() {
 
             {/* Navigation */}
             <nav className="flex-1 px-4 py-6 space-y-8" data-testid="sidebar-navigation">
-                {navigation.map((section) => (
+                {visibleNavigation.map((section) => (
                     <div key={section.name}>
                         <h3 className="px-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">
                             {section.name}
@@ -78,16 +130,26 @@ export default function Sidebar() {
 
             {/* User Section */}
             <div className="px-4 py-4 border-t border-slate-200 dark:border-slate-700">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center space-x-3">
                         <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
-                            <span className="text-white text-sm font-medium">AU</span>
+                            <span className="text-white text-sm font-medium">{initials}</span>
                         </div>
                         <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-slate-900 dark:text-white truncate">Admin User</p>
+                            <p className="text-sm font-medium text-slate-900 dark:text-white truncate">{displayName}</p>
+                            {secondaryLine && (<p className="text-xs text-slate-500 dark:text-slate-400 truncate">{secondaryLine}</p>)}
                         </div>
                     </div>
                 </div>
+
+                <Button
+                    variant="outline"
+                    className="w-full text-sm"
+                    onClick={handleLogout}
+                >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Logout
+                </Button>
             </div>
         </div>
     );

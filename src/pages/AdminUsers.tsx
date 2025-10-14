@@ -1,8 +1,8 @@
 import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
-import { Transition, Dialog as ReactDialog } from "@headlessui/react";
+import { Transition, Dialog as ReactDialog, Tab } from "@headlessui/react";
 import { useToast } from "../components/hooks/use-toast";
 import apiClient from "../services/apiClient";
-import { User } from "../types/User";
+import { Invite, User } from "../types/User";
 import { Button } from "../components/common/v2/Button";
 import {
     AlertTriangle,
@@ -40,6 +40,8 @@ import {
 import { Checkbox } from "../components/common/Checkbox";
 import { Label } from "../components/common/v2/Label";
 import Input from "../components/common/Input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/common/v2/Tabs";
+import { cn } from "../utils/utils";
 
 /** ---------- Roles ---------- */
 type RoleValue = "admin" | "editor" | "viewer" | "super_admin";
@@ -122,7 +124,6 @@ function RoleSelector({
     );
 }
 
-/** ---------- Loading Skeleton ---------- */
 function UsersTableSkeleton() {
     const rows = useMemo(() => Array.from({ length: 6 }), []);
     return (
@@ -145,7 +146,6 @@ function UsersTableSkeleton() {
     );
 }
 
-/** ---------- Inline Success Banner ---------- */
 function SuccessBanner({
     message,
     onClose,
@@ -169,15 +169,20 @@ function SuccessBanner({
     );
 }
 
-/** ---------- HeadlessUI (ReactDialog) Revoke Modal (kept as requested) ---------- */
 function DeleteConfirmationModal({
     isOpen,
     onClose,
     onConfirm,
+    title,
+    description,
+    action,
 }: {
     isOpen: boolean;
     onClose: () => void;
     onConfirm: () => void;
+    title: string;
+    description: string;
+    action: string;
 }) {
     return (
         <Transition appear show={isOpen} as={Fragment}>
@@ -208,12 +213,11 @@ function DeleteConfirmationModal({
                             <ReactDialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white dark:bg-slate-800 p-6 text-left align-middle shadow-xl transition-all">
                                 <ReactDialog.Title className="text-lg font-bold leading-6 text-slate-900 dark:text-slate-50 flex items-center">
                                     <AlertTriangle className="text-red-500 mr-2" />
-                                    Revoke User Access
+                                    {title}
                                 </ReactDialog.Title>
                                 <div className="mt-4">
                                     <p className="text-sm text-slate-600 dark:text-slate-400">
-                                        Are you sure you want to revoke access for this user? This action cannot be undone.
-                                        The user will immediately lose access to the system.
+                                        {description}
                                     </p>
                                 </div>
                                 <div className="mt-6 flex justify-end gap-2">
@@ -228,7 +232,7 @@ function DeleteConfirmationModal({
                                         onClick={onConfirm}
                                         data-testid="button-confirm-revoke"
                                     >
-                                        Revoke Access
+                                        {action}
                                     </button>
                                 </div>
                             </ReactDialog.Panel>
@@ -240,31 +244,30 @@ function DeleteConfirmationModal({
     );
 }
 
-/** ---------- Optional: Pending Invites (best-effort) ---------- */
-type Invite = {
-    id: string;
-    email: string;
-    roles: string[];
-    status: "pending" | "accepted" | "expired";
-    invitedAt?: string;
-};
+function InviteStatusBadge({ invite }: { invite: Invite }) {
+    const now = new Date();
+    let label = "Pending";
+    let style =
+        "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-200";
 
-function InviteStatusBadge({ status }: { status: Invite["status"] }) {
-    const style =
-        status === "pending"
-            ? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-200"
-            : status === "accepted"
-                ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200"
-                : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300";
+    if (invite.acceptedAt) {
+        label = "Accepted";
+        style =
+            "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200";
+    } else if (invite.expiresAt && new Date(invite.expiresAt) < now) {
+        label = "Expired";
+        style =
+            "bg-gray-200 text-gray-600 dark:bg-gray-700/40 dark:text-gray-300";
+    }
+
     return (
         <Badge className={style} variant="outline">
             <Clock3 className="w-3 h-3 mr-1" />
-            {status[0].toUpperCase() + status.slice(1)}
+            {label}
         </Badge>
     );
 }
 
-/** ---------- Main ---------- */
 export default function AdminUsers() {
     const { toast } = useToast();
 
@@ -285,6 +288,8 @@ export default function AdminUsers() {
 
     const [invites, setInvites] = useState<Invite[] | null>(null);
     const [isLoadingInvites, setIsLoadingInvites] = useState(false);
+
+    const [cancelingInviteId, setCancelingInviteId] = useState<string | null>(null);
 
     useEffect(() => {
         let cancelled = false;
@@ -311,18 +316,16 @@ export default function AdminUsers() {
         };
     }, [toast]);
 
-    // Best-effort: fetch pending invites if the API exists
+    // Fetch pending invites
     useEffect(() => {
         let cancelled = false;
         (async () => {
             setIsLoadingInvites(true);
             try {
-                // If your API differs, adjust here—guarded so it won’t break if missing.
-                if (typeof (apiClient as any).listInvites === "function") {
-                    const data: Invite[] = await (apiClient as any).listInvites();
-                    if (!cancelled) setInvites(data || []);
-                } else {
-                    if (!cancelled) setInvites([]);
+                const data = await apiClient.listInvites();
+                if (!cancelled) {
+                    const pendingInvites = data.filter((inv) => !inv.acceptedAt);
+                    setInvites(pendingInvites);
                 }
             } catch {
                 if (!cancelled) setInvites([]);
@@ -445,6 +448,10 @@ export default function AdminUsers() {
         setRevokeUserId(null);
     }, []);
 
+    const closeCancelInviteModal = useCallback(() => {
+        setCancelingInviteId(null);
+    }, []);
+
     const handleRevokeUser = useCallback(async () => {
         if (!revokeUserId) return;
         try {
@@ -462,15 +469,45 @@ export default function AdminUsers() {
         }
     }, [revokeUserId, toast, closeDeleteModal]);
 
+    const handleCancelInvite = useCallback(async () => {
+        if (!cancelingInviteId) return;
+
+        try {
+            await apiClient.cancelInvite(cancelingInviteId);
+            setInvites((prev) => (prev ? prev.filter((inv) => inv.id !== cancelingInviteId) : prev));
+            toast({ title: "Success", description: "Invite cancelled successfully." });
+            closeCancelInviteModal();
+        } catch (error) {
+            console.error("Error cancelling invite:", error);
+            toast({
+                title: "Error",
+                description: "Failed to cancel invite.",
+                variant: "destructive",
+            });
+        }
+    }, [toast]);
+
     const hasUsers = users.length > 0;
 
     return (
         <>
-            {/* Revoke dialog (HeadlessUI) */}
+            {/* Revoke User Confirmation Modal */}
             <DeleteConfirmationModal
                 isOpen={!!revokeUserId}
                 onClose={closeDeleteModal}
                 onConfirm={handleRevokeUser}
+                title="Revoke User Access"
+                description="Are you sure you want to revoke access for this user? This action cannot be undone. The user will immediately lose access to the system."
+                action="Revoke Access"
+            />
+
+            <DeleteConfirmationModal
+                isOpen={!!cancelingInviteId}
+                onClose={closeCancelInviteModal}
+                onConfirm={handleCancelInvite}
+                title="Cancel Invite"
+                description="Are you sure you want to cancel this invite? This action cannot be undone."
+                action="Cancel Invite"
             />
 
             <div className="space-y-6">
@@ -498,115 +535,163 @@ export default function AdminUsers() {
                     </div>
                 </div>
 
-                {/* Pending Invites (optional, shown if API returns list) */}
-                {invites && invites.length > 0 && (
-                    <Card className="bg-white dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm overflow-hidden relative">
-                        <CardHeader className="border-gray-200 dark:border-slate-700">
-                            <div className="flex items-center justify-between">
-                                <CardTitle>Pending Invites</CardTitle>
-                            </div>
-                        </CardHeader>
-                        <CardContent>
-                            {isLoadingInvites ? (
-                                <div className="text-sm text-slate-600 dark:text-slate-400 py-4">Loading invites…</div>
-                            ) : (
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>Email</TableHead>
-                                            <TableHead>Roles</TableHead>
-                                            <TableHead>Status</TableHead>
-                                            <TableHead>Invited</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {invites.map((inv) => (
-                                            <TableRow key={inv.id}>
-                                                <TableCell className="font-medium">{inv.email}</TableCell>
-                                                <TableCell>
-                                                    <RoleBadges roles={inv.roles} />
-                                                </TableCell>
-                                                <TableCell>
-                                                    <InviteStatusBadge status={inv.status} />
-                                                </TableCell>
-                                                <TableCell>
-                                                    <span className="text-slate-600 dark:text-slate-400 text-sm">
-                                                        {inv.invitedAt ? new Date(inv.invitedAt).toLocaleString() : "—"}
-                                                    </span>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                            )}
-                        </CardContent>
-                    </Card>
-                )}
-
-                {/* Users */}
-                <Card className="bg-white dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm overflow-hidden relative">
-                    <CardHeader className="border-gray-200 dark:border-slate-700">
-                        <div className="flex items-center justify-between">
-                            <CardTitle>Users</CardTitle>
-                        </div>
-                    </CardHeader>
-                    <CardContent>
-                        {isLoading ? (
-                            <UsersTableSkeleton />
-                        ) : !hasUsers ? (
-                            <div className="text-center py-8 text-slate-600 dark:text-slate-400">
-                                No users found. Invite your first user to get started.
-                            </div>
-                        ) : (
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Email</TableHead>
-                                        <TableHead>Roles</TableHead>
-                                        <TableHead>Status</TableHead>
-                                        <TableHead className="text-right">Actions</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {users.map((user) => (
-                                        <TableRow key={user.id}>
-                                            <TableCell className="font-medium">{user.email}</TableCell>
-                                            <TableCell>
-                                                <div className="flex items-center gap-2">
-                                                    <RoleBadges roles={user.roles} />
-                                                    {user.isActive && (
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            className="h-6 w-6 p-0"
-                                                            onClick={() => openEditRoles(user.id, user.roles)}
-                                                            aria-label={`Edit roles for ${user.email}`}
-                                                        >
-                                                            <Edit className="w-3 h-3" />
-                                                        </Button>
-                                                    )}
-                                                </div>
-                                            </TableCell>
-                                            <TableCell>
-                                                <StatusBadge isActive={user.isActive} />
-                                            </TableCell>
-                                            <TableCell className="text-right">
-                                                <Button
-                                                    variant="destructive"
-                                                    size="sm"
-                                                    onClick={() => setRevokeUserId(user.id)}
-                                                >
-                                                    <Trash2 className="w-4 h-4 mr-1" />
-                                                    Revoke
-                                                </Button>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
+                <Tabs defaultValue="users" className="space-y-6">
+                    <TabsList
+                        className={cn(
+                            "w-fit rounded-xl bg-slate-100 dark:bg-slate-800 p-1",
+                            "border border-slate-200 dark:border-slate-700"
                         )}
-                    </CardContent>
-                </Card>
+                    >
+                        {[
+                            { value: "users", label: "User Management" },
+                            { value: "invites", label: "Pending Invites" },
+                        ].map(({ value, label }) => (
+                            <TabsTrigger
+                                key={value}
+                                value={value}
+                                data-testid={`tab-${value}`}
+                                className={cn(
+                                    "px-3.5 text-sm font-medium rounded-xl transition-all",
+                                    "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white",
+                                    "data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900",
+                                    "data-[state=active]:text-slate-900 dark:data-[state=active]:text-white",
+                                    "data-[state=active]:shadow-sm"
+                                )}
+                            >
+                                {label}
+                            </TabsTrigger>
+                        ))}
+                    </TabsList>
+
+                    <TabsContent value="users" className="space-y-6">
+                        {/* Users */}
+                        <Card className="bg-white dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm overflow-hidden relative">
+                            <CardHeader className="border-gray-200 dark:border-slate-700">
+                                <div className="flex items-center justify-between">
+                                    <CardTitle>Users</CardTitle>
+                                </div>
+                            </CardHeader>
+                            <CardContent>
+                                {isLoading ? (
+                                    <UsersTableSkeleton />
+                                ) : !hasUsers ? (
+                                    <div className="text-center py-8 text-slate-600 dark:text-slate-400">
+                                        No users found. Invite your first user to get started.
+                                    </div>
+                                ) : (
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>Email</TableHead>
+                                                <TableHead>Roles</TableHead>
+                                                <TableHead>Status</TableHead>
+                                                <TableHead className="text-right">Actions</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {users.map((user) => (
+                                                <TableRow key={user.id}>
+                                                    <TableCell className="font-medium">{user.email}</TableCell>
+                                                    <TableCell>
+                                                        <div className="flex items-center gap-2">
+                                                            <RoleBadges roles={user.roles} />
+                                                            {user.isActive && (
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    className="h-6 w-6 p-0"
+                                                                    onClick={() => openEditRoles(user.id, user.roles)}
+                                                                    aria-label={`Edit roles for ${user.email}`}
+                                                                >
+                                                                    <Edit className="w-3 h-3" />
+                                                                </Button>
+                                                            )}
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <StatusBadge isActive={user.isActive} />
+                                                    </TableCell>
+                                                    <TableCell className="text-right">
+                                                        <Button
+                                                            variant="destructive"
+                                                            size="sm"
+                                                            onClick={() => setRevokeUserId(user.id)}
+                                                        >
+                                                            <Trash2 className="w-4 h-4 mr-1" />
+                                                            Revoke
+                                                        </Button>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                )}
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+
+                    <TabsContent value="invites" className="space-y-6">
+                        {/* Invites tab content is now below the tabs */}
+                        {(!invites || invites.length === 0) && !isLoadingInvites && (
+                            <div className="text-center py-8 text-slate-600 dark:text-slate-400">
+                                No pending invites found.
+                            </div>
+                        )}
+                        {/* Pending Invites */}
+                        {invites && invites.length > 0 && (
+                            <Card className="bg-white dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm overflow-hidden relative">
+                                <CardHeader className="border-gray-200 dark:border-slate-700">
+                                    <div className="flex items-center justify-between">
+                                        <CardTitle>Pending Invites</CardTitle>
+                                    </div>
+                                </CardHeader>
+                                <CardContent>
+                                    {isLoadingInvites ? (
+                                        <div className="text-sm text-slate-600 dark:text-slate-400 py-4">Loading invites…</div>
+                                    ) : (
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow>
+                                                    <TableHead>Email</TableHead>
+                                                    <TableHead>Roles</TableHead>
+                                                    <TableHead>Invited</TableHead>
+                                                    <TableHead className="text-right">Actions</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {invites.map((inv) => (
+                                                    <TableRow key={inv.id}>
+                                                        <TableCell className="font-medium">{inv.email}</TableCell>
+                                                        <TableCell>
+                                                            <RoleBadges roles={inv.roles} />
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <span className="text-slate-600 dark:text-slate-400 text-sm">
+                                                                {inv.createdAt ? new Date(inv.createdAt).toLocaleString() : "—"}
+                                                            </span>
+                                                        </TableCell>
+                                                        <TableCell className="text-right">
+                                                            {!inv.acceptedAt && (
+                                                                <Button
+                                                                    variant="destructive"
+                                                                    size="sm"
+                                                                    onClick={() => setCancelingInviteId(inv.id)}
+                                                                >
+                                                                    <Trash2 className="w-4 h-4 mr-1" />
+                                                                    Cancel
+                                                                </Button>
+                                                            )}
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        )}
+                    </TabsContent>
+                </Tabs>
 
                 {/* Edit Roles Dialog (shadcn) */}
                 <Dialog open={!!editRolesUserId} onOpenChange={(open) => !open && closeEditRoles()}>

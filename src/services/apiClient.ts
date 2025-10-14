@@ -6,7 +6,7 @@ import { Connection, ConnectionDTO, ConnectionTestResult, mapConnection, mapFron
 import { mapMetadataResponse, MetadataResponse, TableMetadata } from "../types/Metadata";
 import { getMigrationDTO, MigrationConfig } from "../types/MigrationConfig";
 import { DryRunReport, DryRunReportEntityDTO, mapDryRunReport } from "../types/DryRun";
-import { mapUser, User, UserDTO } from "../types/User";
+import { Invite, InviteDTO, mapInvite, mapUser, User, UserDTO } from "../types/User";
 
 interface ApiClient extends AxiosInstance {
     getConnectionById: (connectionId: string) => Promise<Connection | null>;
@@ -34,6 +34,8 @@ interface ApiClient extends AxiosInstance {
     updateUserRoles: (userId: string, roles: string[]) => Promise<void>;
     inviteUser: (email: string, roles: string[]) => Promise<void>;
     deleteUser: (userId: string) => Promise<void>;
+    listInvites: () => Promise<Invite[]>;
+    cancelInvite: (inviteId: string) => Promise<void>;
 }
 
 const apiClient: ApiClient = axios.create({
@@ -239,6 +241,15 @@ apiClient.getDryRunReport = async (definitionId: string): Promise<DryRunReport> 
 apiClient.users = async (): Promise<User[]> => {
     const response = await apiClient.get<UserDTO[]>('/users');
     return response.data.map(mapUser);
+}
+
+apiClient.listInvites = async (): Promise<Invite[]> => {
+    const response = await apiClient.get<InviteDTO[]>('/users/invites');
+    return response.data.map(mapInvite);
+}
+
+apiClient.cancelInvite = async (inviteId: string): Promise<void> => {
+    await apiClient.delete(`/users/invites/${inviteId}`);
 }
 
 export default apiClient;

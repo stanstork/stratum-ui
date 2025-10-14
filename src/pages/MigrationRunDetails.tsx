@@ -11,20 +11,12 @@ import {
     Clock,
     CheckCircle,
     XCircle,
-    AlertTriangle,
     Activity,
     BarChart3,
-    FileText,
     Zap,
     Search,
     ArrowDown,
     FileCode,
-    Webhook,
-    Server,
-    Container,
-    CheckCircle2,
-    Loader,
-    ArrowRight,
     Timer
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
@@ -36,9 +28,7 @@ import { Button } from "../components/common/v2/Button";
 import { Badge } from "../components/common/v2/Badge";
 import { cn } from "../utils/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/common/v2/Card";
-import { Progress } from "../components/common/v2/Progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/common/v2/Tabs";
-import { motion } from "framer-motion";
 
 interface ExecutionMetrics {
     recordsProcessed: number;

@@ -4,6 +4,8 @@ export interface UserDTO {
     email: string;
     is_active: boolean;
     roles: string[];
+    first_name?: string;
+    last_name?: string;
 }
 
 export interface User {
@@ -12,6 +14,8 @@ export interface User {
     email: string;
     isActive: boolean;
     roles: string[];
+    firstName?: string;
+    lastName?: string;
 }
 
 export const mapUser = (dto: UserDTO): User => ({
@@ -20,6 +24,8 @@ export const mapUser = (dto: UserDTO): User => ({
     email: dto.email,
     isActive: dto.is_active,
     roles: dto.roles,
+    firstName: dto.first_name,
+    lastName: dto.last_name,
 });
 
 export interface InviteDTO {

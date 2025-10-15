@@ -1,4 +1,4 @@
-import { useLocation, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useToast } from "../components/hooks/use-toast";
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/common/v2/Card";
@@ -12,7 +12,6 @@ import { Button } from "../components/common/v2/Button";
 
 export default function AcceptInvitePage() {
     const { token } = useParams<{ token: string }>();
-    const location = useLocation();
     const { toast } = useToast();
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
@@ -21,6 +20,8 @@ export default function AcceptInvitePage() {
     const [invite, setInvite] = useState<Invite | null>(null);
     const [user, setUser] = useState<User | null>(null);
     const [isAccepting, setIsAccepting] = useState(false);
+    const [firstName, setFirstName] = useState("");
+    const [lastName, setLastName] = useState("");
 
     useEffect(() => {
         const verifyInvite = async () => {
@@ -51,6 +52,16 @@ export default function AcceptInvitePage() {
             });
             return;
         }
+
+        if (!firstName || !lastName) {
+            toast({
+                title: "Name required",
+                description: "Please enter your first and last name.",
+                variant: "destructive",
+            });
+            return;
+        }
+
         if (password.length < 8) {
             toast({
                 title: "Error",
@@ -70,7 +81,7 @@ export default function AcceptInvitePage() {
 
         try {
             setIsAccepting(true);
-            const newUser = await apiClient.acceptInvite(token!, password);
+            const newUser = await apiClient.acceptInvite(token!, password, firstName, lastName);
             setUser(newUser);
             toast({
                 title: "Success",
@@ -94,7 +105,7 @@ export default function AcceptInvitePage() {
     if (isLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
-                <Card className="w-full max-w-md border border-gray-200 dark:border-gray-700">
+                <Card className="w-full max-w-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-800/50">
                     <CardContent className="py-8">
                         <div className="text-center text-slate-600 dark:text-slate-400">
                             Verifying invitation...
@@ -108,7 +119,7 @@ export default function AcceptInvitePage() {
     if (error || !invite) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
-                <Card className="w-full max-w-md border border-gray-200 dark:border-gray-700">
+                <Card className="w-full max-w-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-800/50">
                     <CardHeader>
                         <div className="flex items-center gap-2 text-red-600 dark:text-red-400">
                             <AlertCircle className="w-6 h-6" />
@@ -131,7 +142,7 @@ export default function AcceptInvitePage() {
     if (user) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
-                <Card className="w-full max-w-md border border-gray-200 dark:border-gray-700">
+                <Card className="w-full max-w-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-800/50">
                     <CardHeader>
                         <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
                             <CheckCircle className="w-6 h-6" />
@@ -150,7 +161,7 @@ export default function AcceptInvitePage() {
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
-            <Card className="w-full max-w-md border border-gray-200 dark:border-gray-700">
+            <Card className="w-full max-w-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-800/50">
                 <CardHeader>
                     <CardTitle>Accept Invitation</CardTitle>
                     <CardDescription>
@@ -181,6 +192,29 @@ export default function AcceptInvitePage() {
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="firstName" className="text-slate-800 dark:text-slate-100">First Name</Label>
+                                <Input
+                                    id="firstName"
+                                    type="text"
+                                    placeholder="John"
+                                    value={firstName}
+                                    onChange={(e) => setFirstName(e.target.value)}
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="lastName" className="text-slate-800 dark:text-slate-100">Last Name</Label>
+                                <Input
+                                    id="lastName"
+                                    type="text"
+                                    placeholder="Doe"
+                                    value={lastName}
+                                    onChange={(e) => setLastName(e.target.value)}
+                                />
+                            </div>
+                        </div>
                         <div className="space-y-2">
                             <Label htmlFor="password" className="text-slate-800 dark:text-slate-100">Password</Label>
                             <Input

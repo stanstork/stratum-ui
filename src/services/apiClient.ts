@@ -37,7 +37,7 @@ interface ApiClient extends AxiosInstance {
     listInvites: () => Promise<Invite[]>;
     cancelInvite: (inviteId: string) => Promise<void>;
     getInvite: (token: string) => Promise<Invite>;
-    acceptInvite: (token: string, password: string) => Promise<User>;
+    acceptInvite: (token: string, password: string, firstName: string, lastName: string) => Promise<User>;
 }
 
 const apiClient: ApiClient = axios.create({
@@ -264,8 +264,8 @@ apiClient.getInvite = async (token: string): Promise<Invite> => {
     return mapInvite(response.data);
 }
 
-apiClient.acceptInvite = async (token: string, password: string): Promise<User> => {
-    const response = await apiClient.post<UserDTO>(`/invites/${token}/accept`, { password });
+apiClient.acceptInvite = async (token: string, password: string, firstName: string, lastName: string): Promise<User> => {
+    const response = await apiClient.post<UserDTO>(`/invites/${token}/accept`, { password, first_name: firstName, last_name: lastName });
     return mapUser(response.data);
 }
 

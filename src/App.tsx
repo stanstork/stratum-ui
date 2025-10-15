@@ -15,6 +15,8 @@ import Dashboard from './pages/Dashboard';
 import AddConnection from './pages/AddConnection';
 import NotFound from './pages/NotFound';
 import AdminUsers from './pages/AdminUsers';
+import AcceptInvite from './pages/AcceptInvite';
+import { Toaster } from './components/common/Toaster';
 
 interface AppContextProps {
     page: string;
@@ -145,9 +147,13 @@ const InnerApp: React.FC = () => {
 const App: React.FC = () => (
     <React.StrictMode>
         <ThemeProvider>
+            <Toaster />
             <AuthProvider>
                 <Router>
-                    <InnerApp />
+                    <Routes>
+                        <Route path="/accept-invite/:token" element={<AcceptInvite />} />
+                        <Route path="/*" element={<InnerApp />} />
+                    </Routes>
                 </Router>
             </AuthProvider>
         </ThemeProvider>

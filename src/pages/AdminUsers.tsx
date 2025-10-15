@@ -422,15 +422,10 @@ export default function AdminUsers() {
             setInviting(true);
             await apiClient.inviteUser(inviteEmail.trim(), inviteRoles);
             setInviteBanner(`Invitation sent successfully to ${inviteEmail.trim()}.`);
-            // Refresh invites list if available
-            if (typeof (apiClient as any).listInvites === "function") {
-                try {
-                    const data: Invite[] = await (apiClient as any).listInvites();
-                    setInvites(data || []);
-                } catch {
-                    /* ignore */
-                }
-            }
+            // Refresh invites list
+            const data = await apiClient.listInvites();
+            const pendingInvites = data.filter((inv) => !inv.acceptedAt);
+            setInvites(pendingInvites);
             closeInviteDialog();
         } catch (error) {
             console.error("Error inviting user:", error);
@@ -693,7 +688,7 @@ export default function AdminUsers() {
                     </TabsContent>
                 </Tabs>
 
-                {/* Edit Roles Dialog (shadcn) */}
+                {/* Edit Roles Dialog */}
                 <Dialog open={!!editRolesUserId} onOpenChange={(open) => !open && closeEditRoles()}>
                     <DialogContent className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl">
                         <DialogHeader>
@@ -720,7 +715,7 @@ export default function AdminUsers() {
                     </DialogContent>
                 </Dialog>
 
-                {/* Invite Dialog (shadcn) */}
+                {/* Invite Dialog */}
                 <Dialog
                     open={inviteDialogOpen}
                     onOpenChange={(open) => (open ? setInviteDialogOpen(true) : closeInviteDialog())}

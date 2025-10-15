@@ -32,10 +32,12 @@ interface ApiClient extends AxiosInstance {
     logout: () => void;
     users: () => Promise<User[]>;
     updateUserRoles: (userId: string, roles: string[]) => Promise<void>;
-    inviteUser: (email: string, roles: string[]) => Promise<void>;
+    inviteUser: (email: string, roles: string[]) => Promise<Invite>;
     deleteUser: (userId: string) => Promise<void>;
     listInvites: () => Promise<Invite[]>;
     cancelInvite: (inviteId: string) => Promise<void>;
+    getInvite: (token: string) => Promise<Invite>;
+    acceptInvite: (token: string, password: string) => Promise<User>;
 }
 
 const apiClient: ApiClient = axios.create({
@@ -250,6 +252,29 @@ apiClient.listInvites = async (): Promise<Invite[]> => {
 
 apiClient.cancelInvite = async (inviteId: string): Promise<void> => {
     await apiClient.delete(`/users/invites/${inviteId}`);
+}
+
+apiClient.inviteUser = async (email: string, roles: string[]): Promise<Invite> => {
+    const response = await apiClient.post<InviteDTO>('/users/invites', { email, roles });
+    return mapInvite(response.data);
+}
+
+apiClient.getInvite = async (token: string): Promise<Invite> => {
+    const response = await apiClient.get<InviteDTO>(`/invites/${token}`);
+    return mapInvite(response.data);
+}
+
+apiClient.acceptInvite = async (token: string, password: string): Promise<User> => {
+    const response = await apiClient.post<UserDTO>(`/invites/${token}/accept`, { password });
+    return mapUser(response.data);
+}
+
+apiClient.updateUserRoles = async (userId: string, roles: string[]): Promise<void> => {
+    await apiClient.put(`/users/${userId}/roles`, { roles });
+}
+
+apiClient.deleteUser = async (userId: string): Promise<void> => {
+    await apiClient.delete(`/users/${userId}`);
 }
 
 export default apiClient;

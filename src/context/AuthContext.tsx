@@ -7,6 +7,7 @@ interface User {
     email: string;
     roles: string[];
     isAdmin: boolean;
+    isViewerOnly: boolean;
     displayName: string;
 }
 
@@ -122,6 +123,14 @@ const determineIsAdmin = (payload: JwtPayload | null, roles: string[]): boolean 
     });
 };
 
+const determineIsViewerOnly = (roles: string[]): boolean => {
+    if (!roles || roles.length === 0) {
+        return false;
+    }
+
+    return roles.every((role) => typeof role === 'string' && role.toLowerCase() === 'viewer');
+};
+
 const deriveDisplayName = (payload: JwtPayload | null, fallback: string): string => {
     if (!payload) {
         return fallback;
@@ -145,6 +154,7 @@ const buildUser = (token: string, email: string): User => {
     const payload = decodeJwtPayload(token);
     const roles = extractRoles(payload);
     const isAdmin = determineIsAdmin(payload, roles);
+    const isViewerOnly = determineIsViewerOnly(roles);
     const displayName = deriveDisplayName(payload, email);
 
     return {
@@ -152,6 +162,7 @@ const buildUser = (token: string, email: string): User => {
         email,
         roles,
         isAdmin,
+        isViewerOnly,
         displayName
     };
 };

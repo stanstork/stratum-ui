@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { JobExecution } from "../types/JobExecution";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
@@ -151,10 +152,14 @@ export default function Dashboard() {
                     </p>
                 </div>
                 <div className="mt-4 sm:mt-0">
-                    <Button className="flex items-center space-x-2" variant="primary">
-                        <Plus size={16} />
-                        <span>New Migration</span>
-                    </Button>
+                    {!user?.isViewerOnly && (
+                        <Link to="/wizard">
+                            <Button className="flex items-center space-x-2" variant="primary">
+                                <Plus size={16} />
+                                <span>New Migration</span>
+                            </Button>
+                        </Link>
+                    )}
                 </div>
             </div>
 

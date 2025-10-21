@@ -35,6 +35,7 @@ import { dataFormatLabels } from "./Connections";
 import { DryRunReport } from "../types/DryRun";
 import DryRunPanel from "../components/DryRunPanel";
 import { exprToString, Section, SettingsGrid } from "../components/wizard_step/Step9_Preview";
+import { useAuth } from "../context/AuthContext";
 
 export const isLookup = (expr: Expression): expr is LookupExpr => !!(expr as LookupExpr)?.Lookup;
 export const isLiteral = (expr: Expression): expr is LiteralExpr => !!(expr as LiteralExpr)?.Literal;
@@ -146,6 +147,8 @@ export const highlightBooleanOps = (text: string) => {
 
 export default function DefinitionDetails() {
     const { definitionId } = useParams<{ definitionId: string }>();
+    const { user } = useAuth();
+    const canManageDefinition = !user?.isViewerOnly;
     const [config, setConfig] = useState<MigrationConfig | null>(null);
     const [definition, setDefinition] = useState<JobDefinition | null>(null);
     const [loading, setLoading] = useState(true);
@@ -246,9 +249,11 @@ export default function DefinitionDetails() {
                         <TestTube2 size={16} className="mr-2" />
                         {dryRunLoading ? "Running..." : "Dry Run"}
                     </Button>
-                    <Link to={`/wizard?edit=${definition.id}`}>
-                        <Button variant="primary"><Edit size={16} className="mr-2" />Edit Definition</Button>
-                    </Link>
+                    {canManageDefinition && (
+                        <Link to={`/wizard?edit=${definition.id}`}>
+                            <Button variant="primary"><Edit size={16} className="mr-2" />Edit Definition</Button>
+                        </Link>
+                    )}
                 </div>
             </div>
 

@@ -11,6 +11,7 @@ type NavigationItem = {
     href: string;
     icon: LucideIcon;
     requiresAdmin?: boolean;
+    hideForViewer?: boolean;
 };
 
 type NavigationSection = {
@@ -31,7 +32,7 @@ const navigation: NavigationSection[] = [
     {
         name: "TOOLS",
         items: [
-            { name: "New Migration", href: "/wizard", icon: Plus },
+            { name: "New Migration", href: "/wizard", icon: Plus, hideForViewer: true },
             { name: "Connections", href: "/connections", icon: Plug },
         ]
     },
@@ -62,6 +63,9 @@ export default function Sidebar() {
                 const requireAdmin = section.requiresAdmin ?? item.requiresAdmin;
                 if (requireAdmin) {
                     return user?.isAdmin;
+                }
+                if (item.hideForViewer && user?.isViewerOnly) {
+                    return false;
                 }
                 return true;
             });

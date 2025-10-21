@@ -31,6 +31,7 @@ import { formatDistanceToNow } from "date-fns";
 import Input from "../components/common/Input";
 import { cn } from "../utils/utils";
 import { JobDefinitionStat } from "../types/ExecutionStat";
+import { useAuth } from "../context/AuthContext";
 
 type SortKey = "name";
 type SortDir = "asc" | "desc";
@@ -231,10 +232,12 @@ const DefinitionCard = ({
     def,
     onDelete,
     onRun,
+    canManage,
 }: {
     def: JobDefinitionStat;
     onDelete: (id: string) => void;
     onRun: (id: string) => void;
+    canManage: boolean;
 }) => {
     const navigate = useNavigate();
 
@@ -339,27 +342,31 @@ const DefinitionCard = ({
                                 <Play size={16} />
                             </Button>
 
-                            <Link to={`/wizard/${def.id}`}>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    title="Edit"
-                                    className="h-9 w-9 p-0 text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700/60"
-                                    onClick={(e) => handleActionClick(e, () => navigate(`/wizard/${def.id}`))}
-                                >
-                                    <Edit size={16} />
-                                </Button>
-                            </Link>
+                            {canManage && (
+                                <>
+                                    <Link to={`/wizard/${def.id}`}>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            title="Edit"
+                                            className="h-9 w-9 p-0 text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700/60"
+                                            onClick={(e) => handleActionClick(e, () => navigate(`/wizard/${def.id}`))}
+                                        >
+                                            <Edit size={16} />
+                                        </Button>
+                                    </Link>
 
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                title="Delete"
-                                className="h-9 w-9 p-0 text-red-500 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/30"
-                                onClick={(e) => handleActionClick(e, () => onDelete(def.id))}
-                            >
-                                <AlertTriangle size={16} />
-                            </Button>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        title="Delete"
+                                        className="h-9 w-9 p-0 text-red-500 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/30"
+                                        onClick={(e) => handleActionClick(e, () => onDelete(def.id))}
+                                    >
+                                        <AlertTriangle size={16} />
+                                    </Button>
+                                </>
+                            )}
                         </div>
                     </div>
                 </CardContent>
@@ -368,7 +375,17 @@ const DefinitionCard = ({
     );
 };
 
-const DefinitionRow = ({ def, onDelete, onRun }: { def: JobDefinitionStat; onDelete: (id: string) => void; onRun: (id: string) => void }) => {
+const DefinitionRow = ({
+    def,
+    onDelete,
+    onRun,
+    canManage,
+}: {
+    def: JobDefinitionStat;
+    onDelete: (id: string) => void;
+    onRun: (id: string) => void;
+    canManage: boolean;
+}) => {
     const stats = {
         lastRun: getStatusText(def),
         totalRuns: def.totalRuns,
@@ -409,17 +426,21 @@ const DefinitionRow = ({ def, onDelete, onRun }: { def: JobDefinitionStat; onDel
                             <Eye size={16} />
                         </Link>
                     </Button>
-                    <Button asChild variant="ghost" size="icon" title="Edit">
-                        <Link to={`/wizard/${def.id}`}>
-                            <Edit size={16} />
-                        </Link>
-                    </Button>
                     <Button variant="ghost" size="icon" className="text-blue-600 hover:bg-blue-100 dark:text-blue-400 dark:hover:bg-blue-900/40" onClick={() => onRun(def.id)} title="Run">
                         <Play size={16} />
                     </Button>
-                    <Button variant="ghost" size="icon" className="text-red-500 hover:bg-red-100 dark:text-red-400 dark:hover:bg-red-900/40" onClick={() => onDelete(def.id)} title="Delete">
-                        <AlertTriangle size={16} />
-                    </Button>
+                    {canManage && (
+                        <>
+                            <Button asChild variant="ghost" size="icon" title="Edit">
+                                <Link to={`/wizard/${def.id}`}>
+                                    <Edit size={16} />
+                                </Link>
+                            </Button>
+                            <Button variant="ghost" size="icon" className="text-red-500 hover:bg-red-100 dark:text-red-400 dark:hover:bg-red-900/40" onClick={() => onDelete(def.id)} title="Delete">
+                                <AlertTriangle size={16} />
+                            </Button>
+                        </>
+                    )}
                 </div>
             </td>
         </tr>
@@ -433,6 +454,7 @@ const DefinitionTable = ({
     sortKey,
     sortDir,
     onSort,
+    canManage,
 }: {
     definitions: JobDefinitionStat[];
     onDelete: (id: string) => void;
@@ -440,6 +462,7 @@ const DefinitionTable = ({
     sortKey: "name";
     sortDir: "asc" | "desc";
     onSort: (key: "name") => void;
+    canManage: boolean;
 }) => (
     <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700/60 bg-white dark:bg-slate-800/50">
         <div className="overflow-x-auto">
@@ -480,7 +503,7 @@ const DefinitionTable = ({
                 </thead>
                 <tbody className="divide-y divide-slate-200 dark:divide-slate-700/60">
                     {definitions.map((def) => (
-                        <DefinitionRow key={def.id} def={def} onDelete={onDelete} onRun={onRun} />
+                        <DefinitionRow key={def.id} def={def} onDelete={onDelete} onRun={onRun} canManage={canManage} />
                     ))}
                 </tbody>
             </table>
@@ -489,6 +512,8 @@ const DefinitionTable = ({
 );
 
 const MigrationDefinitionsList = () => {
+    const { user } = useAuth();
+    const canManageDefinitions = !user?.isViewerOnly;
     const [definitions, setDefinitions] = useState<JobDefinitionStat[]>([]);
     const [loading, setLoading] = useState(true);
     const [definitionToDelete, setDefinitionToDelete] = useState<JobDefinitionStat | null>(null);
@@ -594,12 +619,14 @@ const MigrationDefinitionsList = () => {
                         <p className="mt-1 text-slate-700 dark:text-slate-300">Create and manage reusable migration templates</p>
                     </div>
                     <div className="mt-4 sm:mt-0">
-                        <Link to="/wizard">
-                            <Button className="flex items-center space-x-2" variant="primary">
-                                <Plus size={16} />
-                                <span>New Definition</span>
-                            </Button>
-                        </Link>
+                        {canManageDefinitions && (
+                            <Link to="/wizard">
+                                <Button className="flex items-center space-x-2" variant="primary">
+                                    <Plus size={16} />
+                                    <span>New Definition</span>
+                                </Button>
+                            </Link>
+                        )}
                     </div>
                 </div>
 
@@ -656,7 +683,15 @@ const MigrationDefinitionsList = () => {
                 <div className="space-y-4">
                     {sorted.length > 0 ? (
                         viewMode === "list" ? (
-                            sorted.map((def) => <DefinitionCard key={def.id} def={def} onDelete={openDeleteModal} onRun={openRunModal} />)
+                            sorted.map((def) => (
+                                <DefinitionCard
+                                    key={def.id}
+                                    def={def}
+                                    onDelete={openDeleteModal}
+                                    onRun={openRunModal}
+                                    canManage={canManageDefinitions}
+                                />
+                            ))
                         ) : (
                             <DefinitionTable
                                 definitions={sorted}
@@ -668,6 +703,7 @@ const MigrationDefinitionsList = () => {
                                     setSortKey("name");
                                     setSortDir((d) => (d === "asc" ? "desc" : "asc"));
                                 }}
+                                canManage={canManageDefinitions}
                             />
                         )
                     ) : (

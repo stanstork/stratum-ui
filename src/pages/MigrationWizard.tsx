@@ -28,6 +28,7 @@ import { useSearchParams } from "react-router-dom";
 import { getMigrationConfig } from "../types/JobDefinition";
 import Step3_MigrationItems from "../components/wizard_step/Step3_MigrationItems";
 import { ItemScopedHeader } from "../components/ItemScopedHeader";
+import { useAuth } from "../context/AuthContext";
 
 // --------------------------------------------
 // Wizard metadata
@@ -55,6 +56,7 @@ const steps = [
 // --------------------------------------------
 
 export default function MigrationWizard({ setView, onBack }: MigrationWizardProps) {
+    const { user } = useAuth();
     const [currentStep, setCurrentStep] = useState<number>(1);
     const [config, setConfig] = useState<MigrationConfig>(emptyMigrationConfig());
     const [isMetadataLoading, setIsMetadataLoading] = useState(false);
@@ -244,6 +246,24 @@ export default function MigrationWizard({ setView, onBack }: MigrationWizardProp
                 return <Step1_Details {...props} />;
         }
     };
+
+    if (!isEditing && user?.isViewerOnly) {
+        return (
+            <div className="py-10">
+                <Card className="max-w-3xl mx-auto bg-white dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 shadow-sm">
+                    <CardContent className="p-8 space-y-4 text-center">
+                        <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">View Only Access</h2>
+                        <p className="text-slate-600 dark:text-slate-300">
+                            Your account has viewer permissions. Creating new migration configurations is disabled.
+                        </p>
+                        <Button variant="primary" type="button" onClick={onBack}>
+                            Return to Dashboard
+                        </Button>
+                    </CardContent>
+                </Card>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6">

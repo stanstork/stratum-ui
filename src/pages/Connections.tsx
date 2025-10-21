@@ -26,6 +26,7 @@ import { Card, CardContent, CardFooter, CardHeader } from "../components/common/
 import { Badge } from "../components/common/v2/Badge";
 import { Button } from "../components/common/v2/Button";
 import Input from "../components/common/Input";
+import { useAuth } from "../context/AuthContext";
 
 export const dataFormatLabels: { [key: string]: string } = {
     mysql: "MySQL",
@@ -117,11 +118,13 @@ const ConnectionCard = ({
     onEdit,
     onDelete,
     onTest,
+    canManage,
 }: {
     connection: Connection;
     onEdit: (id: string) => void;
     onDelete: (id: string) => void;
     onTest: (id: string) => void;
+    canManage: boolean;
 }) => {
     const handleActionClick = (e: React.MouseEvent, action: () => void) => {
         e.stopPropagation();
@@ -189,17 +192,23 @@ const ConnectionCard = ({
                     </div>
                 </CardContent>
                 <CardFooter className="px-6 py-4 border-t border-slate-200 dark:border-slate-700">
-                    <div className="flex gap-2 w-full">
-                        <Button variant="ghost" className="flex-1" onClick={(e) => handleActionClick(e as any, () => onTest(connection.id))}>
-                            <Zap size={16} /> <span className="ml-2">Test</span>
-                        </Button>
-                        <Button variant="ghost" className="flex-1" onClick={(e) => handleActionClick(e as any, () => onEdit(connection.id))}>
-                            <Settings size={16} /> <span className="ml-2">Configure</span>
-                        </Button>
-                        <Button variant="ghost" className="flex-1" onClick={(e) => handleActionClick(e as any, () => onDelete(connection.id))}>
-                            <Trash size={16} /> <span className="ml-2">Delete</span>
-                        </Button>
-                    </div>
+                    {canManage ? (
+                        <div className="flex gap-2 w-full">
+                            <Button variant="ghost" className="flex-1" onClick={(e) => handleActionClick(e as any, () => onTest(connection.id))}>
+                                <Zap size={16} /> <span className="ml-2">Test</span>
+                            </Button>
+                            <Button variant="ghost" className="flex-1" onClick={(e) => handleActionClick(e as any, () => onEdit(connection.id))}>
+                                <Settings size={16} /> <span className="ml-2">Configure</span>
+                            </Button>
+                            <Button variant="ghost" className="flex-1" onClick={(e) => handleActionClick(e as any, () => onDelete(connection.id))}>
+                                <Trash size={16} /> <span className="ml-2">Delete</span>
+                            </Button>
+                        </div>
+                    ) : (
+                        <div className="w-full text-center text-sm text-slate-500 dark:text-slate-400">
+                            Actions unavailable for viewer role
+                        </div>
+                    )}
                 </CardFooter>
             </Card>
         </motion.div>
@@ -211,11 +220,13 @@ const ConnectionRow = ({
     onEdit,
     onDelete,
     onTest,
+    canManage,
 }: {
     conn: Connection;
     onEdit: (id: string) => void;
     onDelete: (id: string) => void;
     onTest: (id: string) => void;
+    canManage: boolean;
 }) => {
     return (
         <tr className="hover:bg-slate-100 dark:hover:bg-slate-800/40 transition-colors">
@@ -244,17 +255,21 @@ const ConnectionRow = ({
                 {conn.updatedAt ? formatDistanceToNow(new Date(conn.updatedAt), { addSuffix: true }) : "Never"}
             </td>
             <td className="px-4 py-3 whitespace-nowrap">
-                <div className="flex gap-1">
-                    <Button variant="ghost" size="sm" title="Configure" onClick={() => onEdit(conn.id)}>
-                        <Settings size={16} />
-                    </Button>
-                    <Button variant="ghost" size="sm" title="Test" onClick={() => onTest(conn.id)}>
-                        <Zap size={16} />
-                    </Button>
-                    <Button variant="ghost" size="sm" className="text-red-600" title="Delete" onClick={() => onDelete(conn.id)}>
-                        <Trash2 size={16} />
-                    </Button>
-                </div>
+                {canManage ? (
+                    <div className="flex gap-1">
+                        <Button variant="ghost" size="sm" title="Configure" onClick={() => onEdit(conn.id)}>
+                            <Settings size={16} />
+                        </Button>
+                        <Button variant="ghost" size="sm" title="Test" onClick={() => onTest(conn.id)}>
+                            <Zap size={16} />
+                        </Button>
+                        <Button variant="ghost" size="sm" className="text-red-600" title="Delete" onClick={() => onDelete(conn.id)}>
+                            <Trash2 size={16} />
+                        </Button>
+                    </div>
+                ) : (
+                    <span className="text-xs text-slate-500 dark:text-slate-400">View only</span>
+                )}
             </td>
         </tr>
     );
@@ -265,6 +280,8 @@ type ConnectionsPageProps = {
 };
 
 export default function ConnectionsPage({ setView }: ConnectionsPageProps) {
+    const { user } = useAuth();
+    const canManageConnections = !user?.isViewerOnly;
     const [loading, setLoading] = useState(true);
     const [connections, setConnections] = useState<Connection[]>([]);
     const [connectionToDelete, setConnectionToDelete] = useState<Connection | null>(null);
@@ -407,12 +424,14 @@ export default function ConnectionsPage({ setView }: ConnectionsPageProps) {
                         <p className="mt-1 text-slate-700 dark:text-slate-300">Manage your database and data source connections</p>
                     </div>
                     <div className="flex items-center gap-3">
-                        <Link to="/connections/wizard">
-                            <Button className="flex items-center space-x-2" variant="primary">
-                                <Plus size={16} />
-                                <span>Add Connection</span>
-                            </Button>
-                        </Link>
+                        {canManageConnections && (
+                            <Link to="/connections/wizard">
+                                <Button className="flex items-center space-x-2" variant="primary">
+                                    <Plus size={16} />
+                                    <span>Add Connection</span>
+                                </Button>
+                            </Link>
+                        )}
                     </div>
                 </div>
 
@@ -469,7 +488,7 @@ export default function ConnectionsPage({ setView }: ConnectionsPageProps) {
                         <motion.div layout variants={{ visible: { transition: { staggerChildren: 0.07 } }, hidden: {} }} initial="hidden" animate="visible" className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {sorted.length > 0 ? (
                                 sorted.map((conn) => (
-                                    <ConnectionCard key={conn.id} connection={conn} onEdit={handleEditConnection} onDelete={openDeleteModal} onTest={handleTestConnection} />
+                                    <ConnectionCard key={conn.id} connection={conn} onEdit={handleEditConnection} onDelete={openDeleteModal} onTest={handleTestConnection} canManage={canManageConnections} />
                                 ))
                             ) : (
                                 <div className="col-span-full text-center py-16 text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800/50 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700">
@@ -519,7 +538,7 @@ export default function ConnectionsPage({ setView }: ConnectionsPageProps) {
                                     </thead>
                                     <tbody className="divide-y divide-slate-200 dark:divide-slate-700/60">
                                         {sorted.map((conn) => (
-                                            <ConnectionRow key={conn.id} conn={conn} onEdit={handleEditConnection} onDelete={openDeleteModal} onTest={handleTestConnection} />
+                                            <ConnectionRow key={conn.id} conn={conn} onEdit={handleEditConnection} onDelete={openDeleteModal} onTest={handleTestConnection} canManage={canManageConnections} />
                                         ))}
                                         {sorted.length === 0 && (
                                             <tr>

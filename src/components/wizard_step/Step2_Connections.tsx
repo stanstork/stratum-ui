@@ -8,6 +8,7 @@ import { Link } from "react-router-dom";
 import { DatabaseIcon, getConnectionIcon } from "../common/Helper";
 import { emptyMigrationConfig, getConnectionInfo, MigrationConfig } from "../../types/MigrationConfig";
 import { Connection, emptyConnection, StatusType } from "../../types/Connection";
+import { useAuth } from "../../context/AuthContext";
 
 type Step2ConnectionsProps = {
     config: MigrationConfig;
@@ -83,6 +84,7 @@ function ConnectionTile({
 }
 
 export default function Step2_Connections({ config, setConfig }: Step2ConnectionsProps) {
+    const { user } = useAuth();
     const [connections, setConnections] = useState<Connection[]>([]);
     const [loading, setLoading] = useState(true);
     const [rawSearch, setRawSearch] = useState("");
@@ -194,12 +196,14 @@ export default function Step2_Connections({ config, setConfig }: Step2Connection
                         <RefreshCw size={14} />
                         Refresh
                     </Button>
-                    <Link to="/connections/add">
-                        <Button type="button" variant="primary">
-                            <Plus size={14} />
-                            Add Connection
-                        </Button>
-                    </Link>
+                    {!user?.isViewerOnly && (
+                        <Link to="/connections/add">
+                            <Button type="button" variant="primary">
+                                <Plus size={14} />
+                                Add Connection
+                            </Button>
+                        </Link>
+                    )}
                 </div>
             </div>
 

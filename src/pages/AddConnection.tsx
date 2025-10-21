@@ -21,6 +21,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Button } from "../components/common/v2/Button";
 import { Badge } from "../components/common/v2/Badge";
 import { Label } from "../components/common/v2/Label";
+import { useAuth } from "../context/AuthContext";
 
 function Field({ label, htmlFor, hint, children }: { label: string; htmlFor?: string; hint?: string; children: React.ReactNode }) {
     return (
@@ -132,6 +133,9 @@ interface WizardStep {
 }
 
 export default function AddConnection() {
+    const { user } = useAuth();
+    const isViewerOnly = user?.isViewerOnly ?? false;
+
     // Wizard state
     const [currentStep, setCurrentStep] = useState(0);
     const [selectedCategory, setSelectedCategory] = useState<ConnectionCategory["id"]>("database");
@@ -444,6 +448,26 @@ export default function AddConnection() {
             </CardContent>
         </Card>
     );
+
+    if (!isEditing && isViewerOnly) {
+        return (
+            <div className="max-w-3xl mx-auto py-16">
+                <Card className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm">
+                    <CardHeader>
+                        <CardTitle className="text-2xl">View Only Access</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <p className="text-slate-600 dark:text-slate-300">
+                            Your account has read-only permissions. Creating new connections is restricted for viewer users.
+                        </p>
+                        <Link to="/connections">
+                            <Button variant="primary">Back to Connections</Button>
+                        </Link>
+                    </CardContent>
+                </Card>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6">
